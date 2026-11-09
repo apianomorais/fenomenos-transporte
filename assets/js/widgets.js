@@ -5323,6 +5323,304 @@
     registrarRedesenho(desenhar);
   };
 
+  /* =================================================================
+     29. Bulbo úmido
+     O termômetro molhado como balanço entre calor que chega por
+     convecção e massa que sai por evaporação. O cartão duplo compara o
+     resultado de transporte com a temperatura de saturação adiabática,
+     que é termodinâmica pura, e a coincidência é o conteúdo.
+     ================================================================= */
+  REGISTRO.bulboumido = function (raiz) {
+    var R = 8.314, MA = 0.018, LE = 0.854;
+    var est = { T: 34, RH: 0.35 };
+
+    function psat(T) { return 610.94 * Math.exp(17.625 * T / (T + 243.04)); }
+    function csat(T) { return psat(T) / (R * (T + 273.15)); }
+    function lat(T) { return (2501 - 2.36 * T) * 1e3; }
+    function w_de(T, RH) { var p = RH * psat(T); return 0.622 * p / (101325 - p); }
+
+    /* balanço na superfície molhada: o que chega por convecção é o que
+       sai como calor latente, com h/k_c = ρ c_p Le^(2/3) */
+    function bulbo(T, RH) {
+      var ci = csat(T) * RH, lo = -20, hi = T, i;
+      for (i = 0; i < 90; i++) {
+        var Tw = (lo + hi) / 2, Tf = (T + Tw) / 2;
+        var rho = 101325 / (287.05 * (Tf + 273.15));
+        var cp = 1006 + 1860 * MA * ci / rho;
+        var f = rho * cp * Math.pow(LE, 2 / 3) * (T - Tw)
+          - MA * lat(Tw) * (csat(Tw) - ci);
+        if (f > 0) lo = Tw; else hi = Tw;
+      }
+      return (lo + hi) / 2;
+    }
+    /* o mesmo número por termodinâmica: até onde o ar esfria saturando */
+    function satAdiab(T, RH) {
+      var w = w_de(T, RH), h = 1.006 * T + w * (2501 + 1.86 * T);
+      var lo = -10, hi = T, i;
+      for (i = 0; i < 90; i++) {
+        var Ts = (lo + hi) / 2, ws = w_de(Ts, 1);
+        if (1.006 * Ts + ws * (2501 + 1.86 * Ts) < h) lo = Ts; else hi = Ts;
+      }
+      return (lo + hi) / 2;
+    }
+    function orvalho(T, RH) {
+      var p = RH * psat(T), y = Math.log(p / 610.94);
+      return 243.04 * y / (17.625 - y);
+    }
+
+    var corpo = moldura(raiz, 'O termômetro de bulbo úmido');
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'temperatura do ar', 10, 45, 0.5, 34,
+      function (v) { est.T = v; desenhar(); },
+      function (v) { return F.fmt(v, 1) + ' °C'; });
+    deslizante(ctr, 'umidade relativa', 0.05, 1, 0.01, 0.35,
+      function (v) { est.RH = v; desenhar(); },
+      function (v) { return F.pct(v, 0); });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'bulbo úmido, por transporte', k: 'tw' },
+      { rot: 'saturação adiabática, por termodinâmica', k: 'ta' },
+      { rot: 'depressão psicrométrica', k: 'dep' },
+      { rot: 'ponto de orvalho', k: 'orv' },
+      { rot: 'umidade absoluta', k: 'w' },
+      { rot: 'saída de um climatizador evaporativo', k: 'res' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var gr = G.eixos(cv, {
+        altura: 320, xmin: 5, xmax: 100, ymin: 0, ymax: 46, divY: 6,
+        margem: { e: 58, d: 16, c: 16, b: 46 },
+        rotX: 'umidade relativa (%)', rotY: 'temperatura (°C)',
+        marcasX: G.marcasLineares(5, 100, 5, 0),
+        formataY: function (v) { return F.fmt(v, 0); }
+      });
+      var TS = [15, 20, 25, 30, 35, 40];
+      TS.forEach(function (T, i) {
+        G.curva(gr, function (rh) { return bulbo(T, rh / 100); },
+          i % 2 ? G.COR.clara : G.COR.mestra, 1.5);
+        rotulo(gr.ct, T + ' °C', gr.X(99), gr.Y(bulbo(T, 0.99)) - 9,
+          G.COR.suave, 'right');
+      });
+      G.curva(gr, function (rh) { return est.T; }, G.COR.suave, 1.2, [5, 4]);
+      G.curva(gr, function (rh) { return bulbo(est.T, rh / 100); },
+        G.COR.vinho, 2.6);
+      G.curva(gr, function (rh) { return orvalho(est.T, rh / 100); },
+        G.COR.bronze, 1.8, [4, 4]);
+      var tw = bulbo(est.T, est.RH);
+      G.vertical(gr, est.RH * 100, G.COR.suave, '', true);
+      var ct = gr.ct;
+      [[est.T, G.COR.suave], [tw, G.COR.vinho],
+       [orvalho(est.T, est.RH), G.COR.bronze]].forEach(function (p) {
+        ct.fillStyle = p[1];
+        ct.beginPath(); ct.arc(gr.X(est.RH * 100), gr.Y(p[0]), 4.5, 0, 2 * Math.PI);
+        ct.fill();
+      });
+      G.legenda(gr, [{ cor: G.COR.vinho, texto: 'bulbo úmido, no ar escolhido' },
+                     { cor: G.COR.bronze, texto: 'ponto de orvalho' },
+                     { cor: G.COR.mestra, texto: 'bulbo úmido, outras temperaturas' }]);
+
+      var ta = satAdiab(est.T, est.RH);
+      var rho = 101325 / (287.05 * (est.T + 273.15));
+      mostrar({
+        tw: F.fmt(tw, 2) + ' °C',
+        ta: F.fmt(ta, 2) + ' °C',
+        dep: F.fmt(est.T - tw, 2) + ' °C',
+        orv: F.fmt(orvalho(est.T, est.RH), 2) + ' °C',
+        w: F.fmt(w_de(est.T, est.RH) * 1000, 1) + ' g/kg',
+        /* um climatizador evaporativo comercial entrega cerca de 85% da
+           depressão psicrométrica; o resto é limitação do meio poroso */
+        res: F.fmt(est.T - 0.85 * (est.T - tw), 1) + ' °C'
+      });
+
+      nota.innerHTML =
+        '<p>Um termômetro envolto num pano molhado, exposto a uma corrente de ar, marca menos '
+        + 'que um termômetro seco ao lado dele. A razão é um balanço entre dois transportes '
+        + 'diferentes. A água do pano evapora, e para evaporar consome calor latente, o que '
+        + 'esfria o conjunto; à medida que ele esfria, passa a receber calor do ar por '
+        + 'convecção. O equilíbrio se dá quando os dois se igualam:</p>'
+        + '\\[h\\left(T_\\infty-T_u\\right)=k_c\\,M\\,\\lambda\\left(c_{\\text{sat}}(T_u)'
+        + '-c_\\infty\\right).\\]'
+        + '<p>Note o que essa equação tem de notável: do lado esquerdo está um coeficiente de '
+        + 'transferência de calor, do direito um de massa, e o resultado depende da razão '
+        + 'entre eles. Pela analogia de Chilton-Colburn da seção 4,</p>'
+        + '\\[\\frac{h}{k_c}=\\rho\\,c_p\\,\\mathrm{Le}^{2/3},\\qquad'
+        + '\\mathrm{Le}=\\frac{\\alpha}{D_{AB}},\\]'
+        + '<p>de modo que a geometria, a velocidade do ar e o tamanho do bulbo desaparecem da '
+        + 'conta. Essa é a razão de o psicrômetro funcionar como instrumento: a leitura não '
+        + 'depende de como o ar sopra nele.</p>'
+        + '<p>Os dois primeiros cartões são a verificação. O primeiro vem da equação acima, '
+        + 'que é transporte; o segundo é a <strong>temperatura de saturação adiabática</strong>, '
+        + 'obtida por um balanço de entalpia sem nenhuma hipótese sobre coeficientes, que é '
+        + 'termodinâmica. Os dois números coincidem dentro de alguns décimos de grau.</p>'
+        + '<p>A coincidência não é universal: ela acontece porque, para a mistura ar e vapor '
+        + 'd\'água, \\(\\mathrm{Le}\\approx0{,}85\\) e portanto '
+        + '\\(\\mathrm{Le}^{2/3}\\approx0{,}9\\), perto de 1. Para outros pares, como ar e '
+        + 'etanol, \\(\\mathrm{Le}\\) é bem diferente de 1 e as duas temperaturas se separam '
+        + 'por vários graus. A psicrometria clássica, que trata as duas como a mesma coisa, é '
+        + 'uma sorte do par água e ar, e não um teorema.</p>'
+        + '<p>A curva tracejada é o <strong>ponto de orvalho</strong>, que é a temperatura em '
+        + 'que esse ar saturaria sem perder nem ganhar vapor. As três temperaturas obedecem '
+        + 'sempre \\(T_{\\text{orvalho}}\\le T_u\\le T_\\infty\\), com igualdade só na '
+        + 'saturação, e a distância entre elas é uma medida direta de quão seco está o ar. No '
+        + 'Cariri em setembro, com \\(34\\) °C e 35%, a depressão passa de doze graus; em '
+        + 'março, com \\(28\\) °C e 80%, cai para três.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     30. Evaporação de uma superfície livre
+     O mesmo problema do tubo de Stefan do módulo 13, agora com vento.
+     Mostra o que a convecção faz com um transporte que, por difusão
+     pura, seria lento demais para importar.
+     ================================================================= */
+  REGISTRO.evaporacao = function (raiz) {
+    var R = 8.314, MA = 0.018;
+    var est = { U: 3, T: 28, RH: 0.5, L: 1 };
+    var NU = 1.57e-5, D = 2.6e-5, ALFA = 2.22e-5;
+
+    function psat(T) { return 610.94 * Math.exp(17.625 * T / (T + 243.04)); }
+    function csat(T) { return psat(T) / (R * (T + 273.15)); }
+    function lat(T) { return (2501 - 2.36 * T) * 1e3; }
+
+    /* notação científica curta, que o fmt comum só usa para números
+       pequenos */
+    function expo(v) {
+      var e = Math.floor(Math.log10(v));
+      return F.fmt(v / Math.pow(10, e), 2) + '×10'
+        + String(e).replace('-', '⁻').replace(/[0-9]/g, function (d) {
+          return '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d];
+        });
+    }
+
+    function kc(U, L) {
+      var Re = U * L / NU, Sc = NU / D;
+      var Sh = Re < 5e5
+        ? 0.664 * Math.sqrt(Re) * Math.pow(Sc, 1 / 3)
+        : (0.037 * Math.pow(Re, 0.8) - 871) * Math.pow(Sc, 1 / 3);
+      return Math.max(1e-6, Sh) * D / L;
+    }
+    function taxa(U, T, RH, L) {          /* kg/m² por dia */
+      return kc(U, L) * csat(T) * (1 - RH) * MA * 86400;
+    }
+    /* a referência: difusão pura através de 10 cm de ar parado, que é o
+       tubo de Stefan do módulo 13 */
+    function difusaoPura(T, RH) {
+      var c = 101325 / (R * (T + 273.15)), x1 = psat(T) / 101325;
+      return c * D / 0.10 * Math.log((1 - RH * x1) / (1 - x1)) * MA * 86400;
+    }
+
+    var corpo = moldura(raiz, 'Evaporação de uma superfície de água');
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'velocidade do vento', 0.2, 12, 0.1, 3,
+      function (v) { est.U = v; desenhar(); },
+      function (v) { return F.fmt(v, 1) + ' m/s'; });
+    deslizante(ctr, 'temperatura', 10, 45, 0.5, 28,
+      function (v) { est.T = v; desenhar(); },
+      function (v) { return F.fmt(v, 1) + ' °C'; });
+    deslizante(ctr, 'umidade relativa do ar', 0, 0.95, 0.05, 0.5,
+      function (v) { est.RH = v; desenhar(); },
+      function (v) { return F.pct(v, 0); });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'Reynolds e Schmidt', k: 'res' },
+      { rot: 'Sherwood', k: 'sh' },
+      { rot: 'coeficiente k_c', k: 'kc' },
+      { rot: 'evaporação', k: 'ev' },
+      { rot: 'em um ano', k: 'ano' },
+      { rot: 'calor levado pela evaporação', k: 'q' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var gr = G.eixos(cv, {
+        altura: 310, xmin: 0, xmax: 12, ymin: 0,
+        ymax: Math.max(8, taxa(12, est.T, 0, est.L) * 1.1), divY: 6,
+        margem: { e: 62, d: 16, c: 16, b: 46 },
+        rotX: 'velocidade do vento (m/s)',
+        rotY: 'evaporação (mm por dia)',
+        marcasX: G.marcasLineares(0, 12, 5, 0),
+        formataY: function (v) { return F.fmt(v, 0); }
+      });
+      [[0, '0%'], [0.3, '30%'], [0.5, '50%'], [0.7, '70%'], [0.9, '90%']]
+        .forEach(function (r, i) {
+          G.curva(gr, function (U) { return taxa(U, est.T, r[0], est.L); },
+            i % 2 ? G.COR.clara : G.COR.mestra, 1.5);
+          rotulo(gr.ct, r[1], gr.X(11.6), gr.Y(taxa(11.6, est.T, r[0], est.L)) - 9,
+            G.COR.suave, 'right');
+        });
+      G.curva(gr, function (U) { return taxa(U, est.T, est.RH, est.L); },
+        G.COR.vinho, 2.6);
+      var dp = difusaoPura(est.T, est.RH);
+      G.curva(gr, function (U) { return dp; }, G.COR.bronze, 1.8, [5, 4]);
+      rotulo(gr.ct, 'só difusão, 10 cm de ar parado', gr.X(0.3), gr.Y(dp) - 10,
+        G.COR.bronze, 'left');
+      var ct = gr.ct;
+      ct.fillStyle = G.COR.vinho;
+      ct.beginPath();
+      ct.arc(gr.X(est.U), gr.Y(taxa(est.U, est.T, est.RH, est.L)), 4.5, 0, 2 * Math.PI);
+      ct.fill();
+
+      var Re = est.U * est.L / NU, Sc = NU / D, K = kc(est.U, est.L);
+      var tx = taxa(est.U, est.T, est.RH, est.L);
+      mostrar({
+        res: expo(Re) + ' e ' + F.fmt(Sc, 3),
+        sh: F.fmt(K * est.L / D, 0),
+        kc: F.fmt(K, 4) + ' m/s',
+        ev: F.fmt(tx, 2) + ' mm/dia',
+        ano: F.fmt(tx * 365, 0) + ' mm',
+        q: F.fmt(tx / 86400 * lat(est.T), 0) + ' W/m²'
+      });
+
+      nota.innerHTML =
+        '<p>O módulo 13 calculou a evaporação através de uma camada de ar parado e encontrou '
+        + 'meio milímetro por dia. Com vento, o transporte deixa de ser difusivo e o número '
+        + 'muda de categoria. O coeficiente de transferência de massa se define em paralelo '
+        + 'com o de calor,</p>'
+        + '\\[N_A=k_c\\left(c_{A,s}-c_{A,\\infty}\\right),\\qquad'
+        + '\\mathrm{Sh}=\\frac{k_cL}{D_{AB}},\\]'
+        + '<p>e a correlação sai por tradução direta da do módulo 11, trocando Nusselt por '
+        + 'Sherwood e Prandtl por Schmidt:</p>'
+        + '\\[\\overline{\\mathrm{Sh}}_L=0{,}664\\,\\mathrm{Re}_L^{1/2}\\,'
+        + '\\mathrm{Sc}^{1/3}.\\]'
+        + '<p>Nada foi medido de novo para obter essa fórmula. Ela vale porque as equações '
+        + 'adimensionais da camada-limite de concentração e da camada-limite térmica são a '
+        + 'mesma equação, com \\(\\mathrm{Sc}\\) no lugar de \\(\\mathrm{Pr}\\), o que é o '
+        + 'conteúdo inteiro deste módulo.</p>'
+        + '<p>Os números resultantes explicam a paisagem. Com \\(28\\) °C e metade de umidade '
+        + 'relativa, a conta dá de quatro a sete milímetros por dia conforme o vento vá de '
+        + '1 a 3 m/s, isto é, entre mil e seiscentos e dois mil e setecentos milímetros por '
+        + 'ano. Os tanques classe A do semiárido medem algo entre dois mil e dois mil e '
+        + 'quinhentos, de modo que a estimativa cerca o valor real, e ele é o dobro da chuva '
+        + 'anual da região. Um açude perde por '
+        + 'evaporação muito mais do que se costuma supor, e a perda cresce com o vento e com a '
+        + 'área exposta, o que é o argumento técnico a favor de reservatórios fundos em vez de '
+        + 'rasos.</p>'
+        + '<p>O último cartão mostra o outro lado da mesma moeda. Evaporar custa calor '
+        + 'latente, e a superfície que evapora resfria: são centenas de watts por metro '
+        + 'quadrado retirados do que estiver abaixo. É assim que funcionam a transpiração, a '
+        + 'moringa de barro, o resfriamento evaporativo e a torre de resfriamento de uma '
+        + 'termelétrica, e o limite de todos eles é a temperatura de bulbo úmido do widget '
+        + 'anterior.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 14: Convecção mássica e as analogias | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090928">
+<script src="assets/js/comum.js?v=202611090928"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
+      <a href="aula06.html" class="num" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
+      <a href="aula07.html" class="num" title="Módulo 7: Tensão superficial e capilaridade">7</a>
+      <span class="grupo">Numérico</span>
+      <a href="aula08.html" class="num" title="Módulo 8: Campos no computador: relaxação e convergência">8</a>
+      <a href="aula09.html" class="num" title="Módulo 9: Advecção e difusão no computador">9</a>
+      <span class="grupo">Energia</span>
+      <a href="aula10.html" class="num" title="Módulo 10: Condução de calor">10</a>
+      <a href="aula11.html" class="num" title="Módulo 11: Convecção e semelhança">11</a>
+      <a href="aula12.html" class="num" title="Módulo 12: Radiação térmica">12</a>
+      <span class="grupo">Massa</span>
+      <a href="aula13.html" class="num" title="Módulo 13: Difusão de massa e a lei de Fick">13</a>
+      <a href="aula14.html" class="num ativo" title="Módulo 14: Convecção mássica e as analogias">14</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. O coeficiente de transferência de massa</a></li>
+    <li><a href="#s2">2. A camada-limite de concentração</a></li>
+    <li><a href="#s3">3. Correlações por tradução</a></li>
+    <li><a href="#s4">4. A analogia de Chilton-Colburn</a></li>
+    <li><a href="#s5">5. Calor e massa ao mesmo tempo</a></li>
+    <li><a href="#s6">6. Evaporação e resfriamento evaporativo</a></li>
+    <li><a href="#s7">7. Onde as analogias falham</a></li>
+    <li><a href="#s8">8. O curso inteiro numa página</a></li>
+    <li><a href="#s9">9. Exercícios resolvidos</a></li>
+    <li><a href="#s10">10. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 14 · Transporte de massa</p>
+  <h1>Convecção mássica e as analogias</h1>
+  <p class="subtitulo">Este é o último módulo, e ele não introduz fenômeno novo. O que faz é
+  colher o que as três unidades anteriores construíram e mostrar que são a mesma construção:
+  uma correlação medida com um termômetro, numa geometria qualquer, pode ser usada para prever
+  quanta água evapora dela, sem que ninguém tenha medido evaporação.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Definir \(k_c\) e o número de Sherwood, e reconhecer a correspondência com \(h\) e
+      Nusselt.</li>
+      <li>Traduzir uma correlação de transferência de calor em uma de massa trocando
+      \(\mathrm{Pr}\) por \(\mathrm{Sc}\).</li>
+      <li>Usar a analogia de Chilton-Colburn para relacionar atrito, calor e massa.</li>
+      <li>Resolver problemas de calor e massa simultâneos, com a temperatura de bulbo úmido
+      como caso central.</li>
+      <li>Estimar evaporação e resfriamento evaporativo em situações reais.</li>
+      <li>Saber em que condições as analogias deixam de valer.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. O coeficiente de transferência de massa</h2>
+
+  <p>O módulo 13 tratou de difusão em meios parados. Assim que há escoamento, repete-se a
+  história do módulo 11: a espécie atravessa uma camada fina junto da superfície, onde o fluido
+  está praticamente parado, e dali em diante é levada pelo escoamento. Como lá, define-se um
+  coeficiente que esconde toda a complicação:</p>
+
+  <p>\[N_A=k_c\left(c_{A,s}-c_{A,\infty}\right),\]</p>
+
+  <p>com \(k_c\) em m/s, que é a velocidade que o fluxo teria se a diferença de concentração
+  fosse consumida de uma vez. Como \(h\), ele não é propriedade de nada: depende da geometria,
+  do escoamento e do par de substâncias.</p>
+
+  <p>E, como lá, a adimensionalização dá a forma correta de apresentá-lo. O número de
+  <strong>Sherwood</strong> é o Nusselt da transferência de massa:</p>
+
+  <p>\[\mathrm{Sh}=\frac{k_cL}{D_{AB}}
+  \qquad\longleftrightarrow\qquad
+  \mathrm{Nu}=\frac{hL}{k_f},\]</p>
+
+  <p>e mede quanto o transporte total excede o que haveria por difusão pura na mesma espessura.
+  Um Sherwood de 245, que é o que uma placa de um metro com vento de \(3\) m/s produz, significa
+  que a evaporação é 245 vezes maior do que seria se o ar estivesse parado sobre essa mesma
+  espessura.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. A camada-limite de concentração</h2>
+
+  <p>Junto de uma superfície que evapora ou dissolve, forma-se uma camada-limite de
+  concentração, de espessura \(\delta_c\), exatamente como a térmica do módulo 11. A razão
+  entre ela e a de velocidade é governada por um número que já foi definido:</p>
+
+  <p>\[\mathrm{Sc}=\frac{\nu}{D_{AB}},
+  \qquad
+  \frac{\delta}{\delta_c}\approx\mathrm{Sc}^{1/3}.\]</p>
+
+  <p>O <strong>Schmidt</strong> é o Prandtl da transferência de massa, e compara a difusão de
+  quantidade de movimento com a de espécie. Os valores são instrutivos. Em gases, \(\nu\) e
+  \(D\) são ambos da ordem de \(10^{-5}\) m²/s, e \(\mathrm{Sc}\) fica perto de 1: para vapor
+  d'água no ar, \(0{,}60\). Em líquidos, \(\nu\approx10^{-6}\) e
+  \(D\approx10^{-9}\), de modo que \(\mathrm{Sc}\) chega a mil: para sal na água, cerca de 600,
+  e para uma proteína, dezenas de milhares.</p>
+
+  <p>Um Schmidt de mil significa que a camada de concentração é dez vezes mais fina que a de
+  velocidade, com o gradiente dez vezes mais íngreme. É por isso que dissolver açúcar em água
+  parada é desesperador e mexer resolve: o que a colher faz é afinar essa camada.</p>
+
+  <p>A demonstração formal é a mesma do módulo 11. Adimensionalizando a equação da espécie,</p>
+
+  <p>\[\vet{u}^*\cdot\nabla^*c_A^*
+  =\frac{1}{\mathrm{Re}\,\mathrm{Sc}}\nabla^{*2}c_A^*,\]</p>
+
+  <p>que é <strong>idêntica</strong> à equação da energia do módulo 11 com \(\mathrm{Sc}\) no
+  lugar de \(\mathrm{Pr}\). Equações idênticas, com condições de contorno de mesma forma, têm
+  soluções idênticas.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. Correlações por tradução</h2>
+
+  <p>A consequência prática é imediata e vale todo o módulo. Qualquer correlação
+  \(\mathrm{Nu}=f(\mathrm{Re},\mathrm{Pr})\) vira, sem nova medida,</p>
+
+  <p>\[\mathrm{Sh}=f\left(\mathrm{Re},\mathrm{Sc}\right).\]</p>
+
+  <p>Aplicando às correlações do módulo 11:</p>
+
+  <div class="bloco def">
+    <span class="rotulo">O dicionário em uso</span>
+    <p>Placa plana laminar:
+    \(\overline{\mathrm{Nu}}_L=0{,}664\,\mathrm{Re}_L^{1/2}\mathrm{Pr}^{1/3}\)
+    passa a
+    \(\overline{\mathrm{Sh}}_L=0{,}664\,\mathrm{Re}_L^{1/2}\mathrm{Sc}^{1/3}\).</p>
+    <p>Tubo turbulento:
+    \(\mathrm{Nu}_D=0{,}023\,\mathrm{Re}_D^{4/5}\mathrm{Pr}^{0{,}4}\)
+    passa a
+    \(\mathrm{Sh}_D=0{,}023\,\mathrm{Re}_D^{4/5}\mathrm{Sc}^{1/3}\).</p>
+    <p>Tubo laminar desenvolvido: \(\mathrm{Nu}_D=3{,}66\) passa a
+    \(\mathrm{Sh}_D=3{,}66\).</p>
+    <p>Convecção natural: \(\mathrm{Ra}=\mathrm{Gr}\,\mathrm{Pr}\) passa a
+    \(\mathrm{Ra}_m=\mathrm{Gr}_m\mathrm{Sc}\), com o Grashof mássico construído com a
+    diferença de densidade devida à concentração em vez da temperatura.</p>
+  </div>
+
+  <p>Essa tradução é uma das economias mais produtivas da engenharia. Medir transferência de
+  calor é fácil: basta um termômetro e um aquecedor. Medir transferência de massa exige
+  cromatografia, pesagem contínua ou análise química, e cada medida leva muito mais tempo. A
+  analogia permite que a literatura inteira de trocadores de calor, acumulada por um século,
+  seja usada em projeto de secadores, umidificadores, colunas de absorção e reatores
+  catalíticos.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. A analogia de Chilton-Colburn</h2>
+
+  <p>A seção 8 do módulo 11 mostrou que, para \(\mathrm{Pr}=1\), o transporte de calor e o de
+  quantidade de movimento são o mesmo transporte, e que a correção de Colburn estende o
+  resultado para outros Prandtl. Com a terceira equação agora disponível, o enunciado completo
+  é o de Chilton e Colburn, de 1934:</p>
+
+  <p>\[j_H=\mathrm{St}\,\mathrm{Pr}^{2/3}
+  =j_D=\mathrm{St}_m\,\mathrm{Sc}^{2/3}
+  =\frac{C_f}{2},\]</p>
+
+  <p>com \(\mathrm{St}=\mathrm{Nu}/\mathrm{Re}\,\mathrm{Pr}\) e
+  \(\mathrm{St}_m=\mathrm{Sh}/\mathrm{Re}\,\mathrm{Sc}=k_c/U\). Três fenômenos diferentes,
+  medidos por três instrumentos diferentes, colapsam num único número.</p>
+
+  <p>A forma mais útil dessa igualdade se obtém dividindo \(j_H\) por \(j_D\), o que elimina a
+  geometria e o escoamento:</p>
+
+  <p>\[\frac{h}{k_c}=\rho\,c_p\left(\frac{\mathrm{Sc}}{\mathrm{Pr}}\right)^{2/3}
+  =\rho\,c_p\,\mathrm{Le}^{2/3},
+  \qquad
+  \mathrm{Le}=\frac{\alpha}{D_{AB}}.\]</p>
+
+  <p>Conhecido \(h\), obtém-se \(k_c\) sem resolver nada. E, para o par ar e vapor d'água,
+  \(\mathrm{Le}=0{,}85\), de modo que \(\mathrm{Le}^{2/3}=0{,}90\), perto de 1: essa
+  proximidade é o acidente feliz de que a seção seguinte vive.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. Calor e massa ao mesmo tempo</h2>
+
+  <p>Quando uma superfície evapora, os dois transportes ocorrem juntos e se acoplam, porque a
+  evaporação consome calor latente e esfria a superfície, o que por sua vez muda a concentração
+  de saturação e portanto a evaporação. O caso de referência é o termômetro de bulbo úmido, em
+  que o estado estacionário é dado por</p>
+
+  <p>\[h\left(T_\infty-T_u\right)
+  =k_c\,M_A\,\lambda\left(c_{\text{sat}}(T_u)-c_{A,\infty}\right).\]</p>
+
+  <p>Usando \(h/k_c=\rho c_p\mathrm{Le}^{2/3}\), a geometria desaparece e sobra uma relação
+  entre temperaturas e umidades apenas, que é o que faz do psicrômetro um instrumento
+  confiável.</p>
+
+  <div data-widget="bulboumido"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. Evaporação e resfriamento evaporativo</h2>
+
+  <p>A temperatura de bulbo úmido é o <strong>limite</strong> de todo resfriamento
+  evaporativo. Nenhum processo que funcione apenas evaporando água num ar dado consegue baixar
+  da temperatura de bulbo úmido desse ar, porque ali a evaporação para de ser favorecida pelo
+  balanço.</p>
+
+  <p>Esse limite explica uma geografia de tecnologias. No Cariri em setembro, com \(34\) °C e
+  35% de umidade, o bulbo úmido fica perto de \(21\) °C, de modo que uma moringa de barro, um
+  climatizador evaporativo ou um telhado molhado podem entregar algo próximo disso, que é
+  conforto. Em março, com \(28\) °C e 80%, o bulbo úmido sobe para \(25\) °C e o mesmo
+  aparelho praticamente não faz nada. É também por isso que o resfriamento evaporativo domina
+  no sertão e no interior do nordeste e é inútil no litoral úmido.</p>
+
+  <p>O mesmo limite governa a fisiologia. O suor resfria enquanto evapora, e em ar saturado ele
+  escorre sem evaporar e não resfria nada. O índice de bulbo úmido é por isso o critério usado
+  em normas de trabalho sob calor, e valores acima de \(35\) °C de bulbo úmido são
+  incompatíveis com a sobrevivência humana prolongada, por mais sombra e água que haja, porque
+  nessa condição o corpo não tem para onde mandar o calor que produz.</p>
+
+  <div data-widget="evaporacao"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. Onde as analogias falham</h2>
+
+  <p>Toda a força deste módulo vem de uma hipótese que convém enunciar para saber quando ela se
+  rompe. A analogia exige que as equações adimensionais sejam as mesmas, e isso falha em quatro
+  situações.</p>
+
+  <p>A primeira é a <strong>alta taxa de transferência</strong>. Se a evaporação é intensa, o
+  fluxo de massa saindo da superfície empurra a camada-limite para longe, engrossando-a e
+  reduzindo tanto \(h\) quanto \(k_c\). É o mesmo arraste da coluna de Stefan, agora em regime
+  convectivo, e trata-se dele por um fator de correção chamado fator de sopro. A analogia
+  simples vale enquanto a fração molar na superfície for pequena.</p>
+
+  <p>A segunda é a <strong>reação química</strong>. Calor não reage; espécies sim. Se a espécie
+  é consumida dentro da camada-limite, o perfil deixa de ser o da equação análoga, e o problema
+  passa a ser o da seção 9 do módulo 13, com o módulo de Thiele.</p>
+
+  <p>A terceira é a <strong>radiação</strong>. Ela entrega calor a uma superfície sem passar
+  pela camada-limite, de modo que o balanço térmico ganha um termo que não tem correspondente
+  mássico. Um bulbo úmido exposto ao sol lê alto, e por isso o psicrômetro é sempre sombreado e
+  ventilado.</p>
+
+  <p>A quarta é a existência de <strong>mais de duas espécies</strong>. Com três ou mais
+  componentes, a difusão de cada uma depende dos gradientes de todas, e aparecem fenômenos sem
+  análogo térmico, como difusão contra o próprio gradiente. O tratamento correto é o das
+  equações de Maxwell-Stefan.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. O curso inteiro numa página</h2>
+
+  <p>Vale terminar olhando para trás. Os catorze módulos trataram de três grandezas
+  transportadas, e foi sempre o mesmo programa.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">A estrutura que se repetiu quatro vezes</span>
+    <p><strong>Conservação.</strong> Um balanço num volume de controle, que deu a continuidade
+    no módulo 2, a equação de Cauchy no 3, a equação do calor no 10 e a segunda lei de Fick no
+    13. Sempre a mesma forma: acúmulo mais divergência do fluxo igual à geração.</p>
+    <p><strong>Lei constitutiva.</strong> Um fluxo proporcional ao gradiente, com sinal
+    negativo: Newton no módulo 6, Fourier no 10, Fick no 13. As três difusividades, \(\nu\),
+    \(\alpha\) e \(D\), nas mesmas unidades.</p>
+    <p><strong>Adimensionalização.</strong> As equações escritas em variáveis próprias revelam
+    que só uns poucos números importam: Reynolds, Prandtl, Schmidt, Nusselt, Sherwood,
+    Rayleigh, Péclet. Semelhança é o que permite medir pequeno e aplicar grande.</p>
+    <p><strong>Solução.</strong> Analítica onde a geometria coopera, numérica onde não coopera,
+    que é quase sempre. Os módulos 8 e 9 construíram as ferramentas, e os módulos 10 a 14 as
+    usaram.</p>
+    <p>A única grandeza que escapou do programa foi a radiação do módulo 12, que não precisa de
+    meio, não tem gradiente e não tem análogo mássico. Ela é a exceção que mostra que a
+    estrutura dos outros três não era inevitável.</p>
+  </div>
+
+  <p>Três perguntas deste curso continuam valendo para qualquer problema novo. Qual é a
+  grandeza conservada? Qual é a lei que dá o fluxo dela? E quais números adimensionais dizem
+  qual termo domina? Com as três respondidas, o resto é cálculo, e boa parte dele é código.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">14.1 Da placa aquecida à placa molhada</span>
+    <p>No exercício 11.1, ar a \(20\) °C e \(3\) m/s sobre uma placa de \(1\) m dava
+    \(\overline{h}=6{,}7\) W/m²K. Use a analogia para obter \(k_c\) e a taxa de evaporação se a
+    placa estiver molhada, com ar a 50% de umidade a \(25\) °C.</p>
+    <p>O caminho curto usa a razão de Chilton-Colburn. Com
+    \(\alpha=2{,}22\times10^{-5}\) e \(D=2{,}6\times10^{-5}\) m²/s,
+    \(\mathrm{Le}=0{,}854\) e \(\mathrm{Le}^{2/3}=0{,}900\), de modo que</p>
+    <p>\[k_c=\frac{h}{\rho c_p\mathrm{Le}^{2/3}}
+    =\frac{6{,}7}{1{,}17\times1006\times0{,}900}
+    =6{,}3\times10^{-3}\ \text{m/s}.\]</p>
+    <p>O caminho longo usa a correlação traduzida: \(\mathrm{Re}_L=1{,}91\times10^5\),
+    \(\mathrm{Sc}=0{,}604\), de onde
+    \(\overline{\mathrm{Sh}}=0{,}664\sqrt{1{,}91\times10^5}\times0{,}604^{1/3}=245\) e
+    \(k_c=245\times2{,}6\times10^{-5}/1=6{,}4\times10^{-3}\) m/s. Os dois caminhos concordam
+    dentro de 2%, e a diferença vem das propriedades terem sido avaliadas em temperaturas
+    ligeiramente diferentes.</p>
+    <p>A taxa de evaporação, com \(c_{\text{sat}}(25\,^\circ\text{C})=1{,}28\) mol/m³ e o ar a
+    50%,</p>
+    <p>\[N_A=k_c\left(c_s-c_\infty\right)
+    =6{,}4\times10^{-3}\times1{,}28\times0{,}5
+    =4{,}1\times10^{-3}\ \text{mol/m²s},\]</p>
+    <p>ou \(7{,}4\times10^{-5}\) kg/m²s, isto é, \(6{,}4\) mm por dia. O calor latente
+    correspondente é</p>
+    <p>\[q=N_AM_A\lambda=7{,}4\times10^{-5}\times2{,}44\times10^{6}=180\ \text{W/m²},\]</p>
+    <p>Para pôr esse número em perspectiva: a mesma placa seca, com o mesmo coeficiente,
+    precisaria de \(179/6{,}7=27\) K de diferença de temperatura para trocar isso por
+    convecção sensível. Molhar uma superfície muda a categoria do problema térmico, e é por
+    isso que um telhado molhado esfria o que nenhuma pintura branca esfriaria.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">14.2 Até onde resfria uma moringa</span>
+    <p>Um pote de barro poroso é posto à sombra, com ar a \(34\) °C e 35% de umidade relativa.
+    Estime a temperatura da água dentro e a potência retirada, com \(h=10\) W/m²K e área de
+    \(0{,}15\) m².</p>
+    <p>A água do pote atravessa o barro por capilaridade, molha a superfície externa e evapora,
+    de modo que a situação é exatamente a do bulbo úmido. O widget da seção 5, com
+    \(34\) °C e 35%, dá \(T_u=21{,}4\) °C, confirmado pela temperatura de saturação adiabática,
+    \(21{,}9\) °C.</p>
+    <p>A potência retirada é a convectiva que chega do ar quente, já que no equilíbrio ela
+    iguala a latente:</p>
+    <p>\[\dot{Q}=hA\left(T_\infty-T_u\right)
+    =10\times0{,}15\times12{,}6=19\ \text{W},\]</p>
+    <p>e a água evaporada para sustentar isso é
+    \(\dot{m}=\dot{Q}/\lambda=19/2{,}45\times10^{6}=7{,}7\times10^{-6}\) kg/s, cerca de
+    \(0{,}67\) litro por dia. É um preço alto em água, o que casa com a experiência de que a
+    moringa precisa ser reabastecida.</p>
+    <p>Dois comentários importam. O primeiro é que o resultado não depende do material do pote
+    nem do seu tamanho na temperatura, só na potência: qualquer superfície molhada e ventilada
+    chega ao mesmo \(T_u\). O segundo é o limite prático: em março, com \(28\) °C e 80%, a
+    mesma conta dá \(T_u=25\) °C, três graus abaixo do ar, e nenhuma engenhoca evaporativa
+    fará melhor que isso naquele ar.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>14.3</b> Deduza \(h/k_c=\rho c_p\mathrm{Le}^{2/3}\) a partir das definições de
+      \(j_H\) e \(j_D\), deixando claro em que ponto a geometria se cancela. Determine o valor
+      dessa razão para o par ar e etanol, com \(D=1{,}2\times10^{-5}\) m²/s, e compare com o do
+      ar e água.</li>
+
+      <li><b>14.4</b> Escreva um programa que receba temperatura e umidade relativa e devolva a
+      temperatura de bulbo úmido pelos dois caminhos, o de transporte e o de saturação
+      adiabática. Faça o gráfico da diferença entre eles em função da umidade, de 10% a 100%, e
+      explique por que ela cresce com o ar seco.</li>
+
+      <li><b>14.5</b> Um açude de \(5\) hectares no Cariri perde água por evaporação. Usando o
+      widget da seção 6 com dados de setembro, estime a perda diária em metros cúbicos e
+      compare com o consumo de uma cidade de dez mil habitantes, a \(120\) litros por pessoa
+      por dia. Discuta o efeito de reduzir a área exposta pela metade mantendo o volume.</li>
+
+      <li><b>14.6</b> Uma gota de água de \(1\) mm de diâmetro cai em ar seco a \(30\) °C.
+      Use a correlação de Ranz-Marshall,
+      \(\mathrm{Sh}=2+0{,}6\,\mathrm{Re}^{1/2}\mathrm{Sc}^{1/3}\), para calcular o tempo de
+      vida dela, incluindo a queda do diâmetro. Explique a origem física do termo 2.</li>
+
+      <li><b>14.7</b> Para uma torre de resfriamento, mostre que a água pode sair mais fria que
+      a temperatura do ar que entra, mas nunca mais fria que a de bulbo úmido desse ar.
+      Determine a aproximação típica, isto é, a diferença entre a água de saída e o bulbo
+      úmido, consultando catálogos de fabricantes.</li>
+
+      <li><b>14.8</b> Verifique a analogia de Chilton-Colburn com dados reais: tome uma
+      correlação de \(\mathrm{Nu}\) e uma de \(\mathrm{Sh}\) medidas independentemente para
+      esferas, calcule \(j_H\) e \(j_D\) para a mesma faixa de Reynolds e faça o gráfico dos
+      dois. Comente o desvio.</li>
+
+      <li><b>14.9</b> Simule, com os esquemas do módulo 9, a evaporação de um filme fino de
+      água sobre uma placa com vento, resolvendo as equações de energia e de espécie acopladas.
+      Verifique que a temperatura da superfície converge para o bulbo úmido.</li>
+
+      <li><b>14.10</b> Em meia página, fechando o curso: escolha um fenômeno de transporte que
+      não tenha aparecido nestes catorze módulos e analise-o com o programa da seção 8,
+      identificando a grandeza conservada, a lei constitutiva e os números adimensionais
+      relevantes. Diga também o que, no seu fenômeno, escaparia dessa estrutura.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula13.html"><small>Módulo anterior</small>← 13. Lei de Fick</a>
+    <a class="prox" href="index.html"><small>Voltar</small>Página inicial →</a>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611090928"></script>
+</body>
+</html>
