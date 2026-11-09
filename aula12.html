@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 12: Radiação térmica | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090228">
+<script src="assets/js/comum.js?v=202611090228"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
+      <a href="aula06.html" class="num" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
+      <a href="aula07.html" class="num" title="Módulo 7: Tensão superficial e capilaridade">7</a>
+      <span class="grupo">Numérico</span>
+      <a href="aula08.html" class="num" title="Módulo 8: Campos no computador: relaxação e convergência">8</a>
+      <a href="aula09.html" class="num" title="Módulo 9: Advecção e difusão no computador">9</a>
+      <span class="grupo">Energia</span>
+      <a href="aula10.html" class="num" title="Módulo 10: Condução de calor">10</a>
+      <a href="aula11.html" class="num" title="Módulo 11: Convecção e semelhança">11</a>
+      <a href="aula12.html" class="num ativo" title="Módulo 12: Radiação térmica">12</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. Um transporte sem meio</a></li>
+    <li><a href="#s2">2. O corpo negro e a lei de Planck</a></li>
+    <li><a href="#s3">3. Wien e Stefan-Boltzmann</a></li>
+    <li><a href="#s4">4. Superfícies reais e Kirchhoff</a></li>
+    <li><a href="#s5">5. Troca entre superfícies</a></li>
+    <li><a href="#s6">6. O coeficiente radiativo</a></li>
+    <li><a href="#s7">7. Superfícies seletivas e o efeito estufa</a></li>
+    <li><a href="#s8">8. O balanço radiativo da Terra</a></li>
+    <li><a href="#s9">9. Radiação no computador</a></li>
+    <li><a href="#s10">10. Exercícios resolvidos</a></li>
+    <li><a href="#s11">11. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 12 · Transporte de energia</p>
+  <h1>Radiação térmica</h1>
+  <p class="subtitulo">Os dois módulos anteriores trataram de mecanismos que precisam de
+  matéria e obedecem a leis lineares no gradiente. Este trata do terceiro modo, que atravessa o
+  vácuo, não depende de gradiente nenhum e cresce com a quarta potência da temperatura
+  absoluta. É também o único dos três cuja explicação exigiu inventar a física quântica.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Enunciar a lei de Planck e obter dela as leis de Wien e de Stefan-Boltzmann.</li>
+      <li>Distinguir emissividade, absortividade, refletividade e transmissividade, e usar a
+      lei de Kirchhoff com consciência da sua hipótese.</li>
+      <li>Calcular a troca radiativa entre superfícies simples, inclusive com escudos.</li>
+      <li>Linearizar a troca radiativa num coeficiente \(h_r\) e somá-lo ao convectivo.</li>
+      <li>Explicar superfícies seletivas e o efeito estufa pela separação espectral entre a
+      radiação solar e a terrestre.</li>
+      <li>Fazer o balanço radiativo da Terra e estimar a temperatura de equilíbrio.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. Um transporte sem meio</h2>
+
+  <p>Todo corpo com temperatura acima do zero absoluto emite radiação eletromagnética, porque
+  as cargas que o compõem estão aceleradas pela agitação térmica. Essa emissão não precisa de
+  meio para se propagar: é assim que a energia do Sol chega até aqui, atravessando
+  \(1{,}5\times10^{11}\) m de vácuo.</p>
+
+  <p>Três coisas distinguem a radiação dos dois modos anteriores, e convém tê-las claras antes
+  das fórmulas. A primeira é que ela não depende de gradiente: um corpo isolado no vácuo, longe
+  de tudo, continua irradiando e esfriando. A segunda é a não linearidade: o fluxo vai com
+  \(T^4\), de modo que dobrar a temperatura absoluta multiplica a emissão por dezesseis, e isso
+  faz a radiação passar de desprezível a dominante numa faixa estreita de temperatura. A
+  terceira é que a troca é um processo <strong>entre superfícies que se enxergam</strong>, de
+  modo que a geometria entra pelo ângulo sólido, e não por uma distância ao longo de um
+  caminho.</p>
+
+  <p>Em números, para dar escala: a \(20\) °C a radiação compete de igual para igual com a
+  convecção natural, como a seção 6 vai mostrar; a \(500\) °C ela é dez vezes maior; e a
+  \(2000\) °C, num forno, é praticamente o único mecanismo que importa.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. O corpo negro e a lei de Planck</h2>
+
+  <p>Um <strong>corpo negro</strong> é o absorvedor perfeito: absorve toda radiação que
+  incide sobre ele, qualquer que seja o comprimento de onda e a direção. A definição parece
+  tratar só de absorção, mas um argumento de equilíbrio mostra que ela fixa também a emissão.
+  Se um corpo negro dentro de uma cavidade em equilíbrio emitisse menos do que absorve, ele
+  esquentaria sozinho, o que violaria a segunda lei. Logo o corpo negro é também o emissor
+  máximo, e a sua emissão é uma função universal de \(\lambda\) e \(T\), igual para todos os
+  materiais.</p>
+
+  <p>Determinar essa função foi o problema que a física clássica não resolveu. Rayleigh e Jeans
+  obtiveram, contando modos na cavidade e dando \(k_BT\) a cada um,
+  \(E_\lambda\propto T/\lambda^4\), que cresce sem limite no ultravioleta e dá energia total
+  infinita, resultado que ficou conhecido como catástrofe ultravioleta. Max Planck chegou em
+  1900 à fórmula correta supondo que a energia fosse trocada em pacotes de tamanho \(h\nu\):</p>
+
+  <p>\[E_\lambda\left(\lambda,T\right)=\frac{2\pi hc^2}{\lambda^5}
+  \frac{1}{e^{hc/\lambda k_BT}-1},\]</p>
+
+  <p>em W/m² por unidade de comprimento de onda. Ele próprio considerou a hipótese um artifício
+  matemático por alguns anos, e foi Einstein quem, em 1905, levou o quantum a sério. O módulo
+  12 desta disciplina herda, portanto, a certidão de nascimento da mecânica quântica.</p>
+
+  <div data-widget="planck"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. Wien e Stefan-Boltzmann</h2>
+
+  <p>As duas leis que a precederam são casos particulares da de Planck, e as duas se obtêm dela
+  por cálculo direto.</p>
+
+  <p>Derivando \(E_\lambda\) em relação a \(\lambda\) e igualando a zero, aparece uma equação
+  transcendente cuja raiz, \(x=4{,}965\), dá a <strong>lei do deslocamento de Wien</strong>:</p>
+
+  <p>\[\lambda_{\max}T=\frac{hc}{4{,}965\,k_B}=2897{,}8\ \mu\text{m·K}.\]</p>
+
+  <p>Quanto mais quente o corpo, mais curto o comprimento de onda do pico. É por isso que um
+  metal aquecido passa de invisível a vermelho, depois a laranja e a branco, e é por isso que
+  a cor de uma estrela mede a sua temperatura.</p>
+
+  <p>Integrando \(E_\lambda\) em todos os comprimentos de onda, com a substituição
+  \(x=hc/\lambda k_BT\) e a integral conhecida
+  \(\int_0^\infty x^3/(e^x-1)\,dx=\pi^4/15\), sai a lei de
+  <strong>Stefan-Boltzmann</strong>:</p>
+
+  <p>\[E=\sigma T^4,\qquad
+  \sigma=\frac{2\pi^5k_B^4}{15c^2h^3}=5{,}6704\times10^{-8}\ \text{W/m²K⁴}.\]</p>
+
+  <p>Vale sublinhar o que essa expressão significa. A constante \(\sigma\), medida por Stefan
+  em 1879 a partir de dados experimentais, não é uma constante independente da natureza: ela é
+  uma combinação de \(k_B\), \(h\) e \(c\). O widget confere isso numericamente, integrando a
+  curva e dividindo por \(\sigma T^4\).</p>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. Superfícies reais e Kirchhoff</h2>
+
+  <p>Corpos reais emitem menos que o corpo negro. A razão entre a emissão real e a do corpo
+  negro à mesma temperatura é a <strong>emissividade</strong> \(\epsilon\), e com ela</p>
+
+  <p>\[E=\epsilon\,\sigma T^4,\qquad 0\le\epsilon\le1.\]</p>
+
+  <p>Do lado da absorção, a radiação que incide sobre uma superfície se reparte em três
+  frações, que somam um:</p>
+
+  <p>\[\alpha+\rho+\tau=1,\]</p>
+
+  <p>a absortividade, a refletividade e a transmissividade. Para um corpo opaco, \(\tau=0\) e
+  \(\alpha+\rho=1\).</p>
+
+  <p>A <strong>lei de Kirchhoff</strong> afirma que, para cada comprimento de onda e cada
+  direção,</p>
+
+  <p>\[\epsilon_\lambda=\alpha_\lambda.\]</p>
+
+  <p>A demonstração é de novo um argumento de equilíbrio: uma superfície dentro de uma cavidade
+  isotérmica tem de emitir, em cada comprimento de onda, exatamente o que absorve, ou
+  esquentaria ou esfriaria sozinha. Um bom emissor é necessariamente um bom absorvedor.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">O erro que a lei de Kirchhoff provoca</span>
+    <p>A igualdade \(\epsilon_\lambda=\alpha_\lambda\) vale <strong>comprimento de onda por
+    comprimento de onda</strong>. O que não vale, em geral, é a igualdade entre os valores
+    totais, \(\epsilon\) e \(\alpha\), porque cada um é uma média ponderada por um espectro
+    diferente: \(\epsilon\) é ponderada pelo espectro que a superfície emite, à temperatura
+    dela, e \(\alpha\) pelo espectro que chega, que vem de outro corpo a outra
+    temperatura.</p>
+    <p>Quando os dois espectros são parecidos, como numa parede trocando com uma sala, os
+    valores totais coincidem e escrever \(\epsilon=\alpha\) é seguro. Quando são muito
+    diferentes, como numa superfície iluminada pelo Sol a \(5772\) K e emitindo a \(350\) K, os
+    dois números podem ser completamente distintos, e é justamente essa liberdade que torna
+    possível a superfície seletiva da seção 7.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. Troca entre superfícies</h2>
+
+  <p>Uma superfície não troca com uma temperatura, troca com o que ela enxerga. Formalizar isso
+  exige o <strong>fator de forma</strong> \(F_{ij}\), definido como a fração da radiação que
+  sai da superfície \(i\) e chega diretamente em \(j\). Os fatores obedecem a duas regras que
+  resolvem a maioria dos casos simples: a soma sobre todas as superfícies que envolvem \(i\) é
+  um,</p>
+
+  <p>\[\sum_jF_{ij}=1,\]</p>
+
+  <p>e vale a relação de reciprocidade \(A_iF_{ij}=A_jF_{ji}\).</p>
+
+  <p>Três geometrias cobrem quase tudo o que se precisa nesta disciplina.</p>
+
+  <p><strong>Corpo pequeno dentro de uma cavidade grande</strong>, que é o caso de uma pessoa
+  numa sala ou de um tubo num galpão. Como o corpo enxerga apenas a cavidade, \(F_{12}=1\), e
+  como a cavidade é muito maior ela se comporta como um corpo negro:</p>
+
+  <p>\[q=\epsilon_1\sigma\left(T_1^4-T_2^4\right).\]</p>
+
+  <p><strong>Duas placas paralelas grandes</strong>, separadas por um vão estreito, com
+  reflexões múltiplas somadas:</p>
+
+  <p>\[q=\frac{\sigma\left(T_1^4-T_2^4\right)}
+  {\dfrac{1}{\epsilon_1}+\dfrac{1}{\epsilon_2}-1}.\]</p>
+
+  <p><strong>Com um escudo no meio</strong>, de emissividade \(\epsilon_3\) nas duas faces, as
+  resistências radiativas se somam em série, exatamente como no circuito térmico do módulo
+  10, e o fluxo cai drasticamente. O exercício 12.2 faz as contas: um escudo de alumínio
+  polido entre duas placas de \(\epsilon=0{,}9\) reduz a troca por um fator de 33.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. O coeficiente radiativo</h2>
+
+  <p>A expressão \(q=\epsilon\sigma(T_s^4-T_{\text{viz}}^4)\) não tem a forma da lei de Newton,
+  e por isso não entra direto no circuito de resistências. O remédio é fatorar a diferença de
+  quartas potências e definir</p>
+
+  <p>\[h_r=\epsilon\sigma\left(T_s^2+T_{\text{viz}}^2\right)
+  \left(T_s+T_{\text{viz}}\right),\]</p>
+
+  <p>com as temperaturas em kelvin, de modo que \(q=h_r(T_s-T_{\text{viz}})\). Agora \(h_r\) e
+  \(h_c\) atuam em paralelo sobre a mesma diferença de temperatura e se somam. O preço é que
+  \(h_r\) depende das próprias temperaturas, o que torna o circuito não linear e exige iteração
+  quando se quer precisão.</p>
+
+  <div data-widget="hradiativo"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. Superfícies seletivas e o efeito estufa</h2>
+
+  <p>O widget da seção 2 mostrou que o espectro solar e o espectro de um corpo a temperatura
+  ambiente quase não se sobrepõem: o primeiro vive abaixo de \(4\) μm, o segundo acima. Essa
+  separação é o que permite construir superfícies e meios que tratam as duas radiações de modo
+  diferente, e dela saem dois dispositivos de enorme importância prática.</p>
+
+  <p>O primeiro é a <strong>superfície seletiva</strong> de um coletor solar. O que se quer
+  nela é absorver muito no visível, onde chega o Sol, e emitir pouco no infravermelho longo,
+  onde a placa quente perderia energia. Pela lei de Kirchhoff isso parece impossível, mas não
+  é: o que a lei exige é \(\epsilon_\lambda=\alpha_\lambda\) em cada comprimento de onda, e
+  nada impede que esse valor comum seja alto abaixo de \(2\) μm e baixo acima. Revestimentos
+  comerciais de cromo negro chegam a \(\alpha_{\text{solar}}=0{,}95\) com
+  \(\epsilon_{\text{IR}}=0{,}10\).</p>
+
+  <p>O segundo é o <strong>efeito estufa</strong>, no sentido literal da palavra. O vidro comum
+  é transparente no visível e quase opaco acima de \(3\) μm. A radiação solar entra, é
+  absorvida pelo interior, que esquenta e passa a emitir em infravermelho longo, e essa emissão
+  não consegue sair. Numa estufa de verdade há ainda um segundo efeito, puramente mecânico, que
+  é o vidro impedir a convecção de levar o ar quente embora; medidas mostram que esse segundo
+  efeito responde por boa parte do aquecimento de uma estufa de jardim.</p>
+
+  <p>Na atmosfera, a física é a radiativa. O \(\text{CO}_2\), o vapor d'água e o metano são
+  quase transparentes no visível e absorvem fortemente em faixas do infravermelho longo, que é
+  justamente onde a Terra emite. Não se trata de o gás reter calor como um cobertor: trata-se
+  de ele absorver a radiação que subia e reemiti-la em todas as direções, metade dela de volta
+  para baixo. A seção seguinte põe números nisso.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. O balanço radiativo da Terra</h2>
+
+  <p>A Terra intercepta radiação solar com a área de um disco, \(\pi R^2\), e emite pela área
+  de uma esfera, \(4\pi R^2\). Chamando de \(S=1361\) W/m² a constante solar e de \(a=0{,}294\)
+  o albedo planetário, o equilíbrio exige</p>
+
+  <p>\[\left(1-a\right)S\,\pi R^2=4\pi R^2\sigma T_e^4
+  \quad\Longrightarrow\quad
+  T_e=\left[\frac{\left(1-a\right)S}{4\sigma}\right]^{1/4}=255\ \text{K}.\]</p>
+
+  <p>São \(-18\) °C, e a temperatura média observada na superfície é \(288\) K, ou \(15\) °C. A
+  diferença de \(33\) K é o efeito estufa natural, sem o qual o planeta seria congelado. O
+  mesmo cálculo com os dados de Marte e de Vênus, no exercício 12.5, dá a Vênus um efeito
+  estufa de mais de \(500\) K.</p>
+
+  <p>O modelo seguinte, que já captura o mecanismo, trata a atmosfera como uma única camada
+  isotérmica transparente ao visível e opaca ao infravermelho. Fazendo o balanço na camada e no
+  solo, encontra-se \(T_s=2^{1/4}T_e=303\) K, que exagera por \(15\) K. O exagero é
+  informativo: a atmosfera real não é uma camada só, não é totalmente opaca em toda a faixa, e
+  transporta energia também por convecção, que é o que o módulo 11 trata e o que limita o
+  gradiente vertical.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Por que a noite do sertão é fria</span>
+    <p>Um corpo exposto ao céu limpo não troca radiação com o ar que o envolve, e sim com a
+    atmosfera inteira acima dele, cuja temperatura radiativa efetiva, no infravermelho, pode
+    ficar \(20\) K ou mais abaixo da temperatura do ar junto ao solo. Com céu limpo e ar seco,
+    como no sertão no período de estiagem, essa diferença é máxima, porque falta o vapor
+    d'água que fecharia a janela espectral entre \(8\) e \(13\) μm.</p>
+    <p>Daí dois fenômenos cotidianos. O primeiro é a amplitude térmica: o mesmo dia que chega
+    a \(38\) °C pode terminar com \(18\) °C de madrugada, enquanto num litoral úmido a mesma
+    latitude varia muito menos. O segundo é a geada de radiação, que ocorre em noites de céu
+    limpo mesmo quando o ar não chega a zero, porque a folha, irradiando para o céu frio, fica
+    mais fria que o ar em volta. É também por isso que uma cobertura simples, que apenas
+    bloqueie a vista do céu, protege a lavoura: ela substitui o céu frio por uma superfície à
+    temperatura do ar.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Radiação no computador</h2>
+
+  <p>Duas dificuldades novas aparecem quando a radiação entra numa simulação.</p>
+
+  <p>A primeira é a não linearidade. Um balanço de superfície com convecção e radiação tem a
+  forma</p>
+
+  <p>\[k\left.\pder{T}{x}\right|_{s}
+  =h_c\left(T_s-T_\infty\right)+\epsilon\sigma\left(T_s^4-T_{\text{viz}}^4\right),\]</p>
+
+  <p>que é uma equação algébrica de quarto grau em \(T_s\) a cada passo de tempo. Resolvê-la
+  por Newton custa três ou quatro iterações, e a derivada é imediata. A alternativa preguiçosa
+  é usar \(h_r\) calculado com a temperatura do passo anterior, o que funciona bem quando
+  \(T_s\) varia devagar e introduz erro quando não varia.</p>
+
+  <p>A segunda é o acoplamento global. Na condução, cada ponto fala apenas com os vizinhos; na
+  radiação, cada superfície fala com todas as que enxerga, de modo que a matriz do problema
+  deixa de ser esparsa. Num recinto com \(N\) superfícies, o sistema de radiosidades é cheio e
+  custa \(N^3\). É por isso que códigos de radiação usam ou poucas superfícies agrupadas, ou
+  Monte Carlo, lançando raios e acompanhando-os até serem absorvidos.</p>
+
+  <pre class="codigo"><span class="leg">balanço de superfície com radiação, por Newton</span><b>import</b> numpy <b>as</b> np
+
+SIGMA = 5.670374419e-8
+
+<b>def</b> temperatura_superficie(Tviz, Tinf, hc, eps, q_in, T0=300.0):
+    <i># resolve q_in = hc (Ts - Tinf) + eps*sigma*(Ts^4 - Tviz^4)</i>
+    Ts = T0
+    <b>for</b> _ <b>in</b> range(50):
+        f  = hc*(Ts - Tinf) + eps*SIGMA*(Ts**4 - Tviz**4) - q_in
+        df = hc + 4*eps*SIGMA*Ts**3
+        passo = f / df
+        Ts -= passo
+        <b>if</b> abs(passo) &lt; 1e-10:
+            <b>break</b>
+    <b>return</b> Ts
+
+<b>def</b> h_radiativo(eps, Ts, Tviz):
+    <b>return</b> eps * SIGMA * (Ts**2 + Tviz**2) * (Ts + Tviz)</pre>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">12.1 O telhado de zinco e a sala embaixo</span>
+    <p>Um telhado de zinco sem forro atinge \(45\) °C numa tarde do Cariri. A sala embaixo tem
+    ar a \(26\) °C e paredes a \(28\) °C. Estime o fluxo radiativo que o telhado manda para
+    baixo e compare com o convectivo, tomando \(\epsilon=0{,}25\) para o zinco galvanizado já
+    envelhecido e \(h_c=3\) W/m²K.</p>
+    <p>Com o telhado como superfície 1 e o conjunto sala como vizinhança grande,</p>
+    <p>\[q_r=\epsilon\sigma\left(T_1^4-T_2^4\right)
+    =0{,}25\times5{,}67\times10^{-8}\left(318{,}15^4-301{,}15^4\right)
+    =28{,}6\ \text{W/m²}.\]</p>
+    <p>O convectivo, com a diferença para o ar,</p>
+    <p>\[q_c=h_c\left(45-26\right)=57\ \text{W/m²}.\]</p>
+    <p>Com o zinco ainda claro, de \(\epsilon=0{,}25\), a radiação é metade do convectivo. O
+    ponto do exercício, porém, é o que acontece quando se troca a superfície. Um telhado
+    pintado de preto, ou de fibrocimento, tem \(\epsilon\approx0{,}9\), e então
+    \(q_r=103\) W/m², quase o dobro do convectivo e três vezes e meia o caso anterior.</p>
+    <p>A conclusão prática é a que vale para qualquer construção no semiárido: o forro ou a
+    manta aluminizada sob a telha funcionam não por isolar no sentido do módulo 10, já que a
+    camada de ar é fina, e sim por interpor uma superfície de baixa emissividade entre o
+    telhado quente e a sala. É um <strong>escudo radiativo</strong>, exatamente o da seção 5.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">12.2 Um escudo entre duas placas</span>
+    <p>Duas placas paralelas grandes, a \(50\) °C e \(20\) °C, ambas com
+    \(\epsilon=0{,}9\). Calcule o fluxo e repita com um escudo de alumínio polido
+    (\(\epsilon=0{,}05\)) no meio.</p>
+    <p>Sem o escudo,</p>
+    <p>\[q=\frac{\sigma\left(323{,}15^4-293{,}15^4\right)}{1/0{,}9+1/0{,}9-1}
+    =0{,}818\times199{,}6=163\ \text{W/m²}.\]</p>
+    <p>Com o escudo, a troca passa a ser placa-escudo em série com escudo-placa, e as duas
+    resistências se somam:</p>
+    <p>\[q=\frac{\sigma\left(T_1^4-T_2^4\right)}
+    {\left(\dfrac{1}{\epsilon_1}+\dfrac{1}{\epsilon_3}-1\right)
+    +\left(\dfrac{1}{\epsilon_3}+\dfrac{1}{\epsilon_2}-1\right)}
+    =\frac{199{,}6}{20{,}1+20{,}1}=5{,}0\ \text{W/m²}.\]</p>
+    <p>O fluxo caiu por um fator de <strong>33</strong>, por causa de uma folha fina que não
+    tem resistência térmica de condução digna de nota. O que ela faz é obrigar a energia a
+    passar por duas superfícies de \(\epsilon=0{,}05\), e cada uma delas é um gargalo. A
+    garrafa térmica usa exatamente esse princípio, somado ao vácuo que elimina a condução e a
+    convecção: as paredes espelhadas são o escudo.</p>
+    <p>Repare, de passagem, que o escudo não precisa ser bom condutor nem bom isolante. A única
+    propriedade que importa aqui é a emissividade das suas faces.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>12.3</b> Obtenha a lei de Wien derivando a função de Planck, mostrando que a
+      equação transcendente é \(x=5\left(1-e^{-x}\right)\) e resolvendo-a numericamente.
+      Verifique que a mesma dedução feita em frequência dá uma constante diferente e explique
+      por que não há contradição.</li>
+
+      <li><b>12.4</b> Integre numericamente a função de Planck em Python e reproduza
+      \(\sigma=5{,}67\times10^{-8}\) com quatro algarismos. Em seguida calcule a fração emitida
+      no visível para \(2800\) K e para \(5772\) K e comente o rendimento de uma lâmpada
+      incandescente.</li>
+
+      <li><b>12.5</b> Repita o balanço radiativo da seção 8 para Marte (\(S=586\) W/m²,
+      \(a=0{,}25\)) e para Vênus (\(S=2601\) W/m², \(a=0{,}77\)). Compare com as temperaturas
+      de superfície observadas, \(210\) K e \(737\) K, e discuta o que o resultado de Vênus diz
+      sobre o efeito estufa.</li>
+
+      <li><b>12.6</b> Mostre que o modelo de uma camada dá \(T_s=2^{1/4}T_e\) e generalize para
+      \(N\) camadas, obtendo \(T_s=(N+1)^{1/4}T_e\). Determine quantas camadas seriam
+      necessárias para reproduzir os \(288\) K da Terra e discuta o significado físico desse
+      número.</li>
+
+      <li><b>12.7</b> Um coletor solar plano recebe \(800\) W/m². Compare a temperatura de
+      equilíbrio da placa com tinta preta comum (\(\alpha=0{,}95\), \(\epsilon=0{,}95\)) e com
+      superfície seletiva (\(\alpha=0{,}95\), \(\epsilon=0{,}10\)), incluindo perda convectiva
+      com \(h_c=5\) W/m²K. Use o programa de Newton da seção 9.</li>
+
+      <li><b>12.8</b> Deduza a fórmula das duas placas paralelas somando a série geométrica das
+      reflexões múltiplas, e verifique que ela se reduz ao caso do corpo pequeno numa cavidade
+      quando \(\epsilon_2\to1\).</li>
+
+      <li><b>12.9</b> Implemente o resfriamento noturno de uma superfície horizontal exposta ao
+      céu, com temperatura radiativa do céu \(20\) K abaixo da do ar, convecção com
+      \(h_c=4\) W/m²K e capacidade térmica dada. Determine se a superfície chega abaixo de
+      \(0\) °C com o ar a \(4\) °C, que é a condição de geada de radiação.</li>
+
+      <li><b>12.10</b> Em meia página: a seção 4 afirma que \(\epsilon=\alpha\) vale por
+      comprimento de onda mas não necessariamente no total. Explique por que isso não viola a
+      segunda lei, e descreva um experimento conceitual que pareceria produzir trabalho a
+      partir de uma única fonte de calor se a igualdade total valesse sempre.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula11.html"><small>Módulo anterior</small>← 11. Convecção</a>
+    <span class="em-breve"><small>Em preparação</small>13. Lei de Fick</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611090228"></script>
+</body>
+</html>

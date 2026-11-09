@@ -4710,6 +4710,313 @@
     registrarRedesenho(desenhar);
   };
 
+  /* =================================================================
+     25. O espectro de Planck
+     A curva, a lei de Wien, a área que é Stefan-Boltzmann e a fração
+     que cai na faixa visível. Tudo integrado no navegador, de modo que
+     a área sob a curva possa ser conferida contra σT⁴.
+     ================================================================= */
+  REGISTRO.planck = function (raiz) {
+    var est = { T: 5772 };
+    var H = F.C.h, CL = F.C.c, KB = F.C.kB;
+    var SIG = 2 * Math.pow(Math.PI, 5) * Math.pow(KB, 4)
+      / (15 * CL * CL * Math.pow(H, 3));
+
+    /* emitância espectral por unidade de comprimento de onda, W/m² por μm */
+    function B(lam_um, T) {
+      var lam = lam_um * 1e-6;
+      var x = H * CL / (lam * KB * T);
+      if (x > 700) return 0;
+      return 2 * Math.PI * H * CL * CL / Math.pow(lam, 5)
+        / (Math.exp(x) - 1) * 1e-6;
+    }
+
+    /* integral em escala logarítmica, que é onde a curva é bem amostrada */
+    function integra(a, b, T) {
+      var n = 2000, la = Math.log(a), lb = Math.log(b), s = 0, i;
+      for (i = 0; i <= n; i++) {
+        var l = Math.exp(la + (lb - la) * i / n);
+        var p = B(l, T) * l;                 /* dλ = λ d(ln λ) */
+        s += (i === 0 || i === n) ? p : (i % 2 ? 4 * p : 2 * p);
+      }
+      return s * (lb - la) / n / 3;
+    }
+
+    var corpo = moldura(raiz, 'O espectro do corpo negro');
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'temperatura', Math.log10(200), Math.log10(7000), 0.005,
+      Math.log10(5772),
+      function (v) { est.T = Math.pow(10, v); desenhar(); },
+      function (v) { return F.fmt(Math.pow(10, v), 0) + ' K'; });
+    var escolher = opcoes(ctr, [{ rot: 'Sol, 5772 K', v: 5772 },
+                 { rot: 'lâmpada, 2800 K', v: 2800 },
+                 { rot: 'forno, 1000 K', v: 1000 },
+                 { rot: 'pele, 308 K', v: 308 },
+                 { rot: 'Terra, 288 K', v: 288 }], 0,
+      function (v) {
+        est.T = v;
+        ctr.querySelector('input[type=range]').value = Math.log10(v);
+        ctr.querySelector('.valor').innerHTML = F.fmt(v, 0) + ' K';
+        desenhar();
+      });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'comprimento de onda do pico', k: 'lm' },
+      { rot: 'emitância total', k: 'E' },
+      { rot: 'área da curva sobre σT⁴', k: 'raz' },
+      { rot: 'fração no visível', k: 'vis' },
+      { rot: 'fração acima de 4 μm', k: 'ir' },
+      { rot: 'pico espectral', k: 'pico' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function sup(e) {
+      return String(e).replace('-', '⁻').replace(/[0-9]/g, function (d) {
+        return '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d];
+      });
+    }
+
+    function desenhar() {
+      var T = est.T, lm = 2897.772 / T;        /* Wien, em μm */
+      var pico = B(lm, T);
+      /* limites em décadas inteiras, para que os rótulos caiam em
+         potências de dez */
+      var hi = Math.ceil(Math.log10(pico)) + 1, lo = hi - 10;
+      var gr = G.eixos(cv, {
+        altura: 330, xmin: -1, xmax: 2.3, ymin: lo, ymax: hi, divY: 10,
+        margem: { e: 68, d: 16, c: 16, b: 46 },
+        rotX: 'comprimento de onda (μm)',
+        rotY: 'emitância espectral (W/m² por μm)',
+        marcasX: [0.1, 0.3, 1, 3, 10, 30, 100].map(function (v) {
+          return { v: Math.log10(v), r: String(v).replace('.', ',') };
+        }),
+        formataY: function (v) {
+          var e = Math.round(v);
+          return Math.abs(v - e) < 0.02 ? '10' + sup(e) : '';
+        }
+      });
+      var ct = gr.ct;
+
+      /* faixa visível */
+      var xa = gr.X(Math.log10(0.38)), xb = gr.X(Math.log10(0.75));
+      var grad = ct.createLinearGradient(xa, 0, xb, 0);
+      ['#7c4dff', '#2962ff', '#00c853', '#ffd600', '#ff6d00', '#d50000']
+        .forEach(function (c, i, a) { grad.addColorStop(i / (a.length - 1), c); });
+      ct.save(); ct.globalAlpha = 0.22; ct.fillStyle = grad;
+      ct.fillRect(xa, gr.y0, xb - xa, gr.y1 - gr.y0); ct.restore();
+      rotulo(ct, 'visível', (xa + xb) / 2, gr.y1 - 12, G.COR.suave);
+
+      /* curvas de referência, sempre presentes */
+      [[5772, 'Sol'], [288, 'Terra']].forEach(function (r) {
+        G.curva(gr, function (lx) {
+          var v = B(Math.pow(10, lx), r[0]);
+          return v > 0 ? Math.log10(v) : lo - 1;
+        }, G.COR.clara, 1.4, [5, 4]);
+      });
+      /* a curva escolhida */
+      G.curva(gr, function (lx) {
+        var v = B(Math.pow(10, lx), T);
+        return v > 0 ? Math.log10(v) : lo - 1;
+      }, G.COR.vinho, 2.6);
+
+      /* lei de Wien: o lugar geométrico dos picos */
+      G.curva(gr, function (lx) {
+        var l = Math.pow(10, lx), TT = 2897.772 / l;
+        return Math.log10(B(l, TT));
+      }, G.COR.mestra, 1.6, [2, 3]);
+      ct.fillStyle = G.COR.vinho;
+      ct.beginPath();
+      ct.arc(gr.X(Math.log10(lm)), gr.Y(Math.log10(pico)), 4.5, 0, 2 * Math.PI);
+      ct.fill();
+      rotulo(ct, 'λT = 2898 μm·K', gr.X(Math.log10(lm)) + 12,
+        gr.Y(Math.log10(pico)) + 16, G.COR.mestra, 'left');
+      G.legenda(gr, [{ cor: G.COR.vinho, texto: F.fmt(T, 0) + ' K' },
+                     { cor: G.COR.clara, texto: 'Sol e Terra, para comparar' }]);
+
+      var tot = integra(0.01, 2000, T);
+      var vis = integra(0.38, 0.75, T);
+      var ir = integra(4, 2000, T);
+      mostrar({
+        lm: F.fmt(lm, 3) + ' μm',
+        E: F.fmt(SIG * Math.pow(T, 4), 4) + ' W/m²',
+        raz: F.fmt(tot / (SIG * Math.pow(T, 4)), 4),
+        vis: F.pct(vis / tot, 2),
+        ir: F.pct(ir / tot, 2),
+        pico: F.fmt(pico, 4) + ' W/m²μm'
+      });
+
+      nota.innerHTML =
+        '<p>Max Planck obteve em 1900 a distribuição que leva o seu nome, e precisou supor que '
+        + 'a energia fosse trocada em pacotes \\(h\\nu\\) para consegui-la. Em termos de '
+        + 'comprimento de onda, a emitância espectral de um corpo negro é</p>'
+        + '\\[E_\\lambda(\\lambda,T)=\\frac{2\\pi hc^2}{\\lambda^5}'
+        + '\\frac{1}{e^{hc/\\lambda k_BT}-1}.\\]'
+        + '<p>Dela saem as duas leis que a precederam. Derivando e igualando a zero vem a lei '
+        + 'do deslocamento de <strong>Wien</strong>, \\(\\lambda_{\\max}T=2898\\) μm·K, que é '
+        + 'a reta tracejada ligando os picos de todas as curvas; integrando em todos os '
+        + 'comprimentos de onda vem <strong>Stefan-Boltzmann</strong>,</p>'
+        + '\\[E=\\int_0^\\infty E_\\lambda\\,d\\lambda=\\sigma T^4,\\qquad'
+        + '\\sigma=\\frac{2\\pi^5k_B^4}{15c^2h^3}=5{,}6704\\times10^{-8}\\ \\text{W/m²K⁴}.\\]'
+        + '<p>O terceiro cartão é a aferição: o widget integra a curva numericamente e divide '
+        + 'o resultado por \\(\\sigma T^4\\). O quociente dá 1 em quatro casas, o que confirma '
+        + 'que a constante de Stefan-Boltzmann não é um dado experimental independente, e sim '
+        + 'uma consequência de \\(h\\), \\(c\\) e \\(k_B\\).</p>'
+        + '<p>Os botões percorrem os casos que importam. O Sol, a \\(5772\\) K, tem o pico em '
+        + '\\(502\\) nm, bem no meio do visível, e 44% da sua potência cai nessa faixa estreita, '
+        + 'o que não é coincidência evolutiva pequena. Uma lâmpada incandescente, a '
+        + '\\(2800\\) K, põe apenas 8% no visível e joga o resto como calor, que é o motivo '
+        + 'técnico da proibição dela. A pele e a Terra, perto de \\(300\\) K, emitem quase '
+        + 'tudo acima de \\(4\\) μm, no infravermelho longe, onde o olho não vê e a câmara '
+        + 'térmica vê.</p>'
+        + '<p>Repare na separação das escalas. A radiação solar e a radiação terrestre quase '
+        + 'não se sobrepõem no eixo: uma vive abaixo de \\(4\\) μm, a outra acima. É essa '
+        + 'separação que permite a existência de superfícies e de gases que tratam as duas de '
+        + 'modo diferente, e é nela que se apoiam tanto o coletor solar seletivo quanto o '
+        + 'efeito estufa.</p>';
+      tipografar(corpo);
+    }
+
+    /* o botão do Sol é clicado por código, de modo que o deslizante
+       mostre exatamente a temperatura que a curva usa */
+    escolher(0);
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     26. Radiação contra convecção
+     O coeficiente radiativo linearizado posto lado a lado com o
+     convectivo, que é o que fecha o h de norma usado no módulo 10.
+     ================================================================= */
+  REGISTRO.hradiativo = function (raiz) {
+    var SIG = 5.670374419e-8;
+    var est = { eps: 0.90, Ts: 25, Tv: 20, L: 2.5 };
+
+    function hrad(eps, Ts, Tv) {
+      var a = Ts + 273.15, b = Tv + 273.15;
+      return eps * SIG * (a * a + b * b) * (a + b);
+    }
+    /* convecção natural numa parede vertical, Churchill-Chu, com as
+       propriedades do ar perto de 300 K */
+    function hconv(Ts, Tv, L) {
+      var dT = Math.abs(Ts - Tv);
+      if (dT < 1e-6) return 0;
+      var nu = 1.57e-5, al = 2.22e-5, Pr = 0.707, k = 0.0263;
+      var Tm = (Ts + Tv) / 2 + 273.15;
+      var Ra = 9.81 / Tm * dT * Math.pow(L, 3) / (nu * al);
+      var Nu = Math.pow(0.825 + 0.387 * Math.pow(Ra, 1 / 6)
+        / Math.pow(1 + Math.pow(0.492 / Pr, 9 / 16), 8 / 27), 2);
+      return Nu * k / L;
+    }
+
+    var corpo = moldura(raiz, 'Quanto da troca de uma parede é radiação');
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'emissividade da superfície', 0.02, 1, 0.01, 0.9,
+      function (v) { est.eps = v; desenhar(); },
+      function (v) { return F.fmt(v, 2); });
+    deslizante(ctr, 'temperatura da superfície', -10, 120, 1, 25,
+      function (v) { est.Ts = v; desenhar(); },
+      function (v) { return F.fmt(v, 0) + ' °C'; });
+    deslizante(ctr, 'temperatura da vizinhança', -10, 60, 1, 20,
+      function (v) { est.Tv = v; desenhar(); },
+      function (v) { return F.fmt(v, 0) + ' °C'; });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'h radiativo', k: 'hr' },
+      { rot: 'h convectivo natural', k: 'hc' },
+      { rot: 'h total', k: 'ht' },
+      { rot: 'quanto é radiação', k: 'fr' },
+      { rot: 'fluxo radiativo', k: 'qr' },
+      { rot: 'fluxo convectivo', k: 'qc' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var hr = hrad(est.eps, est.Ts, est.Tv);
+      var hc = hconv(est.Ts, est.Tv, est.L);
+      var gr = G.eixos(cv, {
+        altura: 300, xmin: -10, xmax: 120, ymin: 0,
+        ymax: Math.max(14, hrad(1, 120, est.Tv) * 1.1), divY: 7,
+        margem: { e: 60, d: 16, c: 16, b: 46 },
+        rotX: 'temperatura da superfície (°C)', rotY: 'h (W/m²K)',
+        marcasX: G.marcasLineares(-10, 120, 6, 0),
+        formataY: function (v) { return F.fmt(v, 0); }
+      });
+      [[1, 'ε = 1, corpo negro'], [0.9, 'ε = 0,9, tinta e reboco'],
+       [0.3, 'ε = 0,3, aço oxidado'], [0.05, 'ε = 0,05, alumínio polido']]
+        .forEach(function (r, i) {
+          G.curva(gr, function (T) { return hrad(r[0], T, est.Tv); },
+            [G.COR.vinho, G.COR.bronze, G.COR.roxo, G.COR.clara][i], 1.8);
+        });
+      G.curva(gr, function (T) { return hconv(T, est.Tv, est.L); },
+        G.COR.mestra, 2.4, [6, 4]);
+      G.vertical(gr, est.Ts, G.COR.suave, '', true);
+      G.legenda(gr, [{ cor: G.COR.vinho, texto: 'radiativo, ε = 1' },
+                     { cor: G.COR.bronze, texto: 'ε = 0,9' },
+                     { cor: G.COR.roxo, texto: 'ε = 0,3' },
+                     { cor: G.COR.clara, texto: 'ε = 0,05' },
+                     { cor: G.COR.mestra, texto: 'convectivo natural' }]);
+      var ct = gr.ct;
+      ct.fillStyle = G.COR.tinta;
+      [[hr, 'radiativo'], [hc, 'convectivo']].forEach(function (p) {
+        ct.beginPath(); ct.arc(gr.X(est.Ts), gr.Y(p[0]), 4, 0, 2 * Math.PI); ct.fill();
+      });
+
+      var dT = est.Ts - est.Tv;
+      mostrar({
+        hr: F.fmt(hr, 2) + ' W/m²K',
+        hc: F.fmt(hc, 2) + ' W/m²K',
+        ht: F.fmt(hr + hc, 2) + ' W/m²K',
+        fr: F.pct(hr / (hr + hc), 0),
+        qr: F.fmt(hr * dT, 1) + ' W/m²',
+        qc: F.fmt(hc * dT, 1) + ' W/m²'
+      });
+
+      nota.innerHTML =
+        '<p>A troca líquida entre uma superfície pequena de emissividade \\(\\epsilon\\) e uma '
+        + 'vizinhança grande que a envolve é</p>'
+        + '\\[q=\\epsilon\\sigma\\left(T_s^4-T_{\\text{viz}}^4\\right),\\]'
+        + '<p>que não tem a forma da lei de Newton e por isso não se soma a ela como uma '
+        + 'resistência. O remédio é fatorar a diferença de quartas potências,</p>'
+        + '\\[T_s^4-T_{\\text{viz}}^4=\\left(T_s^2+T_{\\text{viz}}^2\\right)'
+        + '\\left(T_s+T_{\\text{viz}}\\right)\\left(T_s-T_{\\text{viz}}\\right),\\]'
+        + '<p>e definir o <strong>coeficiente radiativo</strong></p>'
+        + '\\[h_r=\\epsilon\\sigma\\left(T_s^2+T_{\\text{viz}}^2\\right)'
+        + '\\left(T_s+T_{\\text{viz}}\\right),\\]'
+        + '<p>com as temperaturas em kelvin. Agora \\(q=h_r(T_s-T_{\\text{viz}})\\) tem a forma '
+        + 'certa e \\(h_r\\) pode entrar em paralelo com \\(h_c\\) no circuito térmico do '
+        + 'módulo 10. O preço é que \\(h_r\\) depende da temperatura, de modo que o circuito '
+        + 'deixa de ser linear e um cálculo preciso pede iteração.</p>'
+        + '<p>O gráfico responde a uma pergunta que o módulo 11 deixou pendente. Lá, a '
+        + 'correlação de Churchill-Chu deu \\(h_c=3{,}0\\) W/m²K para uma parede de '
+        + '\\(2{,}5\\) m com \\(10\\) K de diferença, enquanto a norma manda usar \\(8\\). A '
+        + 'diferença está aqui: reboco e tinta têm \\(\\epsilon\\approx0{,}9\\), e a '
+        + 'temperaturas ambientes isso dá \\(h_r\\) da ordem de \\(5\\) W/m²K. Somando, '
+        + '\\(3+5=8\\), que é o valor da norma. <strong>Mais da metade do calor que uma parede '
+        + 'troca com a sala é radiação</strong>, e não convecção, o que costuma surpreender.</p>'
+        + '<p>Duas consequências práticas seguem. A primeira é que baixar a emissividade de uma '
+        + 'superfície é uma forma barata de isolar: o alumínio polido, com '
+        + '\\(\\epsilon=0{,}05\\), corta \\(h_r\\) para perto de \\(0{,}3\\) W/m²K, e é por '
+        + 'isso que mantas térmicas, garrafas térmicas e isolamentos de forno usam folha '
+        + 'metálica. A segunda é que conforto térmico não se mede só pela temperatura do ar: '
+        + 'uma sala com ar a \\(24\\) °C e um telhado de zinco irradiando a \\(45\\) °C é '
+        + 'desconfortável, e nenhum ventilador resolve, porque o problema não é '
+        + 'convectivo.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {
