@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fenômenos de Transporte | LFCA/URCA</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611082310">
+<script src="assets/js/comum.js?v=202611082310"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html" class="ativo">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+<main class="conteudo">
+
+  <div class="heroi">
+    <span class="placa-logo">
+      <img src="assets/img/logo-lfca.png" alt="LFCA | URCA (Laboratório de Física Computacional Aplicada)" style="width: 80%; height: auto;">
+    </span>
+    <h1>Fenômenos de Transporte</h1>
+    <p>Material interativo da disciplina · DF065</p>
+    <p class="meta">
+      Prof. Apiano Morais · Laboratório de Física Computacional Aplicada (LFCA)<br>
+      Universidade Regional do Cariri (URCA) · apiano.morais@urca.br
+    </p>
+  </div>
+
+  <h2 id="apresentacao">Três transportes, uma única equação</h2>
+
+  <p>Uma barra de metal com uma ponta no fogo e a outra na mão conduz calor. Uma gota de tinta
+  num copo de água parado se espalha até tingir tudo. Uma camada de fluido arrastada por uma
+  placa em movimento arrasta a camada vizinha, que arrasta a seguinte. São três fenômenos de
+  aparência completamente diferente, estudados historicamente por comunidades diferentes e
+  medidos com instrumentos diferentes.</p>
+
+  <p>E são a mesma equação. Em cada um dos três casos existe uma grandeza que se conserva,
+  energia, massa ou quantidade de movimento, existe uma densidade de corrente que diz quanto
+  dela atravessa cada superfície por segundo, e existe uma lei que liga essa corrente ao
+  gradiente de alguma coisa. Fourier escreveu a sua em 1822, Fick a dele em 1855 e Newton a
+  terceira bem antes das outras duas, e as três têm a forma</p>
+
+  <p style="text-align:center">corrente \(=\;-\) coeficiente \(\times\) gradiente.</p>
+
+  <p>Juntar essa lei com o balanço numa superfície fechada produz, nos três casos, uma equação
+  de difusão. É essa unidade que dá nome à disciplina.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">O que esta disciplina faz</span>
+    <p>Os dois primeiros módulos constroem o vocabulário: a hipótese do contínuo, a densidade
+    como campo, o fluxo como integral de superfície e a equação da continuidade, que é a
+    conservação da massa escrita localmente. Nada ali é específico de fluidos, de calor ou de
+    massa, e é por isso que vem primeiro.</p>
+    <p>Os cinco módulos seguintes tratam do transporte de quantidade de movimento, que é a
+    mecânica dos fluidos. Começa com o fluido ideal e a equação de Euler, passa pela
+    hidrostática, pelo escoamento irrotacional e por Bernoulli, e termina com a viscosidade, a
+    equação de Navier-Stokes e a tensão superficial.</p>
+    <p>Depois vêm dois módulos de método numérico, porque a partir dali as equações deixam de
+    ter solução analítica em qualquer geometria interessante. Tudo é escrito em Python, do
+    laplaciano discretizado ao critério de estabilidade, e nada é tratado como caixa preta.
+    Os cinco últimos módulos aplicam o mesmo maquinário ao transporte de energia e ao de
+    massa.</p>
+  </div>
+
+  <h3>Por que Python, e não um pacote comercial</h3>
+
+  <p>Um solver comercial resolve o problema e devolve um campo colorido. Isso é útil para
+  quem já sabe o que está fazendo, e é péssimo para quem está aprendendo, porque todas as
+  decisões que importam ficaram escondidas: o esquema de discretização, o tratamento das
+  condições de contorno, o critério de parada, a ordem de convergência. Quem não viu essas
+  escolhas não tem como julgar se o resultado faz sentido.</p>
+
+  <p>A disciplina faz o caminho inverso. O aluno escreve o laplaciano em diferenças centrais,
+  monta o sistema linear, resolve por relaxação, mede a ordem de convergência refinando a
+  malha e compara com a solução analítica nos casos em que ela existe. Depois disso, usar uma
+  biblioteca madura como o FiPy ou o FEniCS para um problema maior é uma decisão informada, e
+  não um ato de fé.</p>
+
+  <hr class="linha">
+
+  <h2>Os módulos</h2>
+
+  <h3 class="unidade">O meio contínuo</h3>
+
+  <div class="cartoes">
+
+    <a class="cartao" href="aula01.html">
+      <span class="numero">Módulo 1</span>
+      <h3>O contínuo, densidade e fluxo</h3>
+      <p>A janela de escalas que autoriza tratar matéria como campo, a densidade local e a
+      massa como integral de volume, a gota de densidade variável, o fluxo através de uma
+      superfície inclinada e a densidade de corrente.</p>
+      <div class="etiquetas">
+        <span class="etiqueta">Flutuação e escala</span>
+        <span class="etiqueta">A gota salgada</span>
+        <span class="etiqueta">Fluxo e cosseno</span>
+      </div>
+    </a>
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 2</span>
+      <h3>A equação da continuidade</h3>
+      <p>O balanço de massa no volume de controle, ralos e criadouros, a forma diferencial, o
+      escoamento incompressível e a vazão mássica.</p>
+    </div>
+
+  </div>
+
+  <h3 class="unidade">Transporte de quantidade de movimento</h3>
+
+  <div class="cartoes">
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 3</span>
+      <h3>Dinâmica do elemento de fluido</h3>
+      <p>A derivada material, forças de campo e de contato, a segunda lei de Newton escrita
+      para um elemento de fluido e a equação de Euler.</p>
+    </div>
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 4</span>
+      <h3>Hidrostática e autogravidade</h3>
+      <p>Equilíbrio mecânico, superfícies de contorno, a equação de Lane-Emden e o que
+      acontece quando a própria massa do fluido faz a gravidade.</p>
+    </div>
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 5</span>
+      <h3>Escoamento irrotacional e Bernoulli</h3>
+      <p>Vorticidade, função de corrente, potencial de velocidade, o teorema de Bernoulli e o
+      escoamento em um ralo resolvido do começo ao fim.</p>
+    </div>
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 6</span>
+      <h3>Viscosidade e a equação de Navier-Stokes</h3>
+      <p>Tensão e o tensor de tensão viscosa, o fluido newtoniano, a equação completa e o
+      escoamento de Hagen-Poiseuille.</p>
+    </div>
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 7</span>
+      <h3>Tensão superficial e capilaridade</h3>
+      <p>Origem molecular, energia de superfície, curvatura e Young-Laplace, o efeito
+      Marangoni, molhamento e a subida da seiva no xilema.</p>
+    </div>
+
+  </div>
+
+  <h3 class="unidade">Métodos numéricos para transporte</h3>
+
+  <div class="cartoes">
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 8</span>
+      <h3>Campos no computador: relaxação e convergência</h3>
+      <p>Discretização, diferenças centrais, o laplaciano em malha, o sistema linear, o método
+      da relaxação e a medida da ordem de convergência.</p>
+    </div>
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 9</span>
+      <h3>Advecção e difusão no computador</h3>
+      <p>Esquemas explícito e implícito, Crank-Nicolson, a condição de estabilidade, difusão
+      numérica e esquemas a montante.</p>
+    </div>
+
+  </div>
+
+  <h3 class="unidade">Transporte de energia</h3>
+
+  <div class="cartoes">
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 10</span>
+      <h3>Condução de calor</h3>
+      <p>A lei de Fourier, o balanço de energia no volume de controle, a equação do calor,
+      aletas e os números de Biot e de Fourier.</p>
+    </div>
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 11</span>
+      <h3>Convecção e semelhança</h3>
+      <p>Camada limite térmica, adimensionalização, Reynolds, Prandtl e Nusselt, correlações
+      empíricas e convecção natural.</p>
+    </div>
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 12</span>
+      <h3>Radiação térmica</h3>
+      <p>Corpo negro, lei de Stefan-Boltzmann, emissividade, fatores de forma e troca
+      radiativa em cavidades.</p>
+    </div>
+
+  </div>
+
+  <h3 class="unidade">Transporte de massa</h3>
+
+  <div class="cartoes">
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 13</span>
+      <h3>Difusão de massa e a lei de Fick</h3>
+      <p>A primeira e a segunda leis de Fick, difusão em sólidos e membranas, difusão com
+      reação e o módulo de Thiele.</p>
+    </div>
+
+    <div class="cartao em-preparo">
+      <span class="numero">Módulo 14</span>
+      <h3>Convecção mássica e as analogias</h3>
+      <p>Coeficiente de transferência de massa, Sherwood e Schmidt, a analogia de
+      Chilton-Colburn e o fechamento do paralelo entre os três transportes.</p>
+    </div>
+
+  </div>
+
+  <hr class="linha">
+
+  <h2 id="plano">O plano de ensino</h2>
+
+  <div class="bloco def">
+    <span class="rotulo">Identificação</span>
+    <ul>
+      <li><strong>Curso:</strong> Bacharelado em Física</li>
+      <li><strong>Disciplina:</strong> Fenômenos de Transporte (DF065), eletiva</li>
+      <li><strong>Pré-requisitos:</strong> DF053 e DF006</li>
+      <li><strong>Carga horária:</strong> 45 h teóricas e 45 h práticas, 6 h semanais,
+      90 h no total</li>
+    </ul>
+  </div>
+
+  <h3>Ementa</h3>
+
+  <p>Transporte de quantidade de movimento, de energia e de massa. Balanços e equações de
+  conservação, soluções analíticas dos casos canônicos, adimensionalização e semelhança.
+  Resolução numérica por diferenças e volumes finitos, implementada em Python, com verificação
+  dos resultados.</p>
+
+  <h3>Objetivos</h3>
+
+  <p>Proporcionar uma compreensão aprofundada dos princípios dos fenômenos de transporte e da
+  unidade formal entre os três transportes. Capacitar o estudante a montar o balanço de uma
+  grandeza conservada, a obter as soluções analíticas dos casos canônicos e a resolver
+  numericamente, em Python, problemas de transferência de calor, de massa e de quantidade de
+  movimento, verificando sempre a qualidade da solução obtida.</p>
+
+  <h3>Metodologia</h3>
+
+  <p>Aulas expositivas para a parte teórica e atividades de programação para a parte prática,
+  escritas em Python com NumPy, SciPy e Matplotlib. Os problemas maiores são resolvidos com
+  FiPy ou FEniCS, depois que os métodos já tenham sido implementados à mão. Os módulos deste
+  site trazem os simuladores que acompanham as aulas.</p>
+
+  <h3>Bibliografia básica</h3>
+
+  <ul>
+    <li>BIRD, R. B.; STEWART, W. E.; LIGHTFOOT, E. N. <em>Transport Phenomena</em>. 2. ed.
+      Wiley, 2007.</li>
+    <li>INCROPERA, F. P.; DEWITT, D. P. <em>Fundamentos de Transferência de Calor e de
+      Massa</em>. 6. ed. LTC, 2008.</li>
+    <li>LANDAU, L. D.; LIFSHITZ, E. M. <em>Fluid Mechanics</em>. 2. ed. Pergamon, 1987.</li>
+  </ul>
+
+  <div class="bloco def">
+    <span class="rotulo">Disciplinas vizinhas</span>
+    <p>Os pré-requisitos são <a href="https://apianomorais.github.io/mecanica-classica-ii/">Mecânica
+    Clássica II</a>, de onde vem o tratamento de campos e de sistemas com muitos graus de
+    liberdade, e a disciplina de métodos numéricos, de onde vem a prática de programação.</p>
+    <p>Em <a href="https://apianomorais.github.io/fisica-estatistica/">Física Estatística</a>
+    os coeficientes que aqui entram como dados de laboratório, a viscosidade, a condutividade
+    térmica e o coeficiente de difusão, aparecem calculados a partir do movimento molecular, e
+    o movimento browniano fecha o círculo com a lei de Fick deste curso.</p>
+  </div>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 1: O contínuo, densidade e fluxo | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611082310">
+<script src="assets/js/comum.js?v=202611082310"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num ativo" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. Quando a multidão vira um mar de gente</a></li>
+    <li><a href="#s2">2. A densidade de massa</a></li>
+    <li><a href="#s3">3. A massa como integral</a></li>
+    <li><a href="#s4">4. A gota de água salgada</a></li>
+    <li><a href="#s5">5. O que é preciso para algo fluir</a></li>
+    <li><a href="#s6">6. A densidade de corrente</a></li>
+    <li><a href="#s7">7. O balanço numa superfície fechada</a></li>
+    <li><a href="#s8">8. Exercícios resolvidos</a></li>
+    <li><a href="#s9">9. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 1 · O meio contínuo</p>
+  <h1>O contínuo, densidade e fluxo</h1>
+  <p class="subtitulo">Um litro de água tem da ordem de \(3\times10^{25}\) moléculas, e
+  ninguém pretende escrever uma equação de movimento para cada uma. A saída é trocar o
+  conjunto de partículas por campos, \(\rho(\vet{r},t)\) e \(\vet{u}(\vet{r},t)\), e o preço
+  dessa troca é uma hipótese sobre escalas que vale a pena examinar antes de usar.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Reconhecer em que janela de escalas a densidade local é uma grandeza bem definida,
+      e medir a flutuação que decide isso.</li>
+      <li>Calcular a massa de um corpo de densidade variável montando a integral de volume
+      que a geometria do problema pede.</li>
+      <li>Escrever o fluxo de uma grandeza como integral de superfície do produto escalar
+      \(\rho\vet{u}\cdot d\vet{A}\), e saber de onde vem o cosseno.</li>
+      <li>Identificar a densidade de corrente \(\vet{j}=\rho\vet{u}\) como o objeto comum aos
+      três transportes que a disciplina vai estudar.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. Quando a multidão vira um mar de gente</h2>
+
+  <p>Imagine um festival de música com cem mil pessoas. Quem está no meio da multidão, perto
+  do palco, enxerga cada pessoa individualmente e percebe em detalhe as interações entre
+  vizinhos: alguém empurra, alguém abre caminho, alguém segura o lugar de um amigo. À medida
+  que esse observador se afasta, subindo para um ponto elevado, as interações individuais
+  deixam de ser visíveis. A partir de certa distância a multidão densa se parece mais com um
+  mar de gente do que com uma coleção de indivíduos, e a única distinção que continua
+  significativa é quantas pessoas há por metro quadrado em cada região do espaço.</p>
+
+  <p>Essa densidade numérica \(\rho_N\) não é uma propriedade de nenhuma pessoa. Ela é uma
+  propriedade da <em>região</em>, e só faz sentido se a região for grande o bastante para
+  conter muita gente. Aí está o ponto delicado de toda a mecânica dos meios contínuos: a
+  teoria vai tratar \(\rho\) como função do ponto, e ponto é exatamente o que ela não pode
+  ter.</p>
+
+  <p>O widget abaixo mede o tamanho desse problema. A tela da esquerda é a multidão vista de
+  cima, dividida em células; a da direita mostra, para cada tamanho de célula, de quanto a
+  contagem flutua em torno da média.</p>
+
+  <div data-widget="escalas"></div>
+
+  <div class="bloco fisica">
+    <span class="rotulo">A janela de escalas</span>
+    <p>Chamemos \(\ell\) o lado da célula de medida, \(a\) a distância típica entre as
+    partículas e \(L\) o tamanho do aparato, o diâmetro do tubo ou a espessura da camada. A
+    hipótese do contínuo é a afirmação de que existem células com</p>
+    <p style="text-align:center">\(a \ll \ell \ll L\).</p>
+    <p>A primeira desigualdade garante que a flutuação relativa, que cai como
+    \(1/\sqrt{\langle n\rangle}\), seja desprezível. A segunda garante que a célula ainda
+    possa ser tratada como um ponto do problema macroscópico. Num gás nas condições ambientes
+    \(a\sim3\) nm e um cubo de um micrômetro de lado já contém dez milhões de moléculas, de
+    modo que a janela é larguíssima. Em ar rarefeito a grande altitude, ou num microcanal de
+    poucos nanômetros, a janela se fecha e a descrição por campos deixa de valer.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. A densidade de massa</h2>
+
+  <p>Aceita a hipótese, o procedimento é o de sempre. Considere um volume infinitesimal
+  \(d\Omega\) no espaço, contendo uma quantidade \(dm\) de massa, e defina a densidade de
+  massa local como a razão entre as duas:</p>
+
+  <p>\[\rho=\der{m}{\Omega}.\]</p>
+
+  <p>O adjetivo <em>local</em> carrega duas consequências. A densidade depende da posição
+  \(\vet{r}\,'\) do elemento de volume, e pode também depender do tempo, se o sistema não for
+  estacionário, como é o caso da multidão do festival. Então</p>
+
+  <p>\[\rho=\rho\left(\vet{r}\,',t\right),\]</p>
+
+  <p>onde o apóstrofo indica, aqui e no resto do curso, uma variável do sistema, isto é, uma
+  posição onde há matéria, em contraste com o ponto de observação, que virá sem apóstrofo.
+  Essa distinção parece exagerada agora e economiza confusão mais adiante, quando as duas
+  posições aparecerem na mesma integral.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. A massa como integral</h2>
+
+  <p>A massa total contida num volume \(\Omega\) é a soma das massas dos elementos, e a soma
+  de infinitos elementos infinitesimais é uma integral:</p>
+
+  <p>\[M=\sum dm=\iiint_\Omega \rho\left(\vet{r}\,',t\right)d\Omega'.\]</p>
+
+  <p>Escrito assim o resultado parece pronto, e não está. A forma da integral a ser resolvida
+  depende da distribuição \(\rho(\vet{r}\,',t)\) e do volume \(\Omega\) onde ela está
+  distribuída, e é na escolha das coordenadas e do elemento de volume que o problema é de
+  fato resolvido ou perdido. Três casos cobrem quase tudo o que aparece:</p>
+
+  <ul>
+    <li>se \(\rho\) depende apenas da distância ao centro, coordenadas esféricas e
+    \(d\Omega=4\pi r'^2dr'\) reduzem tudo a uma integral simples;</li>
+    <li>se \(\rho\) depende apenas da distância a um eixo, coordenadas cilíndricas e
+    \(d\Omega=2\pi r'\,dr'\,dz'\) fazem o mesmo;</li>
+    <li>se \(\rho\) depende de uma única coordenada cartesiana, convém varrer o corpo em
+    fatias perpendiculares a ela, com \(d\Omega=A(z')\,dz'\), onde \(A\) é a área da fatia.</li>
+  </ul>
+
+  <p>O terceiro caso é o do exemplo que vem a seguir, e merece ser visto com cuidado porque a
+  mesma manobra reaparece no cálculo de vazão, de carga térmica e de taxa de reação.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. A gota de água salgada</h2>
+
+  <p>Considere uma gotinha de água salgada, praticamente esférica, de raio \(R\), em que o sal
+  se concentra na faixa equatorial e a densidade cai ao se afastar do plano \(z=0\), para cima
+  ou para baixo, na forma</p>
+
+  <p>\[\rho=\rho_0\left(1-\frac{\alpha\left|z\right|}{R}\right),\]</p>
+
+  <p>onde \(\alpha\) e \(\rho_0\) são constantes. A integração em \(z\) pode ser feita
+  considerando vários discos de raio \(a=\sqrt{R^2-z'^2}\), de modo que a área de cada disco é
+  \(A=\pi a^2=\pi\left(R^2-z'^2\right)\) e a massa total da gota sai de</p>
+
+  <p>\[M=\pi\rho_0\int_{-R}^{R}\left(R^2-z'^2\right)
+  \left(1-\alpha\frac{\left|z'\right|}{R}\right)dz'.\]</p>
+
+  <p>O módulo no integrando atrapalha, e aqui é conveniente separar a integral em duas para
+  proceder uma integração mais fácil, porque em \(z'<0\) vale \(|z'|=-z'\) e em \(z'>0\) vale
+  \(|z'|=z'\):</p>
+
+  <p>\[M=\pi\rho_0\int_{-R}^{0}\left(R^2-z'^2\right)
+  \left(1+\alpha\frac{z'}{R}\right)dz'
+  +\pi\rho_0\int_{0}^{R}\left(R^2-z'^2\right)
+  \left(1-\alpha\frac{z'}{R}\right)dz'.\]</p>
+
+  <p>As duas parcelas dão o mesmo valor, pela simetria do integrando, e a solução é facilmente
+  encontrada como</p>
+
+  <p>\[M=\rho_0\frac{\pi}{6}\left(8-3\alpha\right)R^3.\]</p>
+
+  <p>Vale conferir os limites antes de confiar no resultado. Com \(\alpha=0\) a gota é
+  uniforme e a fórmula devolve \(\frac{4}{3}\pi\rho_0R^3\), como deve. Com \(\alpha=1\) a
+  densidade chega a zero nos polos e a massa cai a \(5/8\) do valor uniforme. O widget faz a
+  mesma integral numericamente, somando os discos, e põe os dois números lado a lado.</p>
+
+  <p>Uma observação sobre o modelo. O módulo em \(|z|\) torna a distribuição simétrica em
+  relação ao plano equatorial, de modo que ela descreve uma gota mais densa no meio e mais
+  rala nas duas pontas. Se a intenção for representar sedimentação por gravidade, que é
+  assimétrica, o perfil a usar é \(\rho=\rho_0\left(1-\alpha z/R\right)\) sem o módulo, e nesse
+  caso a parcela ímpar se cancela na integração, de modo que a massa volta a ser a da gota
+  uniforme e o que muda é a posição do centro de massa. O exercício 1.6 pede exatamente essa
+  comparação.</p>
+
+  <div data-widget="gota"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. O que é preciso para algo fluir</h2>
+
+  <p>O conceito de fluxo é importante em várias áreas da física, e a definição exige duas
+  coisas. Primeiro, deve haver uma quantidade \(q\) que possa fluir, tal como energia, massa,
+  carga, partículas ou quantidade de movimento, com a sua densidade \(\rho\) correspondente.
+  Segundo, deve haver uma superfície através da qual esse escoamento seja contado.</p>
+
+  <p>A quantidade de massa que atravessa uma pequena superfície de área \(\delta A\) durante
+  um tempo \(\delta t\) é a densidade multiplicada pelo volume ocupado por essa massa nesse
+  tempo:</p>
+
+  <p>\[\delta m=\rho\,\delta V=\rho\,\delta A\,\delta x=\rho\,\delta A\,u\,\delta t,\]</p>
+
+  <p>onde \(u\) é a componente da velocidade na mesma direção do vetor normal à área. Essa
+  última ressalva é a única sutileza da definição, e o widget existe para que ela fique
+  visível: inclinar a superfície não muda a sua área nem a velocidade do fluido, e ainda assim
+  reduz o volume varrido, porque o que conta é o avanço medido ao longo da normal.</p>
+
+  <div data-widget="fluxo"></div>
+
+  <p>Dividindo por \(\delta t\), a taxa com que a massa atravessa o pedaço de superfície é
+  \(\delta\dot{m}=\rho u\,\delta A\). Reconhecendo o produto \(u\,\delta A\) como
+  \(\vet{u}\cdot d\vet{A}\) e integrando sobre toda a superfície \(S\), temos o fluxo de
+  massa</p>
+
+  <p>\[\dot{m}=\iint_S \rho\,\vet{u}\cdot d\vet{A}.\]</p>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. A densidade de corrente</h2>
+
+  <p>A combinação que aparece dentro da integral tem nome próprio. Define-se a
+  <strong>densidade de corrente de massa</strong> como</p>
+
+  <p>\[\vet{j}=\rho\vet{u},\]</p>
+
+  <p>um campo vetorial medido em quilogramas por metro quadrado por segundo. Ele carrega toda
+  a informação sobre o transporte: o fluxo através de qualquer superfície é o que resta depois
+  de projetar \(\vet{j}\) na normal e somar sobre a superfície.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">O mesmo objeto, três vezes</span>
+    <p>A disciplina inteira é a história desse vetor em três versões. Para a massa,
+    \(\vet{j}=\rho\vet{u}\), e o módulo 13 vai acrescentar a parte difusiva
+    \(-D\nabla\rho\). Para a energia, \(\vet{J}_q=-\kappa\nabla T\) é a lei de Fourier do
+    módulo 10. Para a quantidade de movimento, o papel de densidade de corrente é feito pelo
+    tensor de tensões do módulo 6, que tem dois índices porque a grandeza transportada já é
+    vetorial.</p>
+    <p>Em todos os casos a estrutura é a mesma: uma densidade de corrente, um balanço numa
+    superfície fechada e uma lei constitutiva que liga a corrente ao gradiente de alguma
+    coisa. Vale guardar essa frase, porque ela é o resumo do curso.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. O balanço numa superfície fechada</h2>
+
+  <p>Considere agora um volume \(\Omega\) ocupado por material de densidade \(\rho\), com
+  \(S\) a superfície fechada que o engloba e \(d\vet{A}\) apontando para fora. A quantidade de
+  massa que passa através da superfície, por unidade de tempo, é</p>
+
+  <p>\[\dot{m}_S=\oint_S \rho\,\vet{u}\cdot d\vet{A},\]</p>
+
+  <p>e com a convenção de normal para fora um valor positivo significa massa <em>saindo</em>
+  do volume. Esse sinal vai fixar os sinais de tudo o que vem depois, e trocá-lo por descuido
+  é o erro mais comum do assunto.</p>
+
+  <p>O teorema da divergência permite escrever esse fluxo de massa em termos de uma integração
+  no volume. Ele afirma que a quantidade de fluxo do campo vetorial \(\vet{j}\) através da
+  superfície \(S\) é igual à integral da divergência de \(\vet{j}\) dentro do volume
+  \(\Omega\):</p>
+
+  <p>\[\oint_S \vet{j}\cdot d\vet{A}=\iiint_\Omega \left(\nabla\cdot\vet{j}\right)d\Omega.\]</p>
+
+  <p>Aplicado ao caso em mãos,</p>
+
+  <p>\[\dot{m}_S=\iiint_\Omega \nabla\cdot\left(\rho\vet{u}\right)d\Omega.\]</p>
+
+  <p>A leitura física da divergência é a que dá nome ao assunto. Onde
+  \(\nabla\cdot\vet{j}>0\), mais corrente sai do que entra numa vizinhança infinitesimal, e o
+  ponto funciona como um <strong>ralo</strong> para o volume que o contém; onde
+  \(\nabla\cdot\vet{j}<0\), o ponto é um <strong>criadouro</strong>. Com esses dois
+  ingredientes, a taxa de variação da massa dentro do volume e o fluxo que atravessa a sua
+  fronteira, o módulo seguinte fecha o balanço e obtém a equação da continuidade.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">1.1 Esfera de densidade linear no raio</span>
+    <p>Uma esfera de raio \(R\) tem densidade \(\rho=\rho_0\left(1-ar/R\right)\), com \(a\) e
+    \(\rho_0\) constantes. Qual é a massa total?</p>
+    <p>A densidade depende apenas de \(r\), de modo que a casca esférica é o elemento certo,
+    com \(d\Omega=4\pi r'^2dr'\):</p>
+    <p>\[M=\int_0^R \rho_0\left(1-\frac{ar'}{R}\right)4\pi r'^2\,dr'
+    =4\pi\rho_0\left(\frac{R^3}{3}-\frac{aR^3}{4}\right)
+    =\frac{\pi}{3}\rho_0R^3\left(4-3a\right).\]</p>
+    <p>Com \(a=0\) sai \(\frac{4}{3}\pi\rho_0R^3\). Com \(a=1\) a densidade se anula na
+    superfície e a massa vale um quarto do valor uniforme. Note a diferença em relação à gota
+    da seção 4: lá o fator era \((8-3\alpha)/8\) do uniforme, aqui é \((4-3a)/4\), porque a
+    geometria do gradiente é outra.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">1.2 Vazão num perfil parabólico</span>
+    <p>Água escoa num tubo de raio \(R=10\) cm com perfil de velocidade
+    \(u(r)=u_0\left(1-r^2/R^2\right)\) e \(u_0=2{,}0\) m/s. Calcule a vazão mássica e a
+    velocidade média.</p>
+    <p>A velocidade varia ponto a ponto, de modo que não se pode multiplicar velocidade por
+    área: é preciso integrar. Em anéis de área \(dA=2\pi r\,dr\),</p>
+    <p>\[\dot{m}=\rho\int_0^R u_0\left(1-\frac{r^2}{R^2}\right)2\pi r\,dr
+    =2\pi\rho u_0\left(\frac{R^2}{2}-\frac{R^2}{4}\right)=\frac{\pi\rho u_0R^2}{2}.\]</p>
+    <p>Com \(\rho=1000\) kg/m³ dá \(\dot{m}=31{,}4\) kg/s. A velocidade média é definida por
+    \(\dot{m}=\rho\bar{u}\pi R^2\), o que dá \(\bar{u}=u_0/2=1{,}0\) m/s: metade da velocidade
+    do eixo. Esse perfil não foi inventado para o exercício, é o de Hagen-Poiseuille, e o
+    módulo 6 vai deduzi-lo da equação de Navier-Stokes.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">1.3 A janela inclinada</span>
+    <p>Um duto de seção \(A=500\) cm² conduz água a \(u=2{,}0\) m/s. Uma placa de medida de
+    mesma área é colocada dentro do duto com a normal fazendo \(35^\circ\) com o escoamento.
+    Qual a vazão que a atravessa, e qual a densidade de corrente?</p>
+    <p>A densidade de corrente não depende da placa: \(j=\rho u=2{,}0\times10^3\)
+    kg/m²s. O que depende da placa é a projeção,</p>
+    <p>\[\dot{m}=\rho u A\cos\theta=1000\times2{,}0\times0{,}050\times\cos 35^\circ
+    =81{,}9\ \text{kg/s},\]</p>
+    <p>contra \(100\) kg/s na posição perpendicular. A placa deitada ao longo do escoamento,
+    com \(\theta=90^\circ\), não é atravessada por nada.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">1.4 Quantas moléculas cabem na célula de medida</span>
+    <p>Ar nas condições ambientes tem \(\rho=1{,}2\) kg/m³ e massa molar \(29\) g/mol. Quantas
+    moléculas há num cubo de \(1\) μm de lado, e de quanto flutua essa contagem?</p>
+    <p>A densidade numérica é \(n=\rho N_A/M=1{,}2\times6{,}022\times10^{23}/0{,}029
+    =2{,}5\times10^{25}\) m⁻³. No cubo de volume \(10^{-18}\) m³ isso dá
+    \(\langle N\rangle=2{,}5\times10^{7}\) moléculas, com flutuação relativa</p>
+    <p>\[\frac{\sigma_N}{\langle N\rangle}=\frac{1}{\sqrt{2{,}5\times10^{7}}}
+    =2{,}0\times10^{-4},\]</p>
+    <p>isto é, duas partes em dez mil. Um micrômetro é desprezível diante de qualquer
+    tubulação, e a flutuação é menor que a precisão de quase qualquer medida: é esta conta que
+    autoriza o resto da disciplina.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>1.5</b> Uma barra de comprimento \(L\) e seção \(A\) constante tem densidade
+      \(\rho=\rho_0e^{-x/\lambda}\). Calcule a massa total e a posição do centro de massa, e
+      verifique os dois limites \(\lambda\ll L\) e \(\lambda\gg L\).</li>
+
+      <li><b>1.6</b> Troque o perfil da gota da seção 4 pelo perfil assimétrico
+      \(\rho=\rho_0\left(1-\alpha z/R\right)\), sem o módulo. Mostre que a massa volta a ser
+      \(\frac{4}{3}\pi\rho_0R^3\), independente de \(\alpha\), e calcule a posição do centro
+      de massa. Em seguida refaça o cálculo original, com o módulo, em coordenadas esféricas,
+      usando \(|z|=r\left|\cos\theta\right|\) e
+      \(d\Omega=r^2\sen\theta\,dr\,d\theta\,d\varphi\), e diga qual das duas montagens é mais
+      rápida e por quê.</li>
+
+      <li><b>1.7</b> A atmosfera isotérmica tem \(\rho=\rho_0e^{-z/H}\) com \(H\approx8{,}4\)
+      km. Mostre que a massa de ar acima de um metro quadrado de solo vale \(\rho_0H\) e
+      compare com a pressão atmosférica ao nível do mar. O que esse acordo diz sobre a
+      hipótese de equilíbrio hidrostático, que o módulo 4 vai tratar?</li>
+
+      <li><b>1.8</b> Um rio de seção retangular tem largura \(b=20\) m, profundidade
+      \(h=3\) m e perfil de velocidade \(u(y)=u_s\left(y/h\right)^{1/7}\), medido a partir do
+      fundo, com \(u_s=1{,}5\) m/s na superfície. Calcule a vazão volumétrica e a velocidade
+      média, e diga que fração da velocidade de superfície ela representa.</li>
+
+      <li><b>1.9</b> Mostre que \(\nabla\cdot\vet{j}=0\) para o campo
+      \(\vet{j}=j_0\left(-y,x,0\right)\) e esboce as linhas de corrente. Em seguida calcule o
+      fluxo desse campo através de um cubo de lado \(\ell\) centrado na origem e explique o
+      resultado sem fazer a conta.</li>
+
+      <li><b>1.10</b> O campo \(\vet{j}=C\,\vers{r}/r^2\) tem divergência nula em todo ponto
+      com \(r\neq0\), e ainda assim o seu fluxo através de qualquer esfera centrada na origem
+      vale \(4\pi C\), independente do raio. Explique a aparente contradição e diga o que isso
+      significa fisicamente quando \(\vet{j}\) é uma corrente de massa.</li>
+
+      <li><b>1.11</b> Discuta em meia página: em que situações concretas a hipótese do
+      contínuo falha? Dê um exemplo de gás rarefeito, um de escala nanométrica e um de meio
+      granular, e diga em cada caso qual das duas desigualdades \(a\ll\ell\ll L\) é
+      violada.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="index.html"><small>Voltar</small>← Início</a>
+    <span class="em-breve"><small>Em preparação</small>2. Continuidade</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611082310"></script>
+</body>
+</html>
