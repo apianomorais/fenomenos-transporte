@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 3: Dinâmica do elemento de fluido | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611082327">
-<script src="assets/js/comum.js?v=202611082327"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611082338">
+<script src="assets/js/comum.js?v=202611082338"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -21,6 +21,7 @@
       <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
       <span class="grupo">Movimento</span>
       <a href="aula03.html" class="num ativo" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
     </nav>
   </div>
 </header>
@@ -111,6 +112,20 @@
 
   <p>chamado <strong>derivada convectiva</strong>. Juntando as duas partes, a aceleração de um
   elemento de fluido é</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Uma palavra sobre o nome</span>
+    <p>O nome é consagrado e vai ser usado aqui e em qualquer livro da área, mas ele é
+    impreciso, e vale saber em que sentido. O que o termo \(\left(\vet{u}\cdot\nabla\right)\)
+    descreve é o transporte de uma grandeza pelo simples fato de o fluido se deslocar, e isso
+    se chama <strong>advecção</strong>. <strong>Convecção</strong>, em sentido estrito, é o
+    nome do transporte quando a advecção e a difusão acontecem juntas, que é o caso de uma
+    parede quente aquecendo o ar que sobe ao longo dela.</p>
+    <p>Dito de outro modo: o termo advectivo é \(\left(\vet{u}\cdot\nabla\right)T\), o
+    difusivo é \(\alpha\nabla^2T\), e a convecção é o fenômeno que resulta dos dois atuando ao
+    mesmo tempo. Por isso o módulo 11 se chama convecção, e não advecção: lá os dois estarão
+    presentes. Aqui, num fluido ideal sem viscosidade e sem condução, só existe o primeiro.</p>
+  </div>
 
   <p>\[\frac{D\vet{u}}{Dt}=\pder{\vet{u}}{t}+\left(\vet{u}\cdot\nabla\right)\vet{u}.\]</p>
 
@@ -334,7 +349,7 @@
 
   <nav class="nav-aulas">
     <a href="aula02.html"><small>Módulo anterior</small>← 2. Continuidade</a>
-    <span class="em-breve"><small>Em preparação</small>4. Hidrostática</span>
+    <a class="prox" href="aula04.html"><small>Próximo módulo</small>4. Hidrostática →</a>
   </nav>
 
 </main>
@@ -346,6 +361,6 @@
   Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
 </footer>
 
-<script src="assets/js/widgets.js?v=202611082327"></script>
+<script src="assets/js/widgets.js?v=202611082338"></script>
 </body>
 </html>

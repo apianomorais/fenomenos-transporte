@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 4: Hidrostática e autogravidade | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611082338">
+<script src="assets/js/comum.js?v=202611082338"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num ativo" title="Módulo 4: Hidrostática e autogravidade">4</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. O fluido em repouso</a></li>
+    <li><a href="#s2">2. As superfícies de nível coincidem</a></li>
+    <li><a href="#s3">3. A lei de Stevin</a></li>
+    <li><a href="#s4">4. Do campo ao potencial</a></li>
+    <li><a href="#s5">5. A equação de estrutura</a></li>
+    <li><a href="#s6">6. Politropos e Lane-Emden</a></li>
+    <li><a href="#s7">7. O caso n = 5, no papel</a></li>
+    <li><a href="#s8">8. Quando o gás deixa de ser ideal</a></li>
+    <li><a href="#s9">9. Exercícios resolvidos</a></li>
+    <li><a href="#s10">10. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 4 · Transporte de quantidade de movimento</p>
+  <h1>Hidrostática e autogravidade</h1>
+  <p class="subtitulo">Apagando o lado esquerdo da equação de Euler sobra o equilíbrio entre o
+  peso e o gradiente de pressão. Essa equação de uma linha resolve o barômetro, a represa e o
+  submarino, e, quando a gravidade que aparece nela é produzida pelo próprio fluido, ela
+  descreve a estrutura de uma estrela.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Obter a condição de equilíbrio mecânico e mostrar que as superfícies de nível de
+      \(\rho\), de \(\Psi\) e de \(p\) são as mesmas.</li>
+      <li>Integrar a lei de Stevin e explicar o paradoxo hidrostático sem apelar para a
+      intuição.</li>
+      <li>Escrever a lei de Gauss da gravitação na forma de Poisson e acoplá-la ao equilíbrio
+      hidrostático.</li>
+      <li>Reduzir o sistema à equação de Lane-Emden, resolvê-la numericamente e reconhecer o
+      significado físico de cada índice politrópico.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. O fluido em repouso</h2>
+
+  <p>Considere o fluido em repouso, de modo que a aceleração do elemento é nula e a equação de
+  Euler se reduz a uma igualdade entre as duas forças por unidade de volume:</p>
+
+  <p>\[\iiint_\Omega\left(\rho\vet{g}-\nabla p\right)d\Omega=\vet{0}
+  \quad\Longrightarrow\quad
+  \nabla p=\rho\vet{g}.\]</p>
+
+  <p>Se a gravidade local puder ser escrita como oriunda de um potencial,
+  \(\vet{g}=-\nabla\Psi\), temos necessariamente</p>
+
+  <p>\[-\rho\nabla\Psi=\nabla p.\]</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. As superfícies de nível coincidem</h2>
+
+  <p>Essa igualdade carrega uma informação que não é óbvia à primeira vista, e que se extrai
+  aplicando o rotacional aos dois lados. O rotacional de um gradiente é sempre nulo, de modo
+  que o lado direito morre. Do lado esquerdo, a regra do produto dá</p>
+
+  <p>\[-\nabla\times\left(\rho\nabla\Psi\right)
+  =-\left(\nabla\rho\right)\times\left(\nabla\Psi\right)
+  -\rho\,\nabla\times\left(\nabla\Psi\right)
+  =\nabla\times\left(\nabla p\right)=\vet{0},\]</p>
+
+  <p>e como a segunda parcela também é nula por ser o rotacional de um gradiente, sobra</p>
+
+  <p>\[\left(\nabla\rho\right)\times\left(\nabla\Psi\right)=\vet{0}.\]</p>
+
+  <p>Dois vetores cujo produto vetorial se anula são paralelos. Como \(\nabla\rho\) é
+  perpendicular às superfícies de densidade constante e \(\nabla\Psi\) às equipotenciais,
+  isso quer dizer que as superfícies de nível de \(\rho\) e de \(\Psi\) <strong>coincidem</strong>.
+  Pela própria equação do equilíbrio, as de pressão também, e nelas vale</p>
+
+  <p>\[\der{p}{\Psi}=-\rho.\]</p>
+
+  <p>A consequência prática é forte. Num fluido em equilíbrio, a superfície livre é
+  necessariamente uma equipotencial, o que explica por que o nível do mar acompanha o geoide
+  e não a esfera, e por que a superfície de um balde girando é um paraboloide: naquele
+  referencial o potencial efetivo inclui a parte centrífuga.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. A lei de Stevin</h2>
+
+  <p>Para um fluido de densidade uniforme a relação \(dp/d\Psi=-\rho\) integra de imediato:</p>
+
+  <p>\[p=p_0-\rho\Psi,\]</p>
+
+  <p>com \(p_0\) a constante de integração. Num campo uniforme, com \(z\) medido para cima e
+  \(\Psi=gz\), isso dá \(p=p_0-\rho gz\). Medindo a profundidade \(h=-z\) a partir da
+  superfície livre, chega-se à forma conhecida:</p>
+
+  <p>\[p=p_0+\rho gh.\]</p>
+
+  <p>A pressão depende da profundidade e de nada mais. Não depende da forma do vaso, do volume
+  contido nem da área da superfície, e o widget abaixo mostra o que isso produz.</p>
+
+  <div data-widget="stevin"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. Do campo ao potencial</h2>
+
+  <p>Até aqui a gravidade foi um dado externo. Para tratar um fluido que gera o próprio campo,
+  é preciso recuperar como esse campo se relaciona com a matéria que o produz. A lei da
+  gravitação universal dá a força entre duas massas separadas por uma distância \(r\),</p>
+
+  <p>\[F=\frac{GMm}{r^2},\]</p>
+
+  <p>e o campo gravitacional de uma massa pontual na origem é
+  \(\vet{g}=-\left(GM/r^2\right)\vers{r}\), que deriva do potencial \(\Psi=-GM/r\) por
+  \(\vet{g}=-\nabla\Psi\).</p>
+
+  <p>A lei de Gauss para a gravitação afirma que o fluxo do campo através de uma superfície
+  fechada é proporcional à massa contida nela:</p>
+
+  <p>\[\oint_S\vet{g}\cdot d\vet{A}=-4\pi GM
+  =-4\pi G\iiint_\Omega\rho\,d\Omega.\]</p>
+
+  <p>O sinal negativo é a diferença entre gravitação e eletrostática: massa só tem um sinal, e
+  o campo sempre aponta para dentro. Aplicando o teorema da divergência ao lado esquerdo e
+  igualando os integrandos, como já foi feito duas vezes neste curso,</p>
+
+  <p>\[\nabla\cdot\vet{g}=-4\pi G\rho
+  \quad\Longrightarrow\quad
+  \nabla^2\Psi=4\pi G\rho,\]</p>
+
+  <p>que é a <strong>equação de Poisson</strong> da gravitação. Ela e a equação do equilíbrio
+  hidrostático são as duas peças que faltavam.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. A equação de estrutura</h2>
+
+  <p>Considere agora uma massa de fluido no espaço, sujeita apenas à atração gravitacional dos
+  seus próprios elementos. Das duas equações,</p>
+
+  <p>\[\nabla^2\Psi=4\pi G\rho
+  \qquad\text{e}\qquad
+  \nabla\Psi=-\frac{\nabla p}{\rho},\]</p>
+
+  <p>elimina-se o potencial tomando a divergência da segunda e substituindo na primeira:</p>
+
+  <p>\[\nabla\cdot\left(\frac{\nabla p}{\rho}\right)=-4\pi G\rho.\]</p>
+
+  <p>Um fluido sujeito apenas à autogravidade adquire forma esférica, de modo que convém usar
+  coordenadas esféricas. Com simetria esférica todas as derivadas angulares desaparecem, o
+  divergente se reduz ao termo radial, e sobra</p>
+
+  <p>\[\der{}{r}\left(\frac{r^2}{\rho}\der{p}{r}\right)=-4\pi G\rho\,r^2.\]</p>
+
+  <p>São duas funções desconhecidas, \(p(r)\) e \(\rho(r)\), e uma equação só. Falta uma
+  relação entre elas, e é aí que entra a física do material.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. Politropos e Lane-Emden</h2>
+
+  <p>É comum escrever uma equação de estado na forma politrópica</p>
+
+  <p>\[p=K\rho^{1+1/n},\]</p>
+
+  <p>em que \(n\) é o <strong>índice politrópico</strong>. Para um gás ideal isotérmico vale
+  \(p=\left(k_BT/m\right)\rho\), com \(T\) a temperatura, \(k_B\) a constante de Boltzmann e
+  \(m\) a massa média das partículas, o que corresponde a \(n\to\infty\). Para um gás
+  monoatômico em equilíbrio adiabático, \(p\propto\rho^{5/3}\) e \(n=3/2\).</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Duas convenções, cuidado</span>
+    <p>Alguns textos escrevem \(p=K\rho^{1+n}\), e nesse caso o índice vale o inverso do que
+    é usado aqui: o \(n=1/5\) de uma convenção é o \(n=5\) da outra. Este curso segue a
+    convenção astrofísica, \(p=K\rho^{1+1/n}\), em que \(n=0\) é a esfera de densidade
+    uniforme e \(n\) crescente significa matéria mais compressível e mais concentrada no
+    centro. Ao comparar fórmulas com outras fontes, o primeiro passo é verificar qual das duas
+    está em uso.</p>
+  </div>
+
+  <p>Com a relação politrópica, escreva \(\rho=\rho_c\theta^n\), onde \(\rho_c\) é a densidade
+  central e \(\theta\) é uma função adimensional que vale 1 no centro. Medindo o raio em
+  unidades de</p>
+
+  <p>\[\alpha=\sqrt{\frac{(n+1)K\rho_c^{1/n-1}}{4\pi G}},\qquad \xi=\frac{r}{\alpha},\]</p>
+
+  <p>todas as constantes físicas desaparecem e a equação de estrutura vira a
+  <strong>equação de Lane-Emden</strong>:</p>
+
+  <p>\[\frac{1}{\xi^2}\der{}{\xi}\left(\xi^2\der{\theta}{\xi}\right)=-\theta^n,
+  \qquad\theta(0)=1,\quad\theta'(0)=0.\]</p>
+
+  <p>A condição em \(\theta'\) vem da exigência de que não haja força no centro, por simetria.
+  A não linearidade em \(\theta^n\) impede a solução analítica, exceto em três casos, e o
+  caminho usual é integrar numericamente.</p>
+
+  <div data-widget="laneemden"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. O caso n = 5, no papel</h2>
+
+  <p>Entre os três casos resolúveis, o mais interessante é \(n=5\), isto é,
+  \(p=K\rho^{6/5}\). A solução é</p>
+
+  <p>\[\theta=\left(1+\frac{\xi^2}{3}\right)^{-1/2},
+  \qquad
+  \rho=\rho_c\left(1+\frac{\xi^2}{3}\right)^{-5/2},\]</p>
+
+  <p>que, escrita diretamente em termos do raio, fica</p>
+
+  <p>\[\rho=\left(\frac{K}{2\pi G}\right)^{5/4}
+  \left(\frac{3a}{a^2+r^2}\right)^{5/2},
+  \qquad
+  p=\frac{27a^3K^{5/2}}{\left(2\pi G\right)^{3/2}\left(a^2+r^2\right)^3},\]</p>
+
+  <p>com \(a\) uma constante de integração fixada pela densidade central. Impondo
+  \(\rho(0)=\rho_c\),</p>
+
+  <p>\[\rho_c=\left(\frac{K}{2\pi G}\right)^{5/4}\left(\frac{3}{a}\right)^{5/2}
+  \quad\Longrightarrow\quad
+  a=\frac{3}{\rho_c^{2/5}}\sqrt{\frac{K}{2\pi G}}.\]</p>
+
+  <p>A massa total sai integrando a densidade em todo o espaço:</p>
+
+  <p>\[M=4\pi\int_0^\infty\rho\,r^2dr
+  =4\pi\left(\frac{K}{2\pi G}\right)^{5/4}\left(3a\right)^{5/2}
+  \int_0^\infty\frac{r^2\,dr}{\left(a^2+r^2\right)^{5/2}}.\]</p>
+
+  <p>A substituição \(r=a\,\tg\varphi\) reduz a integral a
+  \(\int_0^{\pi/2}\sen^2\varphi\cos\varphi\,d\varphi/a^2\), que vale \(1/3a^2\), de modo
+  que</p>
+
+  <p>\[M=\frac{4\pi}{3}\,3^{5/2}\left(\frac{K}{2\pi G}\right)^{5/4}a^{1/2}
+  =\frac{18}{\sqrt{2\pi}}\,\frac{1}{\rho_c^{1/5}}
+  \left(\frac{K}{G}\right)^{3/2}.\]</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Uma esfera sem borda e com massa finita</span>
+    <p>O que torna esse caso memorável é que \(\theta\) nunca chega a zero: a densidade cai
+    como \(r^{-5}\) para longe, de modo que a esfera não tem superfície definida e o raio é
+    infinito. A massa, no entanto, é finita, porque \(\int\rho r^2dr\) converge. É o único
+    politropo com essa combinação, e ele serve de contraexemplo sempre que alguém assume que
+    objeto de massa finita precisa ter borda.</p>
+    <p>Repare também no que a fórmula da massa diz: para \(K\) e \(G\) fixos, quanto maior a
+    densidade central, <em>menor</em> a massa total, com \(M\propto\rho_c^{-1/5}\). Essa
+    relação invertida entre massa e densidade central é a assinatura dos politropos de índice
+    alto, e é dela que vem, no caso \(n=3\), a existência de uma massa máxima para as anãs
+    brancas.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. Quando o gás deixa de ser ideal</h2>
+
+  <p>Para massas grandes a autogravidade chega a ser suficiente para quebrar a estrutura
+  interna das moléculas que compõem o fluido. Nesses casos é preciso um tratamento via
+  mecânica estatística da dependência da pressão com a repulsão eletrônica da nuvem de
+  probabilidade quântica dos elétrons, e da sua interdependência com a temperatura.</p>
+
+  <p>O resultado é que a pressão deixa de vir da agitação térmica e passa a vir do princípio
+  de exclusão: mesmo a temperatura zero, os elétrons não podem ocupar todos o mesmo estado, e
+  o gás resiste à compressão. Essa <strong>pressão de degenerescência</strong> é politrópica
+  nos dois extremos, com \(n=3/2\) no caso não relativístico e \(n=3\) no ultrarrelativístico,
+  e é por isso que esses dois índices aparecem tanto.</p>
+
+  <p>O caso \(n=3\) tem uma propriedade peculiar que o widget deixa ver: a massa total não
+  depende da densidade central. Ela é a mesma para qualquer compressão, o que significa que
+  existe um único valor de massa compatível com o equilíbrio, e acima dele não há solução.
+  Esse valor é o <strong>limite de Chandrasekhar</strong>, cerca de 1,4 massas solares, e é o
+  que separa uma anã branca estável de um colapso para estrela de nêutrons.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">4.1 O barômetro de Torricelli</span>
+    <p>Qual a altura da coluna de mercúrio que equilibra a pressão atmosférica padrão de
+    \(101\,325\) Pa? E se o líquido fosse água?</p>
+    <p>Da lei de Stevin com \(p_0=0\) no vácuo acima da coluna,</p>
+    <p>\[h=\frac{p_{\rm atm}}{\rho g}
+    =\frac{101\,325}{13\,546\times9{,}80665}=0{,}763\ \text{m}.\]</p>
+    <p>Com água, \(\rho=1000\) kg/m³ e \(h=10{,}3\) m. O instrumento de Torricelli só é
+    portátil por causa da densidade do mercúrio, e um barômetro de água precisaria de um tubo
+    mais alto do que um prédio de três andares. Esse é também o limite de sucção de uma bomba
+    aspirante, e a razão de ela não puxar água de um poço profundo.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">4.2 A força na parede da represa</span>
+    <p>Uma represa retangular tem largura \(b\) e profundidade \(H\). Calcule a força total
+    sobre a parede e a altura do ponto de aplicação.</p>
+    <p>A pressão manométrica cresce linearmente, \(p=\rho gh\), e a força é a integral:</p>
+    <p>\[F=\int_0^H \rho gh\,b\,dh=\frac{\rho gbH^2}{2}.\]</p>
+    <p>O momento em relação à base dá a altura de aplicação:</p>
+    <p>\[y=\frac{\int_0^H \rho gh(H-h)b\,dh}{F}=\frac{H}{3}.\]</p>
+    <p>A força cresce com o <em>quadrado</em> da profundidade, e atua a um terço da altura a
+    partir do fundo. Com \(b=50\) m e \(H=20\) m sai \(F=9{,}8\times10^{7}\) N, isto é, dez
+    mil toneladas-força, aplicadas a \(6{,}7\) m do fundo.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">4.3 A esfera de densidade uniforme</span>
+    <p>Obtenha o perfil de pressão de uma esfera autogravitante de densidade uniforme
+    \(\rho_0\) e raio \(R\), e calcule a pressão central da Terra nessa aproximação.</p>
+    <p>Esse é o politropo \(n=0\). O campo dentro de uma esfera uniforme vale
+    \(g(r)=4\pi G\rho_0r/3\), e o equilíbrio \(dp/dr=-\rho_0g\) integra para</p>
+    <p>\[p(r)=\frac{2\pi G\rho_0^2}{3}\left(R^2-r^2\right).\]</p>
+    <p>Com \(\rho_0=5515\) kg/m³ e \(R=6{,}371\times10^{6}\) m, a pressão central dá
+    \(1{,}7\times10^{11}\) Pa, ou \(170\) GPa. O valor aceito para o centro da Terra é cerca
+    de \(360\) GPa, e a diferença é inteiramente devida à hipótese de densidade uniforme: o
+    núcleo é muito mais denso que o manto.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">4.4 Verificando a solução n = 1</span>
+    <p>Mostre que \(\theta=\sen\xi/\xi\) resolve a equação de Lane-Emden com \(n=1\), e
+    obtenha o raio da esfera.</p>
+    <p>Com \(n=1\) a equação vira linear. Substituindo \(\theta=\chi/\xi\), o termo radial
+    simplifica e sobra \(\chi''=-\chi\), cuja solução regular na origem é
+    \(\chi=\sen\xi\). Logo \(\theta=\sen\xi/\xi\), que vale 1 no centro pelo limite conhecido
+    e se anula em \(\xi_1=\pi\).</p>
+    <p>O raio físico é \(R=\alpha\pi\) e, como \(\alpha\) não depende de \(\rho_c\) quando
+    \(n=1\), todas as esferas desse tipo têm <strong>o mesmo raio</strong>,
+    independentemente da massa. O widget confirma \(\xi_1=3{,}14159\) na integração
+    numérica.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>4.5</b> Um tubo em U contém água de um lado e óleo de densidade \(850\) kg/m³ do
+      outro, sem se misturarem. Se a coluna de óleo tem \(20\) cm, qual o desnível entre as
+      duas superfícies livres? Explique o resultado em termos de superfícies de pressão
+      constante.</li>
+
+      <li><b>4.6</b> Deduza a fórmula barométrica para uma atmosfera isotérmica,
+      \(p=p_0e^{-z/H}\) com \(H=k_BT/mg\), partindo de \(dp/dz=-\rho g\) e da equação de
+      estado do gás ideal. Calcule \(H\) para o ar a \(288\) K e compare com os \(8{,}4\) km
+      usados no exercício 1.7.</li>
+
+      <li><b>4.7</b> Repita o cálculo anterior para uma atmosfera adiabática, com
+      \(p\propto\rho^{5/3}\), e mostre que nesse caso a temperatura cai linearmente com a
+      altura. Obtenha a taxa de queda em K/km e compare com o valor observado de cerca de
+      \(6{,}5\) K/km na troposfera. Por que o valor real fica entre o isotérmico e o
+      adiabático seco?</li>
+
+      <li><b>4.8</b> Mostre que \(\theta=1-\xi^2/6\) resolve Lane-Emden com \(n=0\) e obtenha
+      \(\xi_1=\sqrt6\). Em seguida mostre que esse caso reproduz o perfil de pressão do
+      exercício 4.3.</li>
+
+      <li><b>4.9</b> Verifique por substituição direta que
+      \(\theta=\left(1+\xi^2/3\right)^{-1/2}\) resolve a equação com \(n=5\), e confirme que
+      \(-\xi^2\theta'\to\sqrt3\) quando \(\xi\to\infty\). Explique o que esse limite significa
+      para a massa total.</li>
+
+      <li><b>4.10</b> Um balde cilíndrico de raio \(R\) com água gira em torno do seu eixo com
+      velocidade angular \(\Omega\). No referencial girante o potencial efetivo é
+      \(\Psi=gz-\Omega^2r^2/2\). Use o resultado da seção 2 para obter a forma da superfície
+      livre sem escrever nenhuma equação de movimento.</li>
+
+      <li><b>4.11</b> Em meia página: a equação de estrutura da seção 5 precisou de uma
+      relação entre pressão e densidade para ser fechada, enquanto a equação da continuidade
+      do módulo 2 não precisou de nada. Explique a diferença em termos do número de incógnitas
+      e de equações, e diga de onde vem, fisicamente, a relação que faltava.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula03.html"><small>Módulo anterior</small>← 3. Elemento de fluido</a>
+    <span class="em-breve"><small>Em preparação</small>5. Irrotacional e Bernoulli</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611082338"></script>
+</body>
+</html>

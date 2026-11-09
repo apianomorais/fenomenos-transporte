@@ -1294,8 +1294,13 @@
         + '<p>O primeiro termo é a parte <strong>local</strong>, que mede se o escoamento '
         + 'inteiro está mudando com o tempo. O segundo é a parte <strong>convectiva</strong>, '
         + 'que mede o que a partícula encontra ao se deslocar. Os cartões mostram os dois '
-        + 'separadamente: aqui o local é exatamente zero e todo o resto da aceleração vem da '
-        + 'convecção.</p>'
+        + 'separadamente: aqui o local é exatamente zero e todo o resto da aceleração vem do '
+        + 'termo convectivo.</p>'
+        + '<p>O nome é consagrado e é impreciso. Transporte pelo simples deslocamento do '
+        + 'fluido chama-se <strong>advecção</strong>; <strong>convecção</strong>, em sentido '
+        + 'estrito, é o que acontece quando advecção e difusão atuam juntas, como na parede '
+        + 'quente que aquece o ar subindo ao longo dela. No fluido ideal deste módulo não há '
+        + 'difusão nenhuma, de modo que o que existe aqui é advecção pura.</p>'
         + '<p>O exemplo prático desse termo é o bocal de uma mangueira. A água dentro dele está '
         + 'em regime permanente, nada muda com o tempo, e mesmo assim ela sai muito mais '
         + 'rápido do que entrou. Quem acelera essa água é a diferença de pressão entre a '
@@ -1477,6 +1482,335 @@
         + 'a pressão atmosférica, que se cancela exatamente por ser a mesma em cima e embaixo. '
         + 'Essa é a razão prática de se trabalhar com a pressão manométrica, medida a partir '
         + 'da atmosférica, em quase todo problema de hidrostática.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     9. O paradoxo hidrostático
+     Três vasos de mesma base e mesma altura de líquido, com volumes
+     muito diferentes, têm a mesma pressão no fundo e a mesma força
+     sobre a base. O vaso que contém menos líquido empurra a base com
+     a mesma força que o que contém mais, e isso parece violar alguma
+     coisa até se perceber que as paredes inclinadas também empurram.
+     ================================================================= */
+  REGISTRO.stevin = function (raiz) {
+    var est = { h: 0.60, rho: 1000 };
+    var G0 = 9.80665, ABASE = 0.020;        // base de 200 cm², igual nos três
+
+    var corpo = moldura(raiz, 'Mesma altura, mesma pressão, pesos diferentes');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'altura da coluna', 0.10, 1.00, 0.02, 0.60,
+      function (v) { est.h = v; desenhar(); },
+      function (v) { return F.fmt(v * 100, 0) + ' cm'; });
+    opcoes(ctr, [{ rot: 'água', v: 1000 }, { rot: 'óleo', v: 850 },
+                 { rot: 'glicerina', v: 1260 }, { rot: 'mercúrio', v: 13546 }], 0,
+      function (v) { est.rho = v; desenhar(); });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'pressão no fundo', k: 'p' },
+      { rot: 'força sobre a base', k: 'f' },
+      { rot: 'peso no vaso reto', k: 'w1' },
+      { rot: 'peso no vaso que abre', k: 'w2' },
+      { rot: 'peso no vaso que fecha', k: 'w3' },
+      { rot: 'coluna equivalente de água', k: 'eq' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    /* Três vasos de mesma base e mesma altura: reto, tronco que abre e
+       tronco que fecha. O fator é a razão entre o raio no topo e na base. */
+    var VASOS = [
+      { rot: 'reto', f: 1.0 },
+      { rot: 'abre', f: 1.8 },
+      { rot: 'fecha', f: 0.45 }
+    ];
+
+    function volume(f) {
+      /* tronco de cone de raio r0 na base e f·r0 no topo */
+      var r0 = Math.sqrt(ABASE / Math.PI);
+      return Math.PI * r0 * r0 * est.h * (1 + f + f * f) / 3;
+    }
+
+    function desenhar() {
+      var p = est.rho * G0 * est.h, Fb = p * ABASE;
+
+      var pa = G.preparar(cv1, 320);
+      var ct = pa.ct;
+      var base = pa.A - 62, esc = (pa.A - 96) / 1.0;
+      var larg = pa.L / 3;
+
+      VASOS.forEach(function (v, i) {
+        var cx = larg * (i + 0.5);
+        var r0 = larg * 0.17, h = est.h * esc;
+        var rt = r0 * v.f;
+        ct.fillStyle = 'rgba(63,67,145,.16)';
+        ct.beginPath();
+        ct.moveTo(cx - r0, base); ct.lineTo(cx + r0, base);
+        ct.lineTo(cx + rt, base - h); ct.lineTo(cx - rt, base - h);
+        ct.closePath(); ct.fill();
+        ct.strokeStyle = G.COR.tinta; ct.lineWidth = 2;
+        ct.beginPath();
+        ct.moveTo(cx - rt, base - h); ct.lineTo(cx - r0, base);
+        ct.lineTo(cx + r0, base); ct.lineTo(cx + rt, base - h);
+        ct.stroke();
+        ct.strokeStyle = G.COR.mestra; ct.lineWidth = 1.6;
+        ct.beginPath();
+        ct.moveTo(cx - rt, base - h); ct.lineTo(cx + rt, base - h); ct.stroke();
+        rotulo(ct, v.rot, cx, base + 6, G.COR.suave, 'center', 'top');
+        rotulo(ct, F.fmt(volume(v.f) * 1000, 1) + ' L', cx, base - h - 8,
+          G.COR.suave, 'center', 'bottom');
+        /* a força que o líquido faz sobre a base, igual nos três */
+        seta(ct, cx, base + 24, cx, base + 44, G.COR.vinho, 2.4);
+      });
+      rotulo(ct, 'a mesma força sobre as três bases', pa.L / 2, base + 48,
+        G.COR.vinho, 'center', 'top');
+
+      /* perfil de pressão */
+      var pmax = est.rho * G0 * 1.0 / 1000;
+      var gr = G.eixos(cv2, {
+        altura: 300, xmin: 0, xmax: Math.max(1, pmax * 1.05), ymin: 0, ymax: 1,
+        margem: { e: 58, d: 14, c: 14, b: 44 },
+        rotX: 'pressão manométrica (kPa)', rotY: 'profundidade (m)',
+        marcasX: G.marcasLineares(0, Math.max(1, pmax * 1.05), 5,
+          pmax > 20 ? 0 : 1),
+        formataY: function (v) { return F.fmt(1 - v, 1); }
+      });
+      /* o eixo vertical é profundidade medida para baixo, de modo que a
+         reta de Stevin aparece como uma diagonal */
+      var gc = gr.ct;
+      gc.strokeStyle = G.COR.mestra; gc.lineWidth = 2.8;
+      gc.beginPath();
+      gc.moveTo(gr.X(0), gr.Y(1));
+      gc.lineTo(gr.X(est.rho * G0 * est.h / 1000), gr.Y(1 - est.h));
+      gc.stroke();
+      gc.setLineDash([5, 4]); gc.strokeStyle = G.COR.suave; gc.lineWidth = 1.4;
+      gc.beginPath();
+      gc.moveTo(gr.x0, gr.Y(1 - est.h)); gc.lineTo(gr.x1, gr.Y(1 - est.h));
+      gc.stroke(); gc.setLineDash([]);
+      rotulo(gc, 'fundo', gr.x1 - 6, gr.Y(1 - est.h) - 6,
+        G.COR.suave, 'right', 'bottom');
+      rotulo(gc, 'superfície', gr.X(0) + 8, gr.Y(1) + 8,
+        G.COR.suave, 'left', 'top');
+      rotulo(gc, 'p = ϱgh', gr.X(est.rho * G0 * est.h / 1000) - 8,
+        gr.Y(1 - est.h / 2), G.COR.mestra, 'right');
+
+      mostrar({
+        p: F.fmt(p / 1000, 2) + ' kPa',
+        f: F.fmt(Fb, 1) + ' N',
+        w1: F.fmt(volume(1.0) * est.rho * G0, 1) + ' N',
+        w2: F.fmt(volume(1.8) * est.rho * G0, 1) + ' N',
+        w3: F.fmt(volume(0.45) * est.rho * G0, 1) + ' N',
+        eq: F.fmt(p / (1000 * G0) * 100, 1) + ' cm'
+      });
+
+      nota.innerHTML =
+        '<p>Num fluido em repouso a equação de Euler perde o lado esquerdo inteiro e sobra o '
+        + 'equilíbrio entre o peso e o gradiente de pressão:</p>'
+        + '\\[\\nabla p=\\rho\\vet{g}=-\\rho\\nabla\\Psi.\\]'
+        + '<p>Para densidade uniforme e campo uniforme, com \\(\\Psi=-gz\\) medido para cima, '
+        + 'a integração é imediata e dá a <strong>lei de Stevin</strong>,</p>'
+        + '\\[p=p_0+\\rho g h,\\]'
+        + '<p>com \\(h\\) a profundidade abaixo da superfície livre. A pressão depende da '
+        + 'profundidade e de nada mais: não depende da forma do vaso, do volume contido nem '
+        + 'da largura da superfície.</p>'
+        + '<p>Os três vasos do desenho têm a mesma base e a mesma altura de líquido, e contêm '
+        + 'volumes muito diferentes. A pressão no fundo é a mesma nos três, e portanto a '
+        + 'força sobre a base também. Os cartões mostram que o peso do líquido, esse sim, '
+        + 'difere bastante, e que no vaso que abre o peso é maior que a força sobre a base, '
+        + 'enquanto no que fecha é menor. É o <strong>paradoxo hidrostático</strong>, e a '
+        + 'saída é lembrar que as paredes inclinadas não são verticais: elas também empurram '
+        + 'o líquido, para baixo no vaso que fecha e para cima no que abre, e a conta '
+        + 'fecha.</p>'
+        + '<p>O último cartão converte a pressão em altura de coluna de água, que é como ela '
+        + 'costuma ser citada em hidráulica. Com mercúrio a mesma coluna produz treze vezes '
+        + 'mais pressão, e é por isso que o barômetro de Torricelli tem setenta e seis '
+        + 'centímetros em vez de dez metros.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     10. A equação de Lane-Emden
+     Integrada por Runge-Kutta de quarta ordem, com os casos conhecidos
+     servindo de aferição: n = 0 dá raio √6, n = 1 dá π e n = 5 não
+     termina nunca, apesar de ter massa finita.
+     ================================================================= */
+  REGISTRO.laneemden = function (raiz) {
+    var est = { n: 3 };
+
+    /* Valores tabelados, usados para conferir a integração na tela. */
+    var TABELA = { 0: [2.4494, 4.8988], 1: [3.14159, 3.14159],
+                   1.5: [3.65375, 2.71406], 2: [4.35287, 2.41105],
+                   3: [6.89685, 2.01824], 4: [14.9716, 1.79723] };
+
+    var corpo = moldura(raiz, 'A estrutura de uma esfera autogravitante');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'índice politrópico n', 0, 5, 0.25, 3,
+      function (v) { est.n = v; desenhar(); },
+      function (v) { return F.fmt(v, 2); });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'raio ξ₁', k: 'x1' },
+      { rot: 'valor tabelado', k: 'tab' },
+      { rot: '−ξ₁²θ′(ξ₁)', k: 'der' },
+      { rot: 'ρ central / ρ média', k: 'raz' },
+      { rot: 'expoente p ∝ ρ^γ', k: 'gam' },
+      { rot: 'massa adimensional', k: 'm' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    /* θ'' + (2/ξ)θ' + θ^n = 0, com θ(0)=1 e θ'(0)=0. A origem é singular,
+       de modo que o arranque usa a série θ ≈ 1 − ξ²/6 + n ξ⁴/120. */
+    function integrar(n) {
+      var h = 0.002, x = 0.01;
+      var th = 1 - x * x / 6 + n * Math.pow(x, 4) / 120;
+      var dth = -x / 3 + n * Math.pow(x, 3) / 30;
+      var pts = [[0, 1, 0]];
+      function f(x, y) {
+        var t = y[0] <= 0 ? 0 : Math.pow(y[0], n);
+        return [y[1], -2 / x * y[1] - t];
+      }
+      var y = [th, dth], i;
+      for (i = 0; i < 20000; i++) {
+        if (y[0] <= 0) break;
+        if (i % 25 === 0) pts.push([x, y[0], y[1]]);
+        var k1 = f(x, y);
+        var k2 = f(x + h / 2, [y[0] + h / 2 * k1[0], y[1] + h / 2 * k1[1]]);
+        var k3 = f(x + h / 2, [y[0] + h / 2 * k2[0], y[1] + h / 2 * k2[1]]);
+        var k4 = f(x + h, [y[0] + h * k3[0], y[1] + h * k3[1]]);
+        var ant = y[0], antx = x, antd = y[1];
+        y = [y[0] + h / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]),
+             y[1] + h / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1])];
+        x += h;
+        if (y[0] <= 0 && ant > 0) {
+          /* interpolação linear no passo que cruza o zero, aplicada também
+             à derivada, porque é dela que sai a massa */
+          var s = ant / (ant - y[0]);
+          return { pts: pts, x1: antx + s * h,
+                   dx1: antd + s * (y[1] - antd), cortou: true };
+        }
+      }
+      return { pts: pts, x1: x, dx1: y[1], cortou: false };
+    }
+
+    function desenhar() {
+      var n = est.n, r = integrar(n);
+      var xm = r.cortou ? r.x1 * 1.08 : 40;
+
+      var g1 = G.eixos(cv1, {
+        altura: 290, xmin: 0, xmax: xm, ymin: 0, ymax: 1.05,
+        margem: { e: 52, d: 14, c: 14, b: 42 },
+        rotX: 'raio adimensional ξ', rotY: 'θ, com ρ = ρc θⁿ',
+        marcasX: G.marcasLineares(0, xm, 5, xm > 20 ? 0 : 1),
+        formataY: function (v) { return F.fmt(v, 1); }
+      });
+      var gc = g1.ct;
+      gc.strokeStyle = G.COR.mestra; gc.lineWidth = 2.6;
+      gc.beginPath();
+      r.pts.forEach(function (q, i) {
+        var px = g1.X(q[0]), py = g1.Y(Math.max(0, q[1]));
+        if (i === 0) gc.moveTo(px, py); else gc.lineTo(px, py);
+      });
+      gc.stroke();
+      if (r.cortou) G.vertical(g1, r.x1, G.COR.vinho, 'ξ₁');
+
+      var g2 = G.eixos(cv2, {
+        altura: 290, xmin: 0, xmax: xm, ymin: 0, ymax: 1.05,
+        margem: { e: 52, d: 14, c: 14, b: 42 },
+        rotX: 'raio adimensional ξ', rotY: 'densidade ρ/ρc',
+        marcasX: G.marcasLineares(0, xm, 5, xm > 20 ? 0 : 1),
+        formataY: function (v) { return F.fmt(v, 1); }
+      });
+      var g2c = g2.ct;
+      g2c.strokeStyle = G.COR.vinho; g2c.lineWidth = 2.6;
+      g2c.beginPath();
+      r.pts.forEach(function (q, i) {
+        var d = q[1] <= 0 ? 0 : Math.pow(q[1], n);
+        var px = g2.X(q[0]), py = g2.Y(Math.min(1.05, d));
+        if (i === 0) g2c.moveTo(px, py); else g2c.lineTo(px, py);
+      });
+      g2c.stroke();
+      /* sombreado sob a curva, desenhado a partir dos próprios pontos
+         da integração, que não estão igualmente espaçados */
+      g2c.fillStyle = 'rgba(140,47,57,.14)';
+      g2c.beginPath();
+      g2c.moveTo(g2.X(0), g2.Y(0));
+      r.pts.forEach(function (q) {
+        var d = q[1] <= 0 ? 0 : Math.pow(q[1], n);
+        g2c.lineTo(g2.X(q[0]), g2.Y(Math.min(1.05, d)));
+      });
+      g2c.lineTo(g2.X(r.pts[r.pts.length - 1][0]), g2.Y(0));
+      g2c.closePath(); g2c.fill();
+
+      var m = -r.x1 * r.x1 * r.dx1;
+      var tab = TABELA[n];
+      mostrar({
+        x1: r.cortou ? F.fmt(r.x1, 4) : 'não termina',
+        tab: tab ? F.fmt(tab[0], 4) : '—',
+        der: r.cortou ? F.fmt(m, 4) : F.fmt(Math.sqrt(3), 4) + ' (limite)',
+        raz: r.cortou ? F.fmt(r.x1 / (3 * (-r.dx1)), 3) : '∞',
+        gam: F.fmt(n > 0 ? 1 + 1 / n : 0, 3).replace('0,000', '∞'),
+        m: tab ? F.fmt(tab[1], 4) + ' tabelado' : '—'
+      });
+
+      nota.innerHTML =
+        '<p>Uma massa de fluido no espaço, sujeita apenas à atração dos seus próprios '
+        + 'elementos, obedece a duas equações ao mesmo tempo. O equilíbrio hidrostático liga '
+        + 'pressão e potencial,</p>'
+        + '\\[\\nabla\\Psi=-\\frac{\\nabla p}{\\rho},\\]'
+        + '<p>e a equação de Poisson liga o potencial à densidade que o produz,</p>'
+        + '\\[\\nabla^2\\Psi=4\\pi G\\rho.\\]'
+        + '<p>Eliminando \\(\\Psi\\) entre as duas sobra uma equação só para pressão e '
+        + 'densidade,</p>'
+        + '\\[\\nabla\\cdot\\left(\\frac{\\nabla p}{\\rho}\\right)=-4\\pi G\\rho,\\]'
+        + '<p>que em simetria esférica vira '
+        + '\\(\\der{}{r}\\left(\\frac{r^2}{\\rho}\\der{p}{r}\\right)=-4\\pi G\\rho\\,r^2\\). '
+        + 'Falta ainda uma relação entre pressão e densidade, e a escolha usual é a '
+        + 'politrópica \\(p=K\\rho^{1+1/n}\\), com \\(n\\) no deslizante.</p>'
+        + '<p>Escrevendo \\(\\rho=\\rho_c\\theta^n\\) e medindo o raio em unidades de '
+        + '\\(\\alpha=\\sqrt{(n+1)K\\rho_c^{1/n-1}/4\\pi G}\\), toda a física some das '
+        + 'constantes e resta a <strong>equação de Lane-Emden</strong>:</p>'
+        + '\\[\\frac{1}{\\xi^2}\\der{}{\\xi}\\left(\\xi^2\\der{\\theta}{\\xi}\\right)'
+        + '=-\\theta^n,\\qquad\\theta(0)=1,\\quad\\theta\'(0)=0.\\]'
+        + '<p>Ela é resolvida aqui por Runge-Kutta de quarta ordem, com arranque em série '
+        + 'porque a origem é singular. O primeiro zero \\(\\xi_1\\) é a superfície da esfera, '
+        + 'e o cartão ao lado traz o valor tabelado para conferir: \\(n=0\\) dá '
+        + '\\(\\xi_1=\\sqrt6\\), \\(n=1\\) dá exatamente \\(\\pi\\), \\(n=3\\) dá '
+        + '\\(6{,}89685\\).</p>'
+        + '<p>Três casos merecem nome. Com \\(n=0\\) a densidade é uniforme e a solução é a '
+        + 'parábola \\(\\theta=1-\\xi^2/6\\). Com \\(n=3/2\\) descreve-se um gás '
+        + 'monoatômico adiabático e também a matéria degenerada não relativística das anãs '
+        + 'brancas leves. Com \\(n=3\\), que dá \\(\\gamma=4/3\\), descreve-se o gás '
+        + 'degenerado ultrarrelativístico, e é desse caso que sai o limite de '
+        + 'Chandrasekhar.</p>'
+        + '<p>Com \\(n=5\\) acontece algo curioso: \\(\\theta\\) nunca chega a zero, de modo '
+        + 'que a esfera não tem borda, e ainda assim a massa total é finita, porque '
+        + '\\(-\\xi^2\\theta\'\\to\\sqrt3\\). Esse é o único caso com solução em forma '
+        + 'fechada além de \\(n=0\\) e \\(n=1\\), e a próxima seção o resolve no papel.</p>';
       tipografar(corpo);
     }
 
