@@ -3145,6 +3145,695 @@
     registrarRedesenho(desenhar);
   };
 
+  /* =================================================================
+     Moléculas na interface
+     O desenho que acompanha a primeira seção: a mesma molécula no
+     interior e na superfície, com as forças que os vizinhos exercem
+     sobre ela, e a estimativa de gama que sai de contar ligações
+     perdidas, comparada com o valor medido.
+     ================================================================= */
+  REGISTRO.moleculas = function (raiz) {
+    var est = { alfa: 0.08 };
+
+    /* calor de vaporização (kJ/mol), volume molar (cm³/mol) e gama medido
+       (mN/m) a 20 °C. As fontes usuais de tabela concordam nesses valores
+       com um ou dois por cento. */
+    var LIQ = [
+      { rot: 'água', hv: 40.7, vm: 18.0, g: 72.8 },
+      { rot: 'etanol', hv: 38.6, vm: 58.4, g: 22.3 },
+      { rot: 'benzeno', hv: 33.8, vm: 89.4, g: 28.9 },
+      { rot: 'mercúrio', hv: 59.1, vm: 14.8, g: 485.5 }
+    ];
+
+    /* Uma molécula da superfície perde da ordem de um quarto dos vizinhos,
+       e o custo de energia de cada ligação é da ordem do calor latente por
+       molécula dividido pelo número de ligações. Juntando os dois fatores,
+       gama ≈ (1/4) ΔH_vap / (N_A a²), com a² a área que uma molécula ocupa. */
+    function estimativa(L) {
+      var a = Math.cbrt(L.vm * 1e-6 / F.C.NA);
+      return 0.25 * L.hv * 1e3 / F.C.NA / (a * a);
+    }
+
+    var corpo = moldura(raiz, 'Por que a superfície é diferente do interior');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'adesão do meio vizinho, em frações da coesão do líquido',
+      0, 1, 0.01, 0.08, function (v) { est.alfa = v; desenhar(); },
+      function (v) { return F.fmt(v, 2); });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'vizinhos no interior (≈12 em 3D)', k: 'vi' },
+      { rot: 'vizinhos na superfície (≈9 em 3D)', k: 'vs' },
+      { rot: 'resultante no interior, em coesões', k: 'ri' },
+      { rot: 'resultante na superfície, em coesões', k: 'rs' },
+      { rot: 'γ da água estimado', k: 'ge' },
+      { rot: 'γ da água medido', k: 'gm' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    /* rede triangular com um deslocamento fixo por molécula, para o
+       desenho parecer um líquido e não um cristal, sem tremer a cada
+       redesenho */
+    function bagunca(i, j) {
+      var s = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453;
+      var t = Math.sin(i * 39.3468 + j * 11.135) * 24634.6345;
+      return [(s - Math.floor(s)) - 0.5, (t - Math.floor(t)) - 0.5];
+    }
+
+    function desenhar() {
+      /* ---------- painel da esquerda: o líquido visto de perto ---------- */
+      var p = G.preparar(cv1, 330);
+      var ct = p.ct, L = p.L, A = p.A;
+      var d = 30;                                  // espaçamento da rede
+      var ys = 92;                                 // altura da interface
+      var mol = [];
+      var i, j, k;
+      for (j = 0; j * d * 0.87 < A - ys + d; j++) {
+        for (i = -1; i * d < L + d; i++) {
+          var b = bagunca(i, j);
+          mol.push([i * d + (j % 2) * d / 2 + b[0] * d * 0.22,
+                    ys + j * d * 0.87 + b[1] * d * 0.22, j]);
+        }
+      }
+      /* gás: poucas moléculas, espalhadas e sem ordem */
+      var gas = [];
+      for (k = 0; k < 22; k++) {
+        var g1 = bagunca(k + 71, 3), g2 = bagunca(k + 7, 19);
+        gas.push([(0.5 + g1[0]) * L, 8 + (0.5 + g2[0]) * (ys - 26)]);
+      }
+
+      ct.fillStyle = 'rgba(63,67,145,.05)';
+      ct.fillRect(0, ys - d * 0.42, L, A - ys + d * 0.42);
+      ct.strokeStyle = G.COR.clara; ct.lineWidth = 1.2;
+      ct.setLineDash([5, 4]);
+      ct.beginPath(); ct.moveTo(0, ys - d * 0.42); ct.lineTo(L, ys - d * 0.42); ct.stroke();
+      ct.setLineDash([]);
+
+      ct.fillStyle = G.COR.roxo;
+      gas.forEach(function (q) {
+        ct.beginPath(); ct.arc(q[0], q[1], 3.4, 0, 2 * Math.PI); ct.fill();
+      });
+      ct.fillStyle = G.COR.clara;
+      mol.forEach(function (q) {
+        ct.beginPath(); ct.arc(q[0], q[1], 8.5, 0, 2 * Math.PI); ct.fill();
+      });
+
+      /* as duas moléculas em exame: uma na primeira camada, uma no fundo */
+      function maisProxima(x, y, camada) {
+        var melhor = null, dm = 1e9;
+        mol.forEach(function (q) {
+          if (q[2] !== camada) return;
+          var r = (q[0] - x) * (q[0] - x) + (q[1] - y) * (q[1] - y);
+          if (r < dm) { dm = r; melhor = q; }
+        });
+        return melhor;
+      }
+      var alvo = [maisProxima(L * 0.30, ys, 0), maisProxima(L * 0.70, ys + 3 * d * 0.87, 3)];
+
+      var somas = [];
+      alvo.forEach(function (q, idx) {
+        var sx = 0, sy = 0, viz = 0;
+        mol.forEach(function (r) {
+          if (r === q) return;
+          var dx = r[0] - q[0], dy = r[1] - q[1], rr = Math.sqrt(dx * dx + dy * dy);
+          if (rr > d * 1.18) return;
+          viz++;
+          sx += dx / rr; sy += dy / rr;
+          seta(ct, q[0], q[1], q[0] + dx * 0.52, q[1] + dy * 0.52,
+            'rgba(44,95,141,.75)', 1.8);
+        });
+        /* o meio de cima também atrai, com intensidade alfa */
+        if (idx === 0) {
+          [[-0.6, -1], [0.6, -1]].forEach(function (u) {
+            var n = Math.sqrt(u[0] * u[0] + u[1] * u[1]);
+            sx += est.alfa * u[0] / n; sy += est.alfa * u[1] / n;
+            if (est.alfa > 0.02) {
+              seta(ct, q[0], q[1], q[0] + u[0] / n * d * 0.52 * (0.3 + est.alfa * 0.7),
+                q[1] + u[1] / n * d * 0.52 * (0.3 + est.alfa * 0.7),
+                G.COR.roxo, 1.4 + 1.6 * est.alfa);
+            }
+          });
+        }
+        somas.push([sx, sy, viz]);
+        ct.fillStyle = '#fff';
+        ct.beginPath(); ct.arc(q[0], q[1], 12.5, 0, 2 * Math.PI); ct.fill();
+        ct.fillStyle = G.COR.mestra;
+        ct.beginPath(); ct.arc(q[0], q[1], 10.5, 0, 2 * Math.PI); ct.fill();
+        /* a resultante, com comprimento proporcional ao módulo, para que a
+           do interior não pareça tão importante quanto a da superfície */
+        var r0 = Math.sqrt(sx * sx + sy * sy);
+        var c0 = 34 * r0;
+        if (c0 > 7) {
+          seta(ct, q[0], q[1], q[0] + sx / r0 * c0, q[1] + sy / r0 * c0,
+            G.COR.vinho, 3.2);
+          rotulo(ct, r0 < 0.5 ? 'resultante quase nula' : 'resultante',
+            q[0] + sx / r0 * (c0 + 10), q[1] + sy / r0 * (c0 + 10),
+            G.COR.vinho, 'center');
+        } else {
+          rotulo(ct, 'resultante nula', q[0], q[1] - 22, G.COR.vinho, 'center');
+        }
+      });
+
+      rotulo(ct, 'gás', 10, 14, G.COR.roxo, 'left', 'top');
+      rotulo(ct, 'líquido', 10, A - 10, G.COR.mestra, 'left', 'bottom');
+      rotulo(ct, 'molécula da superfície', alvo[0][0], 16, G.COR.tinta, 'center', 'top');
+      rotulo(ct, 'molécula do interior', alvo[1][0], alvo[1][1] + 26,
+        G.COR.tinta, 'center', 'top');
+
+      /* ---------- painel da direita: estimativa contra medida ---------- */
+      var gr = G.eixos(cv2, {
+        altura: 330, xmin: -0.6, xmax: LIQ.length - 0.4,
+        ymin: 0, ymax: 560, divY: 7,
+        margem: { e: 58, d: 14, c: 14, b: 44 },
+        rotY: 'γ (mN/m)',
+        marcasX: LIQ.map(function (q, k) { return { v: k, r: q.rot }; }),
+        formataY: function (v) { return String(Math.round(v)); }
+      });
+      G.barras(gr, LIQ.map(function (q, k) {
+        return { x: k - 0.17, y: estimativa(q) * 1e3 };
+      }), G.COR.clara, 0.3);
+      G.barras(gr, LIQ.map(function (q, k) {
+        return { x: k + 0.17, y: q.g };
+      }), G.COR.mestra, 0.3);
+      G.legenda(gr, [{ cor: G.COR.clara, texto: 'estimado por ligações perdidas' },
+                     { cor: G.COR.mestra, texto: 'medido a 20 °C' }]);
+
+      var s0 = somas[0], s1 = somas[1];
+      mostrar({
+        vi: String(s1[2]),
+        vs: String(s0[2]),
+        ri: F.fmt(Math.sqrt(s1[0] * s1[0] + s1[1] * s1[1]), 2),
+        rs: F.fmt(Math.sqrt(s0[0] * s0[0] + s0[1] * s0[1]), 2),
+        ge: F.fmt(estimativa(LIQ[0]) * 1e3, 0) + ' mN/m',
+        gm: F.fmt(LIQ[0].g, 1) + ' mN/m'
+      });
+
+      nota.innerHTML =
+        '<p>O desenho da esquerda é o argumento da seção posto em figura. Cada seta azul é a '
+        + 'atração de um vizinho, e para a molécula do fundo elas vêm de todos os lados e se '
+        + 'cancelam. Para a molécula da primeira camada faltam os vizinhos de cima, e a soma '
+        + 'das setas restantes não é nula: sobra uma resultante apontando para dentro do '
+        + 'líquido, que é o que o cartão mede em unidades da força de um vizinho.</p>'
+        + '<p>A resultante no interior não dá exatamente zero, e isso não é defeito do '
+        + 'desenho. As moléculas de um líquido não estão numa rede perfeita, de modo que num '
+        + 'instante qualquer sobra uma força pequena apontando para um lado qualquer. O que '
+        + 'importa é a diferença de natureza entre as duas: a do interior flutua em torno de '
+        + 'zero e tem média nula no tempo, enquanto a da superfície é várias vezes maior e '
+        + 'aponta sempre para dentro, porque a assimetria que a produz não é acidental.</p>'
+        + '<p>O deslizante liga a atração do meio de cima. Enquanto o meio vizinho é um gás '
+        + 'rarefeito a adesão é desprezível e a resultante é máxima, que é o caso de uma '
+        + 'interface com ar. Levando a adesão até a mesma intensidade da coesão, as setas '
+        + 'de cima completam as que faltavam, a resultante vai a zero e com ela a tensão '
+        + 'interfacial: é por isso que dois líquidos que se misturam não têm interface, e é '
+        + 'por isso também que a tensão entre dois líquidos é sempre menor que a de cada um '
+        + 'deles contra o ar.</p>'
+        + '<p>Convém insistir num ponto de linguagem, porque ele confunde. A resultante sobre '
+        + 'a molécula da superfície aponta para <strong>dentro</strong>, e não ao longo da '
+        + 'superfície. Ela não é a tensão superficial: é a razão pela qual custa energia '
+        + 'trazer uma molécula do interior para a superfície. A tensão superficial é essa '
+        + 'energia por unidade de área criada, e é tangencial justamente porque é o que se '
+        + 'opõe ao aumento da área.</p>'
+        + '<p>O painel da direita mostra que a conta de ligações perdidas não é só qualitativa. '
+        + 'Se uma molécula da superfície perde da ordem de um quarto dos vizinhos, e se o '
+        + 'calor de vaporização é a energia para romper todas as ligações de um mol, então</p>'
+        + '\\[\\gamma\\approx\\frac14\\,\\frac{\\Delta H_{\\text{vap}}}{N_A\\,a^2},'
+        + '\\qquad a=\\left(\\frac{V_m}{N_A}\\right)^{1/3},\\]'
+        + '<p>com \\(a^2\\) a área que uma molécula ocupa na superfície. Para a água isso dá '
+        + 'algo como duas vezes o valor medido, para o mercúrio fica abaixo dele, e para os '
+        + 'orgânicos erra por um fator entre dois e três. Errar por um fator pequeno é '
+        + 'exatamente o que se espera de uma estimativa que não sabe o número real de vizinhos '
+        + 'nem a geometria da molécula, e o que importa é que ela acerta a ordem de grandeza '
+        + 'dos quatro casos e a posição relativa deles, o que já confirma que a origem do '
+        + 'fenômeno é a que a seção descreve.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     18. Relaxação
+     A equação de Laplace resolvida na tela, iteração a iteração, com o
+     resíduo caindo ao lado. Os três métodos no menu mostram que a
+     diferença entre eles não é de exatidão, é de quantas varreduras são
+     precisas para chegar ao mesmo lugar.
+     ================================================================= */
+  REGISTRO.relaxacao = function (raiz) {
+    var N = 61;                                  // pontos por lado, ímpar
+    var est = { metodo: 'sor', w: 1.82, rodando: true, k: 0, res: 1 };
+    var u = new Float64Array(N * N);
+    var fixo = new Uint8Array(N * N);
+    var hist = [];
+
+    function id(i, j) { return j * N + i; }
+
+    /* Um capacitor de placas paralelas dentro de uma caixa aterrada:
+       as placas são os pontos fixos em +1 e −1, a borda fica em 0. */
+    function montar() {
+      var i, j;
+      u.fill(0); fixo.fill(0);
+      for (i = 0; i < N; i++) {
+        fixo[id(i, 0)] = 1; fixo[id(i, N - 1)] = 1;
+        fixo[id(0, i)] = 1; fixo[id(N - 1, i)] = 1;
+      }
+      /* as placas ficam simétricas em relação ao centro da caixa, de modo
+         que o potencial no centro tem de dar zero e serve de aferição */
+      var m = (N - 1) / 2;
+      var a = m - 15, b = m + 15, y1 = m - 9, y2 = m + 9;
+      for (i = a; i <= b; i++) {
+        u[id(i, y1)] = 1; fixo[id(i, y1)] = 1;
+        u[id(i, y2)] = -1; fixo[id(i, y2)] = 1;
+      }
+      est.k = 0; est.res = 1; hist = [];
+    }
+
+    /* Uma varredura. Jacobi usa só valores velhos; Gauss-Seidel aproveita
+       os novos assim que saem; SOR extrapola a correção por um fator w. */
+    function varrer() {
+      var i, j, s = 0, antigo = est.metodo === 'jacobi' ? u.slice(0) : u;
+      for (j = 1; j < N - 1; j++) {
+        for (i = 1; i < N - 1; i++) {
+          var k = id(i, j);
+          if (fixo[k]) continue;
+          var med = (antigo[id(i + 1, j)] + antigo[id(i - 1, j)]
+                   + antigo[id(i, j + 1)] + antigo[id(i, j - 1)]) / 4;
+          var novo = est.metodo === 'sor' ? u[k] + est.w * (med - u[k]) : med;
+          var d = novo - u[k];
+          s += d * d;
+          u[k] = novo;
+        }
+      }
+      est.k++;
+      est.res = Math.sqrt(s);
+      hist.push(est.res);
+      if (hist.length > 4000) hist.shift();
+    }
+
+    var corpo = moldura(raiz, 'A equação de Laplace resolvida por relaxação');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    opcoes(ctr, [{ rot: 'Jacobi', v: 'jacobi' },
+                 { rot: 'Gauss-Seidel', v: 'gs' },
+                 { rot: 'SOR', v: 'sor' }], 2,
+      function (v) { est.metodo = v; montar(); est.rodando = true; });
+    deslizante(ctr, 'fator de sobre-relaxação ω', 1, 1.97, 0.01, 1.82,
+      function (v) { est.w = v; montar(); est.rodando = true; },
+      function (v) { return F.fmt(v, 2); });
+    opcoes(ctr, [{ rot: 'pausar', v: 0 }, { rot: 'recomeçar', v: 1 }], -1,
+      function (v) {
+        if (v === 0) est.rodando = !est.rodando;
+        else { montar(); est.rodando = true; }
+      });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'varreduras', k: 'it' },
+      { rot: 'resíduo', k: 'res' },
+      { rot: 'fator por varredura', k: 'fat' },
+      { rot: 'potencial no centro', k: 'cen' },
+      { rot: 'campo entre as placas', k: 'ef' },
+      { rot: 'carga numa placa', k: 'q' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function cor(v) {
+      /* azul para negativo, branco no zero, vinho para positivo */
+      var t = Math.max(-1, Math.min(1, v));
+      if (t >= 0) {
+        return 'rgb(' + Math.round(255 - 115 * t) + ',' + Math.round(255 - 208 * t)
+          + ',' + Math.round(255 - 198 * t) + ')';
+      }
+      return 'rgb(' + Math.round(255 + 192 * t) + ',' + Math.round(255 + 188 * t)
+        + ',' + Math.round(255 + 110 * t) + ')';
+    }
+
+    function desenhar() {
+      var p = G.preparar(cv1, 320);
+      var ct = p.ct;
+      var lado = Math.min(p.L - 16, p.A - 16);
+      var x0 = (p.L - lado) / 2, y0 = (p.A - lado) / 2, c = lado / (N - 1);
+      var i, j;
+      for (j = 0; j < N - 1; j++) {
+        for (i = 0; i < N - 1; i++) {
+          ct.fillStyle = cor(u[id(i, j)]);
+          ct.fillRect(x0 + i * c, y0 + j * c, c + 0.8, c + 0.8);
+        }
+      }
+      /* equipotenciais por marcha de quadrados, interpolando nas arestas */
+      ct.strokeStyle = 'rgba(27,31,36,.45)'; ct.lineWidth = 1;
+      ct.beginPath();
+      [-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8].forEach(function (lv) {
+        for (j = 0; j < N - 1; j++) {
+          for (i = 0; i < N - 1; i++) {
+            var a = u[id(i, j)], b = u[id(i + 1, j)];
+            var d = u[id(i + 1, j + 1)], e = u[id(i, j + 1)];
+            var pts = [];
+            if ((a - lv) * (b - lv) < 0) pts.push([i + (lv - a) / (b - a), j]);
+            if ((b - lv) * (d - lv) < 0) pts.push([i + 1, j + (lv - b) / (d - b)]);
+            if ((e - lv) * (d - lv) < 0) pts.push([i + (lv - e) / (d - e), j + 1]);
+            if ((a - lv) * (e - lv) < 0) pts.push([i, j + (lv - a) / (e - a)]);
+            if (pts.length === 2) {
+              ct.moveTo(x0 + pts[0][0] * c, y0 + pts[0][1] * c);
+              ct.lineTo(x0 + pts[1][0] * c, y0 + pts[1][1] * c);
+            }
+          }
+        }
+      });
+      ct.stroke();
+      /* as placas */
+      var mm = (N - 1) / 2;
+      var a2 = mm - 15, b2 = mm + 15, y1 = mm - 9, y2 = mm + 9;
+      ct.strokeStyle = G.COR.vinho; ct.lineWidth = 3.4;
+      ct.beginPath();
+      ct.moveTo(x0 + a2 * c, y0 + y1 * c); ct.lineTo(x0 + b2 * c, y0 + y1 * c);
+      ct.stroke();
+      ct.strokeStyle = G.COR.azul;
+      ct.beginPath();
+      ct.moveTo(x0 + a2 * c, y0 + y2 * c); ct.lineTo(x0 + b2 * c, y0 + y2 * c);
+      ct.stroke();
+      ct.strokeStyle = G.COR.tinta; ct.lineWidth = 1.4;
+      ct.strokeRect(x0, y0, lado, lado);
+      rotulo(ct, 'u = +1', x0 + (a2 + b2) / 2 * c, y0 + y1 * c - 17, G.COR.vinho);
+      rotulo(ct, 'u = −1', x0 + (a2 + b2) / 2 * c, y0 + y2 * c + 17, G.COR.azul);
+      rotulo(ct, 'u = 0 em toda a caixa', x0 + 7, y0 + 7, G.COR.suave, 'left', 'top');
+
+      /* resíduo contra varredura, em escala logarítmica */
+      var lo = -12, hi = 1;
+      var SUP = {};
+      for (i = -12; i <= 2; i++) {
+        SUP[String(i)] = i === 0 ? '1'
+          : '10' + String(i).replace('-', '⁻').replace(/[0-9]/g, function (d) {
+            return '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d];
+          });
+      }
+      var kmax = Math.max(60, hist.length * 1.05);
+      var gr = G.eixos(cv2, {
+        altura: 320, xmin: 0, xmax: kmax, ymin: lo, ymax: hi, divY: 13,
+        margem: { e: 60, d: 14, c: 14, b: 44 },
+        rotX: 'varreduras', rotY: 'resíduo',
+        marcasX: G.marcasLineares(0, kmax, 5, 0),
+        formataY: function (v) {
+          var k = Math.round(v);
+          return (k % 3 === 0) ? (SUP[String(k)] || '') : '';
+        }
+      });
+      var gc = gr.ct;
+      gc.strokeStyle = G.COR.mestra; gc.lineWidth = 2.2;
+      gc.beginPath();
+      hist.forEach(function (r, k) {
+        var y = Math.log10(Math.max(1e-13, r));
+        if (k === 0) gc.moveTo(gr.X(k), gr.Y(y)); else gc.lineTo(gr.X(k), gr.Y(y));
+      });
+      gc.stroke();
+
+      /* medidas de interesse físico. A caixa tem 1 m de lado, de modo que
+         o passo da malha é h = 1/(N−1). O campo é medido no eixo, entre as
+         duas placas, e a carga por unidade de profundidade sai da integral
+         de σ = ε₀ ∂u/∂n sobre as duas faces da placa de cima, onde cada
+         elemento contribui com (∂u/∂n)·h = u_placa − u_vizinho. */
+      var meio = Math.round((N - 1) / 2);
+      var campo = (u[id(meio, y1 + 1)] - u[id(meio, y2 - 1)]) / ((y2 - y1 - 2) / (N - 1));
+      var q = 0;
+      for (i = a2; i <= b2; i++) {
+        q += 2 * u[id(i, y1)] - u[id(i, y1 - 1)] - u[id(i, y1 + 1)];
+      }
+      var fat = hist.length > 6
+        ? Math.pow(hist[hist.length - 1] / hist[hist.length - 6], 1 / 5) : 1;
+
+      mostrar({
+        it: String(est.k),
+        res: F.fmt(est.res, 3),
+        fat: F.fmt(isFinite(fat) ? fat : 1, 4),
+        cen: F.fmt(u[id(meio, meio)], 5),
+        ef: F.fmt(campo, 3) + ' V/m',
+        q: F.fmt(q, 3) + ' ε₀'
+      });
+    }
+
+    function escreverNota() {
+      nota.innerHTML =
+        '<p>O laplaciano discretizado liga cada ponto aos quatro vizinhos. Igualá-lo a zero em '
+        + 'todos os pontos internos dá um sistema linear com tantas equações quantas forem as '
+        + 'incógnitas, e para uma malha de \\(61\\times61\\) isso são quase quatro mil '
+        + 'equações. Resolver por eliminação de Gauss seria possível e insensato: a matriz é '
+        + 'enorme e quase toda nula.</p>'
+        + '<p>O método da relaxação troca o sistema por uma equação de evolução. Acrescenta-se '
+        + 'um parâmetro \\(t\\), sem significado físico neste problema, e resolve-se</p>'
+        + '\\[\\nabla^2\\phi-\\alpha\\pder{\\phi}{t}=0,\\]'
+        + '<p>que é uma equação de difusão. Qualquer que seja o início, o campo evolui para o '
+        + 'estado estacionário, e nele \\(\\partial\\phi/\\partial t\\to0\\), de modo que '
+        + '\\(\\nabla^2\\phi=0\\) fica satisfeita. Discretizando o tempo por diferença '
+        + 'adiantada,</p>'
+        + '\\[\\phi_{i,j}^{k+1}=\\phi_{i,j}^{k}+\\frac{h_t}{\\alpha h^2}'
+        + '\\left(\\phi_{i+1,j}^{k}+\\phi_{i-1,j}^{k}+\\phi_{i,j+1}^{k}'
+        + '+\\phi_{i,j-1}^{k}-4\\phi_{i,j}^{k}\\right).\\]'
+        + '<p>A estabilidade exige \\(C=h_t/\\alpha h^2\\le1/4\\), e com o valor máximo '
+        + '\\(C=1/4\\) a fórmula diz simplesmente que o novo valor de cada ponto é a '
+        + '<strong>média dos quatro vizinhos</strong>. Esse é o método de '
+        + '<strong>Jacobi</strong>, e é a leitura mais física do que a equação de Laplace '
+        + 'significa: a solução é a função que, em todo ponto, vale a média da vizinhança.</p>'
+        + '<p>Os outros dois botões são melhorias do mesmo laço. <strong>Gauss-Seidel</strong> '
+        + 'usa os valores novos assim que eles saem, em vez de guardar a malha velha inteira, '
+        + 'e converge umas duas vezes mais rápido de graça. <strong>SOR</strong> vai além: '
+        + 'calcula a correção de Gauss-Seidel e a multiplica por um fator \\(\\omega\\) entre '
+        + '1 e 2, apostando que o caminho até a solução é sempre na mesma direção. Com '
+        + '\\(\\omega\\) bem escolhido o ganho é de outra ordem de grandeza, e o deslizante '
+        + 'permite procurar o melhor valor pelo cartão do fator por varredura.</p>'
+        + '<p>O critério de parada é o <strong>resíduo</strong></p>'
+        + '\\[R_k=\\sqrt{\\sum_{i,j}\\left(\\phi_{i,j}^{k+1}-\\phi_{i,j}^{k}\\right)^2},\\]'
+        + '<p>que mede o quanto a malha ainda muda de uma varredura para a outra. O gráfico '
+        + 'da direita o mostra em escala logarítmica, onde a queda geométrica característica '
+        + 'dos métodos iterativos aparece como uma reta. Quando o resíduo chega à precisão '
+        + 'desejada, a equação original está satisfeita com aquela precisão, e não antes.</p>'
+        + '<p>Vale olhar o desenho pensando em física, e não apenas em números. As '
+        + 'equipotenciais ficam paralelas e igualmente espaçadas entre as placas, onde o campo '
+        + 'é uniforme, e se abrem nas bordas, que é o efeito de borda que a fórmula de '
+        + 'capacitor plano ignora. O último cartão integra \\(\\sigma=\\epsilon_0\\,'
+        + '\\partial u/\\partial n\\) ao longo da placa para obter a carga, usando o gradiente '
+        + 'por diferenças finitas, que é exatamente o que se faz numa simulação de verdade '
+        + 'depois de resolver o campo.</p>';
+      tipografar(corpo);
+    }
+
+    montar();
+    escreverNota();
+    registrarRedesenho(desenhar);
+
+    (function animar() {
+      if (est.rodando) {
+        var passos = est.metodo === 'sor' ? 2 : 6;
+        for (var s = 0; s < passos; s++) {
+          if (est.res > 1e-11 && est.k < 4000) varrer();
+        }
+        desenhar();
+      }
+      requestAnimationFrame(animar);
+    })();
+  };
+
+  /* =================================================================
+     19. Ordem de convergência
+     Discretizar introduz erro, e a pergunta que importa não é se ele
+     existe, é como ele cai quando a malha é refinada. O widget resolve
+     o mesmo problema em malhas sucessivas, compara com a solução exata
+     e mede a inclinação da reta num gráfico log-log.
+     ================================================================= */
+  REGISTRO.convergencia = function (raiz) {
+    var est = { esquema: 2 };
+    var MALHAS = [5, 9, 13, 17, 25, 33, 49, 65];
+    var cache = {};
+
+    /* Problema de prova: laplaciano nulo no quadrado unitário com
+       u = sen(pi x) senh(pi y)/senh(pi), cuja solução exata é conhecida
+       e é suave, de modo que a ordem observada é a ordem do esquema. */
+    function exata(x, y) {
+      return Math.sin(Math.PI * x) * Math.sinh(Math.PI * y) / Math.sinh(Math.PI);
+    }
+
+    function resolve(n) {
+      if (cache[n]) return cache[n];
+      var h = 1 / (n - 1), i, j, k;
+      var u = new Float64Array(n * n);
+      function id(i, j) { return j * n + i; }
+      for (i = 0; i < n; i++) {
+        u[id(i, n - 1)] = exata(i * h, 1);
+      }
+      /* SOR com o ômega ótimo conhecido para o quadrado */
+      var w = 2 / (1 + Math.sin(Math.PI / (n - 1)));
+      for (k = 0; k < 20000; k++) {
+        var s = 0;
+        for (j = 1; j < n - 1; j++) {
+          for (i = 1; i < n - 1; i++) {
+            var med = (u[id(i + 1, j)] + u[id(i - 1, j)]
+                     + u[id(i, j + 1)] + u[id(i, j - 1)]) / 4;
+            var d = w * (med - u[id(i, j)]);
+            u[id(i, j)] += d;
+            s += d * d;
+          }
+        }
+        if (Math.sqrt(s) < 1e-13) break;
+      }
+      var err = 0;
+      for (j = 1; j < n - 1; j++) {
+        for (i = 1; i < n - 1; i++) {
+          err = Math.max(err, Math.abs(u[id(i, j)] - exata(i * h, j * h)));
+        }
+      }
+      cache[n] = { h: h, err: err, it: k, u: u, n: n };
+      return cache[n];
+    }
+
+    var corpo = moldura(raiz, 'Medindo a ordem do método');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'malha mais fina', k: 'n' },
+      { rot: 'passo h', k: 'h' },
+      { rot: 'erro máximo', k: 'err' },
+      { rot: 'inclinação medida', k: 'inc' },
+      { rot: 'ordem do esquema', k: 'ord' },
+      { rot: 'erro ao dobrar a malha', k: 'raz' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var dados = MALHAS.map(resolve);
+
+      /* ---- o campo da malha mais fina ---- */
+      var fim = dados[dados.length - 1];
+      var p = G.preparar(cv1, 300);
+      var ct = p.ct;
+      var lado = Math.min(p.L - 16, p.A - 16);
+      var x0 = (p.L - lado) / 2, y0 = (p.A - lado) / 2, c = lado / (fim.n - 1);
+      var i, j;
+      for (j = 0; j < fim.n - 1; j++) {
+        for (i = 0; i < fim.n - 1; i++) {
+          var v = fim.u[j * fim.n + i];
+          ct.fillStyle = 'rgb(' + Math.round(255 - 115 * v) + ','
+            + Math.round(255 - 208 * v) + ',' + Math.round(255 - 198 * v) + ')';
+          /* o eixo y da tela cresce para baixo, de modo que a linha j = 0
+             é desenhada embaixo */
+          ct.fillRect(x0 + i * c, y0 + lado - (j + 1) * c, c + 0.8, c + 0.8);
+        }
+      }
+      ct.strokeStyle = G.COR.tinta; ct.lineWidth = 1.4;
+      ct.strokeRect(x0, y0, lado, lado);
+      rotulo(ct, 'u = sen(πx)', x0 + lado / 2, y0 + 11, G.COR.vinho, 'center');
+      rotulo(ct, 'u = 0', x0 + lado / 2, y0 + lado - 11, G.COR.suave, 'center');
+      rotulo(ct, 'malha ' + fim.n + '×' + fim.n, x0 + 6, y0 + 6,
+        G.COR.suave, 'left', 'top');
+
+      /* ---- erro contra passo, em log-log ---- */
+      var lxs = dados.map(function (d) { return Math.log10(d.h); });
+      var lys = dados.map(function (d) { return Math.log10(d.err); });
+      var n = lxs.length, sx = 0, sy = 0, sxx = 0, sxy = 0;
+      for (i = 0; i < n; i++) {
+        sx += lxs[i]; sy += lys[i]; sxx += lxs[i] * lxs[i]; sxy += lxs[i] * lys[i];
+      }
+      var incl = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+      var b0 = (sy - incl * sx) / n;
+
+      /* os limites em y vão de década em década, para que os rótulos
+         caiam sempre em potências de dez */
+      var ylo = Math.floor(Math.min.apply(null, lys));
+      var yhi = Math.ceil(Math.max.apply(null, lys));
+      var gr = G.eixos(cv2, {
+        altura: 300,
+        xmin: Math.min.apply(null, lxs) - 0.15, xmax: Math.max.apply(null, lxs) + 0.15,
+        ymin: ylo, ymax: yhi, divY: yhi - ylo,
+        margem: { e: 62, d: 14, c: 14, b: 44 },
+        rotX: 'passo h', rotY: 'erro máximo',
+        marcasX: [0.015, 0.03, 0.06, 0.12, 0.25].map(function (v) {
+          return { v: Math.log10(v), r: String(v).replace('.', ',') };
+        }),
+        formataY: function (v) {
+          var e = Math.round(v);
+          return Math.abs(v - e) < 0.01
+            ? ('10' + String(e).replace('-', '⁻').replace(/[0-9]/g, function (d) {
+                return '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]; }))
+            : '';
+        }
+      });
+      G.curva(gr, function (lx) { return b0 + incl * lx; }, G.COR.suave, 1.6, [6, 4]);
+      var gc = gr.ct;
+      gc.strokeStyle = G.COR.mestra; gc.lineWidth = 2.4;
+      gc.beginPath();
+      lxs.forEach(function (lx, k) {
+        if (k === 0) gc.moveTo(gr.X(lx), gr.Y(lys[k]));
+        else gc.lineTo(gr.X(lx), gr.Y(lys[k]));
+      });
+      gc.stroke();
+      gc.fillStyle = G.COR.mestra;
+      lxs.forEach(function (lx, k) {
+        gc.beginPath(); gc.arc(gr.X(lx), gr.Y(lys[k]), 4, 0, 2 * Math.PI); gc.fill();
+      });
+      rotulo(gc, 'inclinação ' + F.fmt(incl, 3), gr.X(lxs[1]), gr.Y(lys[1]) - 14,
+        G.COR.suave, 'left', 'bottom');
+
+      var r2 = resolve(13).err / resolve(25).err;
+      mostrar({
+        n: fim.n + '×' + fim.n,
+        h: F.fmt(fim.h, 4),
+        err: F.fmt(fim.err, 3),
+        inc: F.fmt(incl, 3),
+        ord: '2, por construção',
+        raz: F.fmt(r2, 2) + ' vezes menor'
+      });
+
+      nota.innerHTML =
+        '<p>A fórmula de diferenças centrais veio de truncar duas séries de Taylor, e o '
+        + 'primeiro termo descartado é de ordem \\(h^4\\) nas somas, o que deixa um erro de '
+        + 'ordem \\(h^2\\) na segunda derivada. O método é, portanto, de '
+        + '<strong>segunda ordem</strong>. Essa é a previsão; a questão é medir.</p>'
+        + '<p>O problema de prova é a equação de Laplace no quadrado unitário com '
+        + '\\(u=\\sen(\\pi x)\\) na borda de cima e zero nas outras três. A solução exata é '
+        + 'conhecida,</p>'
+        + '\\[u(x,y)=\\sen(\\pi x)\\,\\frac{\\senh(\\pi y)}{\\senh \\pi},\\]'
+        + '<p>de modo que o erro pode ser medido ponto a ponto em vez de estimado. O widget '
+        + 'resolve o problema em oito malhas, de \\(5\\times5\\) a \\(65\\times65\\), toma o '
+        + 'maior erro em cada uma e põe tudo num gráfico de \\(\\log\\) do erro contra '
+        + '\\(\\log\\) do passo.</p>'
+        + '<p>Se o erro vai como \\(Ch^{\\,p}\\), então \\(\\log E=\\log C+p\\log h\\), e a '
+        + 'inclinação da reta é a ordem do método. A medida dá \\(p\\) muito perto de 2, e o '
+        + 'cartão da razão confirma pelo outro lado: dobrando o número de pontos, o erro cai '
+        + 'por um fator próximo de quatro.</p>'
+        + '<p>Esse procedimento é a verificação mínima de qualquer código de método numérico, '
+        + 'e convém fazê-lo sempre que houver solução exata disponível, ainda que para um '
+        + 'caso simples demais para interessar. Um código que resolve certo mas converge em '
+        + 'primeira ordem onde deveria convergir em segunda tem um erro escondido, quase '
+        + 'sempre no tratamento das bordas, e a inclinação medida é o único jeito barato de '
+        + 'descobrir isso antes de confiar no resultado de um problema sem solução '
+        + 'analítica.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {

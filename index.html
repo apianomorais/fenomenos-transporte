@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fenômenos de Transporte | LFCA/URCA</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611090017">
-<script src="assets/js/comum.js?v=202611090017"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090040">
+<script src="assets/js/comum.js?v=202611090040"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -25,6 +25,8 @@
       <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
       <a href="aula06.html" class="num" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
       <a href="aula07.html" class="num" title="Módulo 7: Tensão superficial e capilaridade">7</a>
+      <span class="grupo">Numérico</span>
+      <a href="aula08.html" class="num" title="Módulo 8: Campos no computador: relaxação e convergência">8</a>
     </nav>
   </div>
 </header>
@@ -204,12 +206,19 @@
 
   <div class="cartoes">
 
-    <div class="cartao em-preparo">
+    <a class="cartao" href="aula08.html">
       <span class="numero">Módulo 8</span>
       <h3>Campos no computador: relaxação e convergência</h3>
-      <p>Discretização, diferenças centrais, o laplaciano em malha, o sistema linear, o método
-      da relaxação e a medida da ordem de convergência.</p>
-    </div>
+      <p>Diferenças centradas pela série de Taylor, o laplaciano de cinco pontos e a
+      propriedade da média, o sistema linear que não convém resolver de frente, a relaxação
+      como difusão em tempo fictício, o limite \(C\le1/4\), Jacobi contra Gauss-Seidel contra
+      SOR, e a medida da ordem de convergência contra solução exata.</p>
+      <div class="etiquetas">
+        <span class="etiqueta">Relaxação</span>
+        <span class="etiqueta">SOR</span>
+        <span class="etiqueta">Ordem de convergência</span>
+      </div>
+    </a>
 
     <div class="cartao em-preparo">
       <span class="numero">Módulo 9</span>

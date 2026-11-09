@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 7: Tensão superficial e capilaridade | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611090017">
-<script src="assets/js/comum.js?v=202611090017"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090040">
+<script src="assets/js/comum.js?v=202611090040"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -25,6 +25,8 @@
       <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
       <a href="aula06.html" class="num" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
       <a href="aula07.html" class="num ativo" title="Módulo 7: Tensão superficial e capilaridade">7</a>
+      <span class="grupo">Numérico</span>
+      <a href="aula08.html" class="num" title="Módulo 8: Campos no computador: relaxação e convergência">8</a>
     </nav>
   </div>
 </header>
@@ -82,6 +84,8 @@
   <p>Essa desigualdade faz a superfície se comportar como uma membrana elástica, tensionando-se
   para minimizar a própria área. É esse efeito de minimização que gera a tensão superficial, e
   ele é essencial para entender a forma e a estabilidade das gotas.</p>
+
+  <div data-widget="moleculas"></div>
 
   <div class="bloco fisica">
     <span class="rotulo">As quatro origens</span>
@@ -288,14 +292,112 @@
   de maior tensão, o que é contraintuitivo até se lembrar que \(\gamma\) é uma tensão, e
   portanto puxa.</p>
 
+  <h3>A força tangencial como uma condição de contorno</h3>
+
+  <p>Dividindo o resultado da seção 4 pela área do elemento, a parcela tangencial fica</p>
+
+  <p>\[\vet{f}_t=\frac{\vet{F}_{S,t}}{\delta A}=\nabla_l\gamma,\]</p>
+
+  <p>que tem dimensão de força por área, isto é, de tensão. A comparação com a parcela normal
+  é instrutiva. Aquela podia ser equilibrada por um salto de pressão, porque pressão é
+  justamente uma força normal por unidade de área, e disso saiu Young-Laplace com o fluido
+  parado. Esta não tem como ser equilibrada por nada que esteja em repouso: uma interface não
+  tem rigidez ao cisalhamento, de modo que não existe tensão tangencial estática para opor a
+  \(\nabla_l\gamma\). Se a tensão superficial varia ao longo da superfície, o fluido escoa, e
+  a única coisa capaz de equilibrar a força tangencial em regime permanente é a tensão viscosa
+  que vem de baixo.</p>
+
+  <p>Essa observação transforma o resultado da seção 4 numa condição de contorno. Tome uma
+  interface plana no plano \(z=0\), com líquido em \(z&lt;0\) e gás acima. Pelo tensor de
+  Cauchy do módulo 6, a componente tangencial da tensão que o líquido exerce sobre a sua
+  própria superfície é \(\mu\left(\pder{u_x}{z}+\pder{u_z}{x}\right)\), e numa interface quase
+  plana o segundo termo é desprezível diante do primeiro. O balanço das duas tensões
+  tangenciais exige</p>
+
+  <p>\[\mu\left.\pder{u_x}{z}\right|_{z=0}=\pder{\gamma}{x}.\]</p>
+
+  <p>Essa é a condição que substitui a de superfície livre. A condição usual,
+  \(\partial u_x/\partial z=0\), que diz que uma superfície livre não cisalha o fluido abaixo
+  dela, não é um princípio geral: é o caso particular em que \(\gamma\) é uniforme. Qualquer
+  variação de \(\gamma\) ao longo da interface impõe um cisalhamento prescrito na borda do
+  domínio, e é esse cisalhamento que põe o líquido em movimento.</p>
+
+  <h3>A escala de velocidade</h3>
+
+  <p>Num filme de espessura \(h\) o gradiente de velocidade é da ordem de \(U/h\), e se
+  \(\gamma\) varia de \(\Delta\gamma\) ao longo de um comprimento \(L\), a condição acima dá</p>
+
+  <p>\[\frac{\mu U}{h}\sim\frac{\Delta\gamma}{L}
+  \qquad\Longrightarrow\qquad
+  U\sim\frac{h\,\Delta\gamma}{\mu L}.\]</p>
+
+  <p>Vale olhar o que não aparece nessa estimativa. Não há \(g\), porque a força é de
+  superfície e não de volume, e não há a densidade, porque o regime é viscoso. O que aparece é
+  a espessura no numerador, de modo que o efeito é tanto mais importante quanto mais fino o
+  filme, e é por isso que ele governa a secagem de tintas e vernizes e domina a dinâmica de
+  líquidos em ausência de peso, onde a convecção natural não existe para competir com ele.</p>
+
+  <p>Falta dizer de onde vem \(\nabla_l\gamma\). Com temperatura, a dependência é quase linear
+  numa faixa ampla,</p>
+
+  <p>\[\gamma(T)\approx\gamma_0-b\left(T-T_0\right),\qquad
+  b=-\der{\gamma}{T}\approx0{,}15\ \text{mN/(m·K)}\]</p>
+
+  <p>para água contra ar perto de \(20\) °C, o que dá \(\nabla_l\gamma=-b\,\nabla_lT\): o
+  líquido é puxado para onde está mais frio. Com concentração de um soluto tensoativo,
+  \(\nabla_l\gamma=\left(\partial\gamma/\partial c\right)\nabla_lc\) com
+  \(\partial\gamma/\partial c&lt;0\), e o líquido é puxado para onde há menos tensoativo. Nos
+  dois casos o sinal é o mesmo do bom senso invertido: a região que tem a tensão mais alta é a
+  que ganha líquido.</p>
+
+  <p>Comparando a força motriz com a difusão de calor, que é o que tende a apagar o gradiente
+  de temperatura, aparece o número adimensional que mede a importância do efeito,</p>
+
+  <p>\[\mathrm{Ma}=\frac{\left(-\der{\gamma}{T}\right)\Delta T\,L}{\mu\alpha},\]</p>
+
+  <p>com \(\alpha\) a difusividade térmica. O papel dele é o mesmo que o número de Rayleigh
+  tem na convecção natural, e os dois competem em qualquer camada aquecida por baixo. Numa
+  camada rasa o Marangoni vence, e as células hexagonais que aparecem num filme fino de óleo
+  aquecido, descritas por Block e explicadas por Pearson em 1958, são instabilidade de tensão
+  superficial e não de empuxo, com um valor crítico de \(\mathrm{Ma}\) da ordem de algumas
+  dezenas. A convecção de Rayleigh-Bénard, que trata do caso oposto, é assunto do módulo 11.</p>
+
+  <div class="bloco ex">
+    <span class="rotulo">As lágrimas do vinho em números</span>
+    <p>O vinho tem cerca de \(12\%\) de álcool em volume, e a mistura tem
+    \(\gamma\approx48\) mN/m contra \(73\) mN/m da água pura. No filme fino que sobe pela
+    parede da taça o álcool evapora primeiro, de modo que ali \(\gamma\) sobe. Tomando
+    \(\Delta\gamma\approx25\) mN/m ao longo de \(L\approx1\) cm de filme, com espessura
+    \(h\approx10\) μm e \(\mu\approx1{,}2\) mPa·s,</p>
+    <p style="text-align:center">\(U\sim\dfrac{h\,\Delta\gamma}{\mu L}
+    =\dfrac{10^{-5}\times0{,}025}{1{,}2\times10^{-3}\times10^{-2}}
+    \approx2\) cm/s,</p>
+    <p>que é a ordem de grandeza com que se vê o filme subir a olho nu.</p>
+    <p>Até onde ele sobe é a outra pergunta. A força de Marangoni por unidade de largura da
+    parede é \(\Delta\gamma\), e o que ela tem de sustentar é o peso do filme, que por unidade
+    de largura vale \(\rho g h H\) para uma altura \(H\). Igualando,</p>
+    <p style="text-align:center">\(H\sim\dfrac{\Delta\gamma}{\rho g h}
+    =\dfrac{0{,}025}{10^3\times9{,}81\times10^{-5}}\approx25\) cm,</p>
+    <p>muito mais que a altura de qualquer taça. É por isso que o filme não para no meio do
+    caminho: ele chega à borda, acumula ali o líquido que continua chegando, e só então a
+    gravidade vence localmente e o excesso escorre de volta em gotas, que são as lágrimas. O
+    ciclo se mantém enquanto houver álcool para evaporar.</p>
+  </div>
+
   <div class="bloco fisica">
     <span class="rotulo">Onde se vê</span>
-    <p>A demonstração mais bonita é a das <strong>lágrimas do vinho</strong>. O vinho sobe pela
-    parede da taça por capilaridade e, no filme fino que se forma, o álcool evapora mais
-    depressa que a água. A mistura que fica tem mais água e, portanto, tensão superficial
-    maior, o que puxa mais vinho para cima. O líquido acumula no alto até que a gravidade
-    vença e ele escorra de volta em gotas, que são as lágrimas. O ciclo se repete enquanto
-    houver álcool.</p>
+    <p>A demonstração de mesa mais simples é a do <strong>sabão e da pimenta</strong>. Flocos
+    de pimenta espalhados sobre água parada marcam a superfície, e um toque de detergente no
+    meio derruba \(\gamma\) ali de \(73\) para uns \(30\) mN/m. A água de fora, que ficou com a
+    tensão maior, puxa a superfície para longe do ponto tocado, e os flocos disparam para as
+    bordas em menos de um segundo. O mesmo mecanismo move os barquinhos de cânfora e as larvas
+    de alguns insetos que secretam tensoativo para se deslocar.</p>
+    <p>Dentro do pulmão o efeito é o que distribui o surfactante da seção anterior. Ele é
+    secretado em pontos discretos da parede alveolar, e o gradiente de concentração que isso
+    cria gera um escoamento de Marangoni que o espalha por toda a interface. Essa é também a
+    razão pela qual instilar surfactante exógeno na traqueia de um prematuro funciona: o
+    líquido não precisa ser levado a cada alvéolo, porque o próprio gradiente de \(\gamma\) o
+    carrega até eles.</p>
     <p>Em aplicações, o efeito controla a distribuição de líquidos em filmes e revestimentos,
     para evitar defeitos durante a secagem, e governa o movimento do metal fundido na soldagem
     e na brasagem, influenciando a qualidade da junta. Em processos biológicos, variações de
@@ -447,12 +549,19 @@
       esvaziar no grande. Em seguida estime o trabalho de uma inspiração, integrando
       \(\Delta p\,dV\) de \(R_0\) a \(1{,}3R_0\), com e sem surfactante, e compare os dois
       números.</li>
+
+      <li><b>7.13</b> Uma camada de água de \(1\) mm de espessura sobre uma placa é aquecida de
+      um lado, de modo que a temperatura da superfície varia \(10\) K ao longo de \(5\) cm.
+      Use \(-d\gamma/dT=0{,}15\) mN/(m·K) para estimar a velocidade do escoamento de Marangoni
+      na superfície e diga para que lado ele corre. Calcule em seguida o número
+      \(\mathrm{Ma}\) com \(\alpha=1{,}4\times10^{-7}\) m²/s e discuta se a camada está acima
+      ou abaixo do limiar de algumas dezenas em que as células hexagonais aparecem.</li>
     </ol>
   </div>
 
   <nav class="nav-aulas">
     <a href="aula06.html"><small>Módulo anterior</small>← 6. Navier-Stokes</a>
-    <span class="em-breve"><small>Em preparação</small>8. Relaxação</span>
+    <a class="prox" href="aula08.html"><small>Próximo módulo</small>8. Relaxação →</a>
   </nav>
 
 </main>
@@ -464,6 +573,6 @@
   Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
 </footer>
 
-<script src="assets/js/widgets.js?v=202611090017"></script>
+<script src="assets/js/widgets.js?v=202611090040"></script>
 </body>
 </html>

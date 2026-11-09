@@ -115,6 +115,16 @@ ul,ol{padding-left:1.4rem}
 li{margin:.3rem 0}
 code{font-family:var(--mono);font-size:.88em;background:var(--papel-alt);
   padding:.1em .35em;border-radius:4px}
+/* listagens de programa, usadas na unidade de métodos numéricos */
+pre.codigo{font-family:var(--mono);font-size:.82rem;line-height:1.55;
+  background:var(--papel-alt);border:1px solid var(--borda);
+  border-left:3px solid var(--azul-claro);border-radius:6px;
+  padding:.85rem 1rem;margin:1.1rem 0;overflow-x:auto;color:var(--tinta)}
+pre.codigo b{font-weight:600;color:var(--azul-claro)}
+pre.codigo i{font-style:normal;color:var(--tinta-suave)}
+pre.codigo .leg{display:block;font-family:var(--sans);font-size:.72rem;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--tinta-suave);
+  margin-bottom:.5rem}
 .chapeu{font-family:var(--sans);font-size:.74rem;text-transform:uppercase;
   letter-spacing:.13em;color:var(--vinho);font-weight:600;margin:0}
 .subtitulo{font-size:1.06rem;color:var(--tinta-suave);margin:.2rem 0 1.4rem;font-style:italic}

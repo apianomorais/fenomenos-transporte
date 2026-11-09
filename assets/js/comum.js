@@ -24,6 +24,10 @@ window.MathJax = {
       arcsin: '\\operatorname{arcsen}',
       arctg: '\\operatorname{arctg}',
       arctan: '\\operatorname{arctg}',
+      senh: '\\operatorname{senh}',
+      sinh: '\\operatorname{senh}',
+      tgh: '\\operatorname{tgh}',
+      tanh: '\\operatorname{tgh}',
       /* mecânica clássica: vetores com seta, versores com chapéu,
          tensores em sem-serifa. A hamiltoniana fica com o H reto e a
          lagrangiana com o L caligráfico, como em Goldstein. */

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 8: Campos no computador: relaxação e convergência | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090040">
+<script src="assets/js/comum.js?v=202611090040"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
+      <a href="aula06.html" class="num" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
+      <a href="aula07.html" class="num" title="Módulo 7: Tensão superficial e capilaridade">7</a>
+      <span class="grupo">Numérico</span>
+      <a href="aula08.html" class="num ativo" title="Módulo 8: Campos no computador: relaxação e convergência">8</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. Por que resolver no computador</a></li>
+    <li><a href="#s2">2. A malha e as diferenças finitas</a></li>
+    <li><a href="#s3">3. O laplaciano de cinco pontos</a></li>
+    <li><a href="#s4">4. O sistema linear</a></li>
+    <li><a href="#s5">5. Relaxação: Laplace como uma difusão</a></li>
+    <li><a href="#s6">6. Estabilidade e resíduo</a></li>
+    <li><a href="#s7">7. Jacobi, Gauss-Seidel e sobre-relaxação</a></li>
+    <li><a href="#s8">8. Do campo às grandezas físicas</a></li>
+    <li><a href="#s9">9. Ordem de convergência e verificação</a></li>
+    <li><a href="#s10">10. Exercícios resolvidos</a></li>
+    <li><a href="#s11">11. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 8 · Métodos numéricos para transporte</p>
+  <h1>Campos no computador: relaxação e convergência</h1>
+  <p class="subtitulo">Os sete módulos anteriores produziram equações diferenciais parciais e
+  resolveram as poucas que têm solução fechada. Esta unidade trata do que fazer com as outras,
+  que são a maioria, e começa pelo caso mais simples de todos: um campo escalar que satisfaz a
+  equação de Laplace com valores dados no contorno.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Obter as fórmulas de diferenças finitas a partir da série de Taylor e identificar a
+      ordem do erro de truncamento.</li>
+      <li>Escrever o laplaciano discreto de cinco pontos e reconhecer nele a propriedade da
+      média das funções harmônicas.</li>
+      <li>Resolver o sistema resultante por relaxação, justificar o limite de estabilidade
+      \(C\le1/4\) e usar o resíduo como critério de parada.</li>
+      <li>Comparar Jacobi, Gauss-Seidel e sobre-relaxação em número de varreduras.</li>
+      <li>Extrair grandezas físicas do campo numérico por derivadas e integrais discretas.</li>
+      <li>Medir a ordem de convergência de um código contra uma solução exata, como
+      verificação obrigatória antes de confiar nele.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. Por que resolver no computador</h2>
+
+  <p>Vale fazer um inventário do que esta disciplina já produziu. O módulo 2 deu a equação da
+  continuidade, o módulo 3 a equação de Cauchy, o módulo 6 a de Navier-Stokes, e o módulo 5
+  mostrou que no caso irrotacional e incompressível tudo se reduz a \(\nabla^2\phi=0\). Em
+  cada um desses módulos as soluções analíticas vieram de geometrias muito particulares: o
+  tubo cilíndrico infinito, a esfera, o plano infinito, o cilindro isolado numa corrente
+  uniforme. A razão é sempre a mesma, e é a separação de variáveis exigir que o contorno
+  coincida com superfícies coordenadas.</p>
+
+  <p>Um contorno real quase nunca coincide. O capacitor tem placas de tamanho finito, o
+  trocador de calor tem aletas, a aerofólio tem a forma que tem, e o reservatório tem o
+  contorno que o terreno deu. Para todos esses casos a equação continua valendo, as condições
+  de contorno continuam sendo as mesmas, e o que falta é apenas um modo de resolver que não
+  dependa da geometria ser simples. Esse modo existe, é mais velho que o computador, e consiste
+  em trocar as derivadas por diferenças entre valores em pontos vizinhos.</p>
+
+  <p>O problema desta aula é o mais simples da família, e por isso o melhor para fixar o
+  método:</p>
+
+  <p>\[\nabla^2\phi=0\ \text{em}\ \Omega,\qquad
+  \phi=f\ \text{em}\ \partial\Omega.\]</p>
+
+  <p>Resolvê-lo é mais útil do que parece. O escoamento potencial do módulo 5 tem essa forma,
+  a condução de calor em regime permanente do módulo 10 também, a difusão de massa em regime
+  permanente do módulo 13 igualmente, e o potencial eletrostático é o exemplo clássico. São
+  quatro físicas diferentes com a mesma matemática, e um único programa resolve as quatro.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. A malha e as diferenças finitas</h2>
+
+  <p>A primeira decisão é abandonar a ideia de uma função definida em todos os pontos. No seu
+  lugar fica uma tabela de valores num conjunto discreto de pontos igualmente espaçados,</p>
+
+  <p>\[x_n=x_0+n\,h,\qquad n=0,1,2,\dots,N,\]</p>
+
+  <p>com \(h\) o passo da malha, e \(f_n\equiv f(x_n)\) o valor ali. O que se perde é a
+  informação entre os pontos; o que se ganha é que derivadas viram operações aritméticas.</p>
+
+  <p>Para ver como, escreva as séries de Taylor em torno de \(x_i\) para os dois vizinhos:</p>
+
+  <p>\[f(x_i+h)=f_i+h\,f'_i+\frac{h^2}{2}f''_i+\frac{h^3}{6}f'''_i
+  +\frac{h^4}{24}f''''_i+\cdots,\]</p>
+
+  <p>\[f(x_i-h)=f_i-h\,f'_i+\frac{h^2}{2}f''_i-\frac{h^3}{6}f'''_i
+  +\frac{h^4}{24}f''''_i-\cdots.\]</p>
+
+  <p>Subtraindo uma da outra, os termos pares se cancelam e sobra a derivada primeira:</p>
+
+  <p>\[f'_i=\frac{f_{i+1}-f_{i-1}}{2h}-\frac{h^2}{6}f'''_i+\cdots.\]</p>
+
+  <p>Somando as duas, os termos ímpares se cancelam e sobra a segunda:</p>
+
+  <p>\[\dder{f}{x}\bigg|_i=\frac{f_{i+1}+f_{i-1}-2f_i}{h^2}
+  -\frac{h^2}{12}f''''_i+\cdots.\]</p>
+
+  <p>As duas fórmulas são <strong>centradas</strong>, e o primeiro termo desprezado é
+  proporcional a \(h^2\) nos dois casos. Essa é a origem da expressão <em>método de segunda
+  ordem</em>: reduzindo \(h\) à metade, o erro de truncamento cai a um quarto. A seção 9 mede
+  isso num caso concreto, em vez de aceitar a afirmação.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Três erros diferentes</span>
+    <p>O erro de <strong>truncamento</strong> é o que a série de Taylor descartou, e é o que
+    cai como \(h^2\) na fórmula acima. Ele diminui com malhas mais finas.</p>
+    <p>O erro de <strong>arredondamento</strong> vem da aritmética de ponto flutuante. Numa
+    fórmula que divide por \(h^2\), ele cresce quando \(h\) diminui, porque a diferença entre
+    números próximos perde algarismos significativos. Em dupla precisão esse efeito só aparece
+    para malhas absurdamente finas, mas numa derivada numérica de passo pequeno ele é o que
+    limita a precisão.</p>
+    <p>O erro de <strong>convergência</strong> é diferente dos dois: é o quanto a solução
+    iterativa ainda está longe de resolver o sistema discreto. É o único que não depende de
+    \(h\) e o único que se pode reduzir indefinidamente apenas insistindo, e é ele que o
+    resíduo da seção 6 mede. Confundi-lo com o erro de truncamento é o engano mais comum de
+    quem começa.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. O laplaciano de cinco pontos</h2>
+
+  <p>Em duas dimensões a malha fica indexada por dois inteiros, com
+  \(\phi_{i,j}=\phi(x_0+ih,\,y_0+jh)\) para um passo igual nas duas direções. Aplicando a
+  fórmula da segunda derivada em cada direção e somando,</p>
+
+  <p>\[\nabla^2\phi\bigg|_{i,j}=\frac{\phi_{i+1,j}+\phi_{i-1,j}+\phi_{i,j+1}+\phi_{i,j-1}
+  -4\phi_{i,j}}{h^2}+O(h^2).\]</p>
+
+  <p>Esse arranjo de cinco pontos, o central e os quatro vizinhos mais próximos, é o
+  <strong>estêncil</strong> do método. Impor \(\nabla^2\phi=0\) nele dá uma relação com
+  significado geométrico limpo:</p>
+
+  <p>\[\phi_{i,j}=\frac{\phi_{i+1,j}+\phi_{i-1,j}+\phi_{i,j+1}+\phi_{i,j-1}}{4}.\]</p>
+
+  <p>O valor em cada ponto é a média dos quatro vizinhos. Esse não é um acidente da
+  discretização: é a versão discreta de uma propriedade exata das funções harmônicas, segundo a
+  qual o valor de \(\phi\) no centro de um círculo é igual à média de \(\phi\) sobre a
+  circunferência. Duas consequências vêm de graça. Uma função harmônica não pode ter máximo nem
+  mínimo no interior do domínio, porque num máximo o ponto seria maior que a média dos
+  vizinhos, e os extremos estão sempre no contorno. E a solução, se existe, é única, porque a
+  diferença entre duas soluções seria harmônica e nula no contorno, portanto nula em toda
+  parte.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">A mesma equação em quatro disciplinas</span>
+    <p>A propriedade da média é o que faz do escoamento potencial, da condução de calor
+    estacionária, da difusão estacionária e da eletrostática o mesmo problema. Em todas, o
+    campo se acomoda de modo a não ter nem poço nem corcova no interior: qualquer excesso local
+    se espalha até que cada ponto seja a média da vizinhança. Os máximos ficam onde alguém os
+    impôs, isto é, no contorno, que é precisamente a condição que o problema dá. O módulo 10
+    retoma isso com a temperatura, e lá o contorno é a parede aquecida.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. O sistema linear</h2>
+
+  <p>Escrevendo a relação da média para cada ponto interno, com os valores do contorno já
+  conhecidos passados para o lado direito, aparece um sistema linear</p>
+
+  <p>\[\Ten{A}\,\vet{\phi}=\vet{b},\]</p>
+
+  <p>com uma equação por ponto interno. Numa malha de \(61\times61\) são \(59^2=3481\)
+  incógnitas; numa malha de \(1000\times1000\), quase um milhão. A matriz \(\Ten{A}\) é
+  quadrada e enorme, e cada linha dela tem exatamente cinco elementos não nulos, porque cada
+  ponto só conhece quatro vizinhos. Ela é, portanto, extremamente esparsa.</p>
+
+  <p>A tentação é resolver de frente, por eliminação de Gauss. Vale fazer a conta antes de
+  tentar. A eliminação custa da ordem de \(n^3/3\) operações para \(n\) incógnitas, o que dá
+  \(1{,}4\times10^{10}\) operações já na malha de \(61\times61\), e \(3\times10^{17}\) na de
+  mil por mil. Pior que o tempo é a memória: a eliminação preenche de valores não nulos as
+  posições que eram zero, de modo que não se pode guardar apenas os cinco elementos por linha,
+  e a matriz cheia da malha de mil por mil pediria oito terabytes.</p>
+
+  <p>A saída é não formar a matriz. Os métodos iterativos usam apenas o estêncil, isto é, a
+  receita que diz como atualizar um ponto a partir dos vizinhos, e com isso a memória cai para
+  o tamanho da própria malha. É o que as três seções seguintes fazem.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. Relaxação: Laplace como uma difusão</h2>
+
+  <p>O caminho mais físico até o método iterativo consiste em acrescentar à equação um termo
+  que não existia. Introduza um parâmetro \(t\), sem nenhum significado no problema original, e
+  considere</p>
+
+  <p>\[\nabla^2\phi-\alpha\pder{\phi}{t}=0.\]</p>
+
+  <p>Essa é uma equação de difusão, com \(1/\alpha\) no papel da difusividade. O argumento que
+  justifica o truque é o comportamento dela no tempo longo: partindo de qualquer condição
+  inicial compatível com o contorno, a difusão espalha as diferenças e o campo tende a um
+  estado estacionário. Nesse estado \(\partial\phi/\partial t\to0\), e o que resta é
+  exatamente \(\nabla^2\phi=0\). A solução do problema de Laplace é o destino de uma
+  difusão.</p>
+
+  <p>Discretizando o tempo por diferença adiantada, \(\partial\phi/\partial t\approx
+  (\phi^{k+1}-\phi^k)/h_t\), e o espaço pelo estêncil de cinco pontos, a equação se resolve
+  para o valor novo:</p>
+
+  <p>\[\phi_{i,j}^{k+1}=\phi_{i,j}^{k}+\frac{h_t}{\alpha h^2}
+  \left(\phi_{i+1,j}^{k}+\phi_{i-1,j}^{k}+\phi_{i,j+1}^{k}+\phi_{i,j-1}^{k}
+  -4\phi_{i,j}^{k}\right).\]</p>
+
+  <p>O índice \(k\) conta as varreduras, e a combinação que controla o passo é adimensional,</p>
+
+  <p>\[C=\frac{h_t}{\alpha h^2}.\]</p>
+
+  <p>Com \(C=1/4\) a fórmula se reduz a \(\phi^{k+1}_{i,j}=\) média dos quatro vizinhos, que é
+  a relação da seção 3 usada como receita de atualização. Esse caso particular é o método de
+  <strong>Jacobi</strong>, e a próxima seção mostra que ele é também o maior valor de \(C\)
+  admissível.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. Estabilidade e resíduo</h2>
+
+  <p>A pergunta sobre \(C\) tem resposta exata, e o modo de obtê-la é acompanhar o que o laço
+  faz com um modo de Fourier. Tome o erro na forma
+  \(\varepsilon^k_{i,j}=g^k e^{\mathrm{i}(k_x ih+k_y jh)}\), substitua na fórmula de
+  atualização e divida por \(\varepsilon^k_{i,j}\). O fator de amplificação por varredura
+  sai</p>
+
+  <p>\[g=1-4C+2C\left(\cos k_xh+\cos k_yh\right).\]</p>
+
+  <p>Para o esquema não amplificar nada é preciso \(|g|\le1\) para todos os modos. O modo mais
+  perigoso é o de menor comprimento de onda que a malha enxerga, com
+  \(k_xh=k_yh=\pi\), isto é, o padrão de tabuleiro de xadrez em que vizinhos têm sinais
+  opostos. Para ele os cossenos valem \(-1\) e</p>
+
+  <p>\[g=1-8C,\]</p>
+
+  <p>de modo que \(|g|\le1\) exige</p>
+
+  <p>\[C=\frac{h_t}{\alpha h^2}\le\frac14.\]</p>
+
+  <p>No valor máximo, \(C=1/4\), sai \(g=-1\) para o tabuleiro, de modo que ele não cresce nem
+  decai numa malha infinita. Num domínio limitado com valores dados no contorno isso não
+  impede a convergência, porque os modos admissíveis não chegam a ter comprimento de onda de
+  exatamente dois passos: o contorno os amortece, e é por isso que Jacobi converge, ainda que
+  devagar. Essa é a diferença entre não amplificar e convergir.</p>
+
+  <p>Passando do limite, \(g&lt;-1\), e o tabuleiro de xadrez cresce em amplitude trocando
+  de sinal a cada varredura. Não é um erro numérico que se acumula devagar: a malha fica
+  quadriculada em poucas dezenas de varreduras e o resultado vai a infinito. O exercício 8.10
+  pede para ver isso acontecer.</p>
+
+  <p>Com a estabilidade garantida, falta saber quando parar. O critério natural é o
+  <strong>resíduo</strong>, definido como a norma da variação de uma varredura para a
+  seguinte:</p>
+
+  <p>\[R_k=\sqrt{\sum_{i,j}\left(\phi_{i,j}^{k+1}-\phi_{i,j}^{k}\right)^2}.\]</p>
+
+  <p>Quando \(R_k\) fica pequeno, a malha praticamente não muda mais, e pela fórmula de
+  atualização isso significa que \(\nabla^2\phi\) discreto é pequeno em todo ponto, isto é, a
+  equação está satisfeita. O valor de corte é uma escolha, e convém escolhê-lo bem abaixo do
+  erro de truncamento da malha usada, porque não há sentido em resolver o sistema discreto com
+  precisão muito maior que a fidelidade dele ao problema contínuo.</p>
+
+  <div data-widget="relaxacao"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. Jacobi, Gauss-Seidel e sobre-relaxação</h2>
+
+  <p>Jacobi tem um desperdício evidente. Ao varrer a malha em ordem, quando se chega ao ponto
+  \((i,j)\) os vizinhos de trás já foram atualizados, e o método insiste em usar os valores
+  velhos deles, guardados numa segunda cópia da malha. Usar os valores novos assim que ficam
+  disponíveis dá o método de <strong>Gauss-Seidel</strong>, que além de dispensar a cópia
+  converge cerca de duas vezes mais rápido.</p>
+
+  <p>A ideia seguinte vem de olhar a história de um ponto qualquer durante a iteração: ele se
+  aproxima do valor final sempre pelo mesmo lado, em passos cada vez menores. Se a correção
+  aponta sempre na mesma direção, convém exagerá-la. Chamando de \(\phi^{\text{GS}}\) o valor
+  que Gauss-Seidel daria, a <strong>sobre-relaxação sucessiva</strong> toma</p>
+
+  <p>\[\phi^{k+1}_{i,j}=\phi^k_{i,j}
+  +\omega\left(\phi^{\text{GS}}_{i,j}-\phi^k_{i,j}\right),\qquad 1&lt;\omega&lt;2,\]</p>
+
+  <p>que é a sigla SOR, de <em>successive over-relaxation</em>. Com \(\omega=1\) o método é
+  Gauss-Seidel; acima de 2 ele divergiria. Para o quadrado com valores dados em todo o
+  contorno existe um valor ótimo conhecido,</p>
+
+  <p>\[\omega_{\text{ót}}=\frac{2}{1+\sen\left(\pi/N\right)},\]</p>
+
+  <p>próximo de 1,9 para \(N=60\) divisões. Esse valor vale para o quadrado vazio, e a
+  geometria do widget tem duas placas no meio, o que muda o espectro do operador e desloca o
+  ótimo para perto de 1,82. A moral é prática: a fórmula orienta a busca, e o ajuste final se
+  faz medindo, que é para isso que o widget tem o cartão do fator por varredura.</p>
+
+  <p>Os números do caso do widget, numa malha de \(61\times61\) com resíduo de corte em
+  \(10^{-11}\), dão a medida do que se ganha:</p>
+
+  <div class="bloco ex">
+    <span class="rotulo">Varreduras até o mesmo resíduo</span>
+    <ul>
+      <li>Jacobi: 3822 varreduras</li>
+      <li>Gauss-Seidel: 1969 varreduras</li>
+      <li>SOR com \(\omega=1{,}82\): 163 varreduras</li>
+    </ul>
+    <p>Os três chegam ao mesmo campo, com diferença máxima de \(6\times10^{-11}\) entre eles,
+    o que confirma que a escolha do método não afeta a resposta e sim o custo de obtê-la. A
+    dependência com o tamanho da malha também é diferente: Jacobi e Gauss-Seidel precisam de
+    um número de varreduras que cresce como \(N^2\), enquanto o SOR com \(\omega\) ótimo cresce
+    como \(N\). É por isso que, para malhas grandes, a diferença deixa de ser de fator vinte e
+    passa a ser de ordens de grandeza.</p>
+  </div>
+
+  <p>Em Python o laço inteiro cabe em poucas linhas, e a forma vetorizada do Jacobi é a mais
+  direta de escrever porque opera na malha toda de uma vez:</p>
+
+  <pre class="codigo"><span class="leg">Jacobi vetorizado em numpy</span><b>import</b> numpy <b>as</b> np
+
+<b>def</b> laplace(u, fixo, tol=1e-10, kmax=20000):
+    <i># u: malha com os valores de contorno já postos</i>
+    <i># fixo: máscara booleana dos pontos que não devem mudar</i>
+    <b>for</b> k <b>in</b> range(kmax):
+        novo = u.copy()
+        novo[1:-1, 1:-1] = 0.25 * (u[2:, 1:-1] + u[:-2, 1:-1]
+                                 + u[1:-1, 2:] + u[1:-1, :-2])
+        novo[fixo] = u[fixo]
+        res = np.sqrt(np.sum((novo - u)**2))
+        u = novo
+        <b>if</b> res &lt; tol:
+            <b>break</b>
+    <b>return</b> u, k, res</pre>
+
+  <p>Gauss-Seidel e SOR não se vetorizam desse jeito, porque dependem da ordem em que os
+  pontos são visitados, e um laço explícito em Python puro é lento. A saída usual é a ordenação
+  de tabuleiro, que atualiza primeiro as casas brancas e depois as negras: dentro de cada cor
+  os pontos não são vizinhos entre si, de modo que cada metade pode ser feita de uma vez só
+  com a mesma sintaxe de fatias. O exercício 8.9 trata disso.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. Do campo às grandezas físicas</h2>
+
+  <p>Ter a malha resolvida não é ter a resposta. O que se pergunta de uma simulação é quase
+  sempre uma derivada ou uma integral do campo, e as duas se calculam com as mesmas diferenças
+  finitas da seção 2. No caso do capacitor do widget, com a caixa aterrada de \(1\) m de lado,
+  as duas grandezas de interesse são o campo entre as placas e a carga sobre elas.</p>
+
+  <p>O campo sai de \(\vet{E}=-\nabla u\) por diferenças centradas nos pontos internos. No eixo
+  de simetria, entre as placas, a medida numérica dá \(6{,}663\) V/m, contra \(6{,}667\) V/m da
+  fórmula de placas infinitas \(\Delta V/d\). A concordância é boa porque ali o campo é de fato
+  quase uniforme.</p>
+
+  <p>Antes de olhar qualquer número, porém, convém ter um teste que o próprio problema ofereça.
+  As duas placas estão postas simetricamente em relação ao centro da caixa, com potenciais
+  opostos, de modo que a solução tem de ser ímpar e o potencial no centro tem de ser
+  exatamente nulo. O cartão correspondente marca \(7\times10^{-14}\), que é da ordem do resíduo
+  de corte e não um erro do método. Verificações desse tipo, baseadas em simetrias que a
+  resposta tem de respeitar, custam pouco e pegam uma classe inteira de erros de
+  programação.</p>
+
+  <p>A carga é mais interessante, porque é onde a geometria finita cobra o preço. A densidade
+  superficial num condutor vale</p>
+
+  <p>\[\sigma=\epsilon_0\pder{u}{n},\]</p>
+
+  <p>com a derivada tomada na direção normal que sai do condutor. Na malha isso é uma diferença
+  de um lado só, \(\partial u/\partial n\approx(u_{\text{placa}}-u_{\text{vizinho}})/h\), e a
+  carga por unidade de profundidade é a soma dela ao longo da placa, nas duas faces,
+  multiplicada por \(h\). O resultado é instrutivo:</p>
+
+  <div class="bloco ex">
+    <span class="rotulo">A carga na placa de cima, em unidades de \(\epsilon_0\)</span>
+    <ul>
+      <li>face interna, voltada para a outra placa: \(3{,}95\)</li>
+      <li>face externa, voltada para a parede aterrada: \(2{,}36\)</li>
+      <li>total: \(6{,}31\), contra \(3{,}33\) da fórmula de placas infinitas</li>
+    </ul>
+    <p>A face interna já excede o valor ideal, e a razão aparece no campo ponto a ponto: no
+    centro da placa ele vale \(6{,}7\) V/m, mas a dois passos da borda chega a \(9{,}9\) V/m.
+    A carga se acumula nas quinas, que é um efeito que a fórmula de placas infinitas não tem
+    como conter. A face externa contribui com quase dois terços do que a interna, porque a parede
+    aterrada está a apenas \(0{,}35\) m e também atrai carga. Somando tudo, a capacitância
+    desta geometria é quase o dobro de \(\epsilon_0A/d\).</p>
+    <p>Esse fator dois é a resposta à pergunta de para que serve resolver no computador um
+    problema cuja fórmula de livro já se conhece. A fórmula vale para placas cuja largura é
+    muito maior que a separação, e aqui a largura é \(0{,}50\) m contra \(0{,}30\) m de
+    separação, de modo que a hipótese simplesmente não se aplica. O exercício 8.8 pede para
+    encontrar a razão largura sobre separação a partir da qual o erro cai abaixo de dez por
+    cento.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Ordem de convergência e verificação</h2>
+
+  <p>Resta a parte do trabalho que costuma ser pulada e que é a mais importante de todas. Um
+  programa que roda, não divergiu e produziu figuras bonitas pode ainda assim estar errado, e
+  o modo barato de desconfiar dele é comparar com um caso de solução conhecida, não para ver
+  se os números batem, e sim para ver se o erro cai com a taxa prevista.</p>
+
+  <p>O raciocínio é simples. Se o erro se comporta como \(E=Ch^{\,p}\), então</p>
+
+  <p>\[\log E=\log C+p\log h,\]</p>
+
+  <p>e num gráfico de \(\log E\) contra \(\log h\) os pontos caem numa reta de inclinação
+  \(p\). Como a seção 2 prevê \(p=2\), medir a inclinação é testar a fórmula de diferenças
+  centradas, a implementação dela e o tratamento do contorno de uma vez só.</p>
+
+  <p>O widget faz esse teste no quadrado unitário com \(u=\sen(\pi x)\) na borda de cima e zero
+  nas outras três, cuja solução exata é
+  \(u=\sen(\pi x)\senh(\pi y)/\senh\pi\). A inclinação medida em oito malhas é \(1{,}976\), e
+  o erro cai por um fator \(3{,}95\) quando o número de pontos dobra, contra o 4 previsto.</p>
+
+  <div data-widget="convergencia"></div>
+
+  <div class="bloco fisica">
+    <span class="rotulo">O que uma inclinação errada denuncia</span>
+    <p>Medir \(p=2\) onde se espera 2 é uma confirmação modesta. Medir \(p=1\) é uma informação
+    valiosa, porque indica erro de programação, e quase sempre no mesmo lugar: o contorno.
+    Impor uma condição de Neumann por diferença de um lado só, por exemplo, introduz um erro de
+    primeira ordem que contamina o domínio inteiro e derruba a ordem global, ainda que o
+    interior esteja perfeito. O exercício 8.5 trata exatamente disso, com a correção pelo ponto
+    fantasma.</p>
+    <p>Medir \(p\) maior que o esperado também é suspeito, e costuma significar que o caso de
+    teste é especial demais, com alguma simetria que anula o termo dominante do erro. A
+    verificação pede uma solução exata suave e sem simetrias convenientes, e é por isso que a
+    escolhida aqui mistura seno numa direção com seno hiperbólico na outra.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">8.1 O limite de estabilidade, passo a passo</span>
+    <p>Obtenha \(C\le1/4\) pelo fator de amplificação e determine quantas varreduras o modo de
+    tabuleiro leva para crescer mil vezes se \(C=0{,}30\).</p>
+    <p>Substituindo \(\varepsilon^k_{i,j}=g^ke^{\mathrm{i}(k_xih+k_yjh)}\) na fórmula de
+    atualização, cada deslocamento de um ponto vira um fator de fase, e</p>
+    <p>\[g=1+C\left(e^{\mathrm{i}k_xh}+e^{-\mathrm{i}k_xh}
+    +e^{\mathrm{i}k_yh}+e^{-\mathrm{i}k_yh}-4\right)
+    =1-4C+2C\left(\cos k_xh+\cos k_yh\right).\]</p>
+    <p>O fator é real, e varia entre \(g=1\) para os modos longos, com os cossenos valendo 1, e
+    \(g=1-8C\) para o tabuleiro, com os cossenos valendo \(-1\). A condição \(|g|\le1\) só é
+    violada por baixo, isto é, exige \(1-8C\ge-1\), ou \(C\le1/4\).</p>
+    <p>Com \(C=0{,}30\) sai \(g=1-2{,}4=-1{,}4\), e o crescimento por mil pede</p>
+    <p>\[1{,}4^{\,k}=10^3\quad\Longrightarrow\quad
+    k=\frac{3\ln10}{\ln1{,}4}=\frac{6{,}908}{0{,}3365}\approx21\ \text{varreduras}.\]</p>
+    <p>Vinte e uma varreduras é nada, e o sinal alternado de \(g\) faz o padrão trocar de sinal
+    a cada uma delas. É daí que vem a aparência quadriculada e pulsante que denuncia
+    instabilidade antes mesmo de os números estourarem.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">8.2 Direto ou iterativo, na malha de mil por mil</span>
+    <p>Compare o custo de resolver \(\nabla^2\phi=0\) numa malha de \(1000\times1000\) por
+    eliminação de Gauss em banda e por SOR.</p>
+    <p>São \(n\approx10^6\) incógnitas. Numerando os pontos linha por linha, os cinco elementos
+    de cada equação ficam dentro de uma banda de largura \(N=10^3\), e a eliminação em banda
+    custa da ordem de \(nN^2\) operações e exige guardar \(nN\) números:</p>
+    <p>\[10^6\times10^6=10^{12}\ \text{operações},\qquad
+    10^6\times10^3\times8\ \text{bytes}=8\ \text{GB}.\]</p>
+    <p>O SOR com \(\omega\) ótimo precisa de um número de varreduras da ordem de \(N\), digamos
+    \(3\times10^3\), e cada varredura faz umas cinco operações por ponto:</p>
+    <p>\[3\times10^3\times5\times10^6=1{,}5\times10^{10}\ \text{operações},\qquad
+    10^6\times8\ \text{bytes}=8\ \text{MB}.\]</p>
+    <p>São quase cem vezes menos operações e mil vezes menos memória. A comparação fica ainda
+    mais desfavorável ao método direto em três dimensões, onde a banda da malha de
+    \(100^3\) tem largura \(10^4\) e o custo direto explode. É por isso que praticamente todo
+    código de campo em uso resolve por iteração, seja por SOR, seja por métodos mais modernos
+    como gradiente conjugado ou multigrade, que seguem a mesma filosofia de usar apenas o
+    estêncil.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>8.3</b> Deduza a fórmula de diferença centrada para a derivada segunda mostrando
+      explicitamente o termo de erro \(-h^2f''''/12\). Em seguida combine os valores em
+      \(x_i\pm h\) e \(x_i\pm2h\) para obter uma fórmula de quarta ordem para \(f''\) e diga
+      quantos pontos do contorno ela torna problemáticos.</li>
+
+      <li><b>8.4</b> Escreva o estêncil para a equação de Poisson \(\nabla^2\phi=-\rho/
+      \epsilon_0\) e resolva numericamente o caso de uma densidade uniforme num quadrado com
+      potencial nulo no contorno. Compare o valor no centro com a série analítica e verifique
+      a ordem de convergência.</li>
+
+      <li><b>8.5</b> Implemente a condição de Neumann \(\partial\phi/\partial n=0\) numa
+      parede, primeiro por diferença de um lado só e depois pelo ponto fantasma, que impõe
+      \(\phi_{-1}=\phi_{1}\). Meça a ordem de convergência nos dois casos e explique a
+      diferença.</li>
+
+      <li><b>8.6</b> Obtenha o estêncil de cinco pontos para \(h_x\neq h_y\) e mostre que o
+      limite de estabilidade do laço de relaxação passa a depender da razão \(h_x/h_y\).
+      Determine esse limite.</li>
+
+      <li><b>8.7</b> Para \(N=21,41,81,161\), meça o número de varreduras que Jacobi,
+      Gauss-Seidel e SOR precisam para atingir o mesmo resíduo, e ajuste uma potência de \(N\)
+      a cada um dos três conjuntos. Compare com as previsões \(N^2\), \(N^2\) e \(N\).</li>
+
+      <li><b>8.8</b> Usando a geometria do widget, calcule a capacitância por unidade de
+      profundidade como função da razão entre a largura da placa e a separação. Determine a
+      partir de que razão a fórmula \(\epsilon_0A/d\) erra menos de dez por cento, e verifique
+      se a presença da caixa aterrada afeta essa conclusão.</li>
+
+      <li><b>8.9</b> Explique por que Gauss-Seidel não se vetoriza e descreva a ordenação de
+      tabuleiro. Mostre que, dentro de cada cor, nenhum ponto é vizinho de outro da mesma cor,
+      e escreva a atualização das duas cores com fatias de numpy.</li>
+
+      <li><b>8.10</b> Parta de uma malha com o padrão de tabuleiro \(\phi_{i,j}=(-1)^{i+j}\) no
+      interior e rode o laço com \(C=0{,}30\). Verifique que a amplitude cresce por um fator
+      \(1{,}4\) por varredura, como previsto no exercício 8.1, e que com \(C=0{,}25\) ela cai.
+      Faça o gráfico do resíduo nos dois casos.</li>
+
+      <li><b>8.11</b> Em meia página: a seção 5 introduziu um tempo que não existe no problema.
+      Discuta em que sentido a trajetória da iteração é fisicamente significativa e em que
+      sentido não é, e explique por que o SOR, que acelera a convergência, não corresponde a
+      nenhuma difusão real.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula07.html"><small>Módulo anterior</small>← 7. Tensão superficial</a>
+    <span class="em-breve"><small>Em preparação</small>9. Advecção e difusão</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611090040"></script>
+</body>
+</html>
