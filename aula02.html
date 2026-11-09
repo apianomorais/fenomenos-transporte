@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 2: A equação da continuidade | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611082321">
+<script src="assets/js/comum.js?v=202611082321"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num ativo" title="Módulo 2: A equação da continuidade">2</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. O volume de controle</a></li>
+    <li><a href="#s2">2. Ralos e criadouros</a></li>
+    <li><a href="#s3">3. A equação da continuidade</a></li>
+    <li><a href="#s4">4. Escoamento incompressível</a></li>
+    <li><a href="#s5">5. Vazão e o bico da mangueira</a></li>
+    <li><a href="#s6">6. A forma material da equação</a></li>
+    <li><a href="#s7">7. Exercícios resolvidos</a></li>
+    <li><a href="#s8">8. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 2 · O meio contínuo</p>
+  <h1>A equação da continuidade</h1>
+  <p class="subtitulo">Conservação da massa é uma frase antiga e pouco útil enquanto ficar no
+  plural: a massa do universo se conserva, e isso não ajuda a projetar coisa alguma. O que
+  serve é a versão local, que diz o que acontece em cada ponto, e obtê-la exige apenas somar
+  com cuidado o que entra e o que sai de uma caixa pequena.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Montar o balanço de uma grandeza conservada num volume de controle fixo e passar da
+      forma integral para a diferencial.</li>
+      <li>Ler a divergência como a medida local do que sai menos o que entra, e usar o teorema
+      da divergência com segurança nos sinais.</li>
+      <li>Reduzir a equação ao caso incompressível e aplicá-la a dutos de seção variável.</li>
+      <li>Reescrever a equação com a derivada material e antecipar o significado dela, que o
+      módulo 3 vai usar o tempo todo.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. O volume de controle</h2>
+
+  <p>A receita é sempre a mesma, e convém enunciá-la antes de aplicá-la, porque ela vai
+  reaparecer para energia e para espécies químicas sem uma vírgula de diferença. Escolhe-se
+  uma região fixa do espaço, chamada <strong>volume de controle</strong>, que não se move e
+  não se deforma. Conta-se quanto da grandeza existe dentro dela. Conta-se quanto atravessa a
+  sua fronteira por segundo. Iguala-se a variação do primeiro número ao negativo do
+  segundo.</p>
+
+  <p>A primeira parcela já está pronta. A massa dentro do volume é a integral da densidade, e
+  a taxa com que ela varia é</p>
+
+  <p>\[\dot{m}_\Omega=\der{}{t}\iiint_\Omega \rho\,d\Omega
+  =\iiint_\Omega \pder{\rho}{t}\,d\Omega,\]</p>
+
+  <p>onde a derivada pôde entrar na integral justamente porque o volume é fixo. Se ele se
+  movesse ou mudasse de forma, apareceriam termos extras, e é para evitá-los que se escolhe o
+  volume parado.</p>
+
+  <p>A segunda parcela é o fluxo do módulo anterior, agora sobre uma superfície fechada e com
+  a normal apontando para fora:</p>
+
+  <p>\[\dot{m}_S=\oint_S \rho\,\vet{u}\cdot d\vet{A}
+  =\iiint_\Omega \nabla\cdot\left(\rho\vet{u}\right)d\Omega.\]</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. Ralos e criadouros</h2>
+
+  <p>Antes de juntar as duas parcelas vale olhar de perto para o que a divergência mede, e o
+  modo mais honesto de fazer isso é contar o fluxo face por face numa caixa pequena. O widget
+  abaixo faz essa conta com um campo linear, em que cada face tem componente normal constante
+  e o fluxo sai sem precisar de integral nenhuma.</p>
+
+  <div data-widget="divergencia"></div>
+
+  <p>O resultado é o <strong>teorema da divergência</strong>, e a sua leitura física é direta.
+  Onde \(\nabla\cdot\vet{j}>0\), sai mais corrente do que entra na vizinhança do ponto, e
+  aquele ponto se comporta como um <strong>ralo</strong> para o volume que o contém. Onde
+  \(\nabla\cdot\vet{j}<0\), o ponto é um <strong>criadouro</strong>. A palavra não é figura de
+  linguagem: num escoamento com injeção de fluido por uma parede porosa, ou numa mistura em
+  que uma reação química produz uma espécie, o criadouro existe de fato e aparece como um
+  termo de fonte do lado direito da equação.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. A equação da continuidade</h2>
+
+  <p>Para a massa de um fluido comum não há nem ralo nem criadouro: a massa total do sistema
+  só varia através do fluxo que atravessa a superfície \(S\). Com a convenção de normal para
+  fora, o fluxo positivo retira massa de dentro, de modo que as duas parcelas se somam a
+  zero:</p>
+
+  <p>\[\iiint_\Omega \pder{\rho}{t}\,d\Omega
+  +\iiint_\Omega \nabla\cdot\left(\rho\vet{u}\right)d\Omega=0.\]</p>
+
+  <p>Aqui entra o argumento que transforma uma afirmação global numa local. O volume \(\Omega\)
+  foi escolhido arbitrariamente, e a soma das duas integrais se anula para <em>qualquer</em>
+  escolha. Uma função contínua cuja integral é nula em todo volume, por menor que seja, só
+  pode ser identicamente nula. Logo</p>
+
+  <p>\[\pder{\rho}{t}+\nabla\cdot\left(\rho\vet{u}\right)=0,\]</p>
+
+  <p>que é a <strong>equação da continuidade de massa</strong>. Ela vale ponto a ponto, não
+  tem nenhuma hipótese sobre o fluido além da conservação da massa e da hipótese do contínuo,
+  e é a única equação deste curso que não depende do material.</p>
+
+  <div data-widget="continuidade"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. Escoamento incompressível</h2>
+
+  <p>A equação pode ser aplicada localmente em diferentes problemas, e o caso mais comum é
+  aquele em que a densidade não varia nem no tempo, \(\partial\rho/\partial t=0\), nem no
+  espaço, \(\nabla\rho=\vet{0}\). Para um <strong>escoamento incompressível</strong> sobra
+  então a condição simples</p>
+
+  <p>\[\nabla\cdot\vet{u}=0.\]</p>
+
+  <p>Convém guardar que essa é uma propriedade do <em>escoamento</em>, e não do fluido. Água
+  é praticamente incompressível em qualquer circunstância, mas ar também escoa de forma
+  incompressível sempre que a velocidade for pequena em relação à do som, o que cobre
+  ventilação, aerodinâmica de automóveis e quase toda a meteorologia de pequena escala. O
+  critério quantitativo é o número de Mach: as variações relativas de densidade são da ordem
+  de \(M^2/2\), de modo que a \(100\) km/h num carro, com \(M\approx0{,}08\), elas ficam em
+  três partes em mil.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">O que a condição proíbe</span>
+    <p>Dizer que \(\nabla\cdot\vet{u}=0\) é dizer que nenhum elemento de fluido muda de
+    volume. Ele pode ser esticado numa direção, desde que seja comprimido na mesma medida nas
+    outras: o campo \(\vet{u}=(x,-y,0)\) é incompressível, e o campo \(\vet{u}=(x,y,0)\) não
+    é, embora os dois pareçam igualmente inocentes.</p>
+    <p>Há uma consequência prática desagradável. Com \(\rho\) constante, a equação da
+    continuidade deixa de ser uma equação de evolução para \(\rho\) e passa a ser uma
+    restrição sobre \(\vet{u}\), sem derivada temporal nenhuma. A pressão, que some das
+    incógnitas naturais, reaparece como o multiplicador que força essa restrição a valer a
+    cada instante, e é por isso que o cálculo numérico de escoamentos incompressíveis gira em
+    torno de uma equação de Poisson para a pressão, que é o assunto do módulo 8.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. Vazão e o bico da mangueira</h2>
+
+  <p>Um líquido escoando através de uma tubulação de área de seção reta \(S_1\), ao passar
+  para outra região cuja área seja \(S_2\), sofrerá uma mudança na velocidade de escoamento se
+  não houver mudança na massa contida no volume entre as duas seções. Nesse caso
+  \(\dot{m}_S=0\), e a quantidade de fluido que entra por uma seção tem de ser igual à que sai
+  pela outra:</p>
+
+  <p>\[0=\oint_{S_1+S_2} \rho\,\vet{u}\cdot d\vet{A}
+  =\iint_{S_2} \rho\,\vet{u}\cdot d\vet{A}-\iint_{S_1} \rho\,\vet{u}\cdot d\vet{A}.\]</p>
+
+  <p>Definindo a velocidade média em cada seção como a que reproduz o fluxo verdadeiro quando
+  multiplicada pela área, chega-se a</p>
+
+  <p>\[\dot{Q}=\rho u_1S_1=\rho u_2S_2,\]</p>
+
+  <p>onde \(\dot{Q}=\rho uS\) é a vazão mássica através da seção. A definição de velocidade
+  média merece atenção, porque ela esconde o perfil: o exercício 1.2 do módulo anterior
+  mostrou que, num perfil parabólico, a velocidade média vale metade da velocidade do eixo. A
+  vazão é a mesma; o que muda é o significado de \(u\).</p>
+
+  <div data-widget="tubo"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. A forma material da equação</h2>
+
+  <p>A equação da continuidade pode ser reescrita de um jeito que diz outra coisa. Abrindo a
+  divergência do produto,</p>
+
+  <p>\[\nabla\cdot\left(\rho\vet{u}\right)
+  =\vet{u}\cdot\nabla\rho+\rho\,\nabla\cdot\vet{u},\]</p>
+
+  <p>e levando de volta à equação, os dois primeiros termos se agrupam:</p>
+
+  <p>\[\pder{\rho}{t}+\vet{u}\cdot\nabla\rho=-\rho\,\nabla\cdot\vet{u}.\]</p>
+
+  <p>A combinação do lado esquerdo tem nome e significado próprios. Ela é a taxa de variação
+  da densidade medida por quem viaja junto com o fluido, e não por quem fica parado num ponto
+  do espaço. Chama-se <strong>derivada material</strong>, escreve-se</p>
+
+  <p>\[\frac{D}{Dt}=\pder{}{t}+\vet{u}\cdot\nabla,\]</p>
+
+  <p>e com ela a equação da continuidade fica</p>
+
+  <p>\[\frac{D\rho}{Dt}=-\rho\,\nabla\cdot\vet{u}.\]</p>
+
+  <p>Lida assim, ela afirma que um elemento de fluido só muda de densidade se mudar de
+  volume, com a divergência medindo a taxa de expansão relativa. A condição de
+  incompressibilidade aparece agora na sua forma mais natural, \(D\rho/Dt=0\): a densidade de
+  cada elemento é constante ao longo do seu próprio movimento, mesmo que diferentes elementos
+  tenham densidades diferentes, o que é o caso de uma mistura estratificada de água doce e
+  salgada. O módulo 3 vai construir essa derivada do zero e usá-la para escrever a segunda lei
+  de Newton para um elemento de fluido.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">2.1 O bico da mangueira</span>
+    <p>A água flui através de um tubo de diâmetro interno de \(20\) cm a uma velocidade de
+    \(1\) m/s. Qual deve ser o diâmetro do bico se a água deve emergir a \(4\) m/s?</p>
+    <p>Da continuidade na forma \(u_1S_1=u_2S_2\), com \(S=\pi D^2/4\),</p>
+    <p>\[\frac{\pi}{4}D_2^2=\frac{\pi}{4}D_1^2\frac{u_1}{u_2}
+    \quad\Longrightarrow\quad
+    D_2=D_1\sqrt{\frac{u_1}{u_2}}=0{,}20\sqrt{\frac{1}{4}}=0{,}10\ \text{m}.\]</p>
+    <p>O bico deve ter metade do diâmetro do tubo, isto é, \(10\) cm. Note que a razão de
+    velocidades é quatro e a de diâmetros é dois, porque o que importa é a área.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">2.2 O tanque que enche</span>
+    <p>Um tanque de base \(A=2{,}0\) m² recebe \(5{,}0\) L/s por uma tubulação e perde
+    \(3{,}0\) L/s por outra. Com que velocidade sobe o nível?</p>
+    <p>Aqui convém a forma integral, com o volume de controle envolvendo o líquido. Como
+    \(\rho\) é constante, a massa dentro vale \(\rho Ah\) e</p>
+    <p>\[\rho A\der{h}{t}=\dot{Q}_{\rm entra}-\dot{Q}_{\rm sai}
+    \quad\Longrightarrow\quad
+    \der{h}{t}=\frac{(5{,}0-3{,}0)\times10^{-3}}{2{,}0}=1{,}0\ \text{mm/s}.\]</p>
+    <p>A conta é trivial e o ponto não é ela. O ponto é que esta é exatamente a mesma equação
+    da seção 3, apenas integrada num volume grande em vez de aplicada num ponto, e que a
+    superfície livre do líquido faz parte da fronteira do volume de controle.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">2.3 Quando a densidade não pode ser cancelada</span>
+    <p>Ar entra num duto de \(S_1=0{,}10\) m² a \(u_1=60\) m/s com \(\rho_1=1{,}2\) kg/m³ e
+    sai por \(S_2=0{,}040\) m² com \(\rho_2=0{,}90\) kg/m³. Qual a velocidade de saída?</p>
+    <p>Em regime permanente \(\partial\rho/\partial t=0\), e a forma integral dá
+    \(\rho_1u_1S_1=\rho_2u_2S_2\):</p>
+    <p>\[u_2=\frac{\rho_1u_1S_1}{\rho_2S_2}
+    =\frac{1{,}2\times60\times0{,}10}{0{,}90\times0{,}040}=200\ \text{m/s}.\]</p>
+    <p>A hipótese incompressível teria dado \(150\) m/s, um erro de \(25\%\). A \(200\) m/s o
+    número de Mach já vale \(0{,}6\), e a essa altura cancelar \(\rho\) deixou de ser
+    legítimo. O critério para decidir isso aparece no módulo 11, junto com os demais grupos
+    adimensionais.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">2.4 Dois campos parecidos</span>
+    <p>Quais dos campos \(\vet{u}=(x,-y,0)\), \(\vet{u}=(x,y,0)\) e
+    \(\vet{u}=(-y,x,0)\) podem representar um escoamento incompressível?</p>
+    <p>Basta calcular a divergência: \(1-1=0\) no primeiro, \(1+1=2\) no segundo e \(0+0=0\)
+    no terceiro. O primeiro e o terceiro servem, o segundo não. O primeiro é o escoamento que
+    se aproxima de um ponto de estagnação, esticando o elemento de fluido numa direção e
+    comprimindo na outra; o terceiro é uma rotação rígida, que não deforma nada. O segundo
+    descreve fluido brotando de toda parte, o que exigiria uma fonte distribuída.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>2.5</b> Mostre que, para um escoamento permanente num tubo de seção lentamente
+      variável \(S(x)\), a continuidade incompressível dá \(u(x)S(x)=\) constante. Em seguida
+      obtenha \(du/dx\) em função de \(dS/dx\) e diga onde o escoamento acelera mais num bocal
+      cônico.</li>
+
+      <li><b>2.6</b> Uma esponja cilíndrica de raio \(R\) e altura \(h\), saturada de água, é
+      comprimida de modo que a sua altura diminui a uma taxa \(\dot h\) enquanto o raio não
+      muda. Supondo que a água saia uniformemente pela superfície lateral, calcule a
+      velocidade de saída em função de \(\dot h\).</li>
+
+      <li><b>2.7</b> Considere o campo \(\vet{u}=u_0\left(1+x/L\right)\vers{x}\) e uma faixa
+      de fluido que no instante inicial ocupa \(0\le x\le\ell\). Acompanhe os dois extremos da
+      faixa ao longo do tempo, mostre que o seu comprimento cresce exponencialmente e obtenha
+      a densidade em função do tempo pela conservação da massa da faixa. Compare com o que o
+      widget da seção 3 mostra.</li>
+
+      <li><b>2.8</b> Deduza a equação da continuidade em coordenadas cilíndricas para um
+      escoamento com simetria axial, partindo do balanço num anel de raio \(r\), espessura
+      \(dr\) e altura \(dz\). Confira o resultado contra a expressão tabelada do divergente em
+      coordenadas cilíndricas.</li>
+
+      <li><b>2.9</b> Uma mistura contém uma espécie química de concentração \(c\) que é
+      produzida por reação a uma taxa \(\sigma\) por unidade de volume. Refaça o balanço da
+      seção 3 incluindo esse criadouro e mostre que a equação ganha o termo \(\sigma\) do lado
+      direito. Que unidades tem \(\sigma\)?</li>
+
+      <li><b>2.10</b> A densidade de corrente elétrica satisfaz
+      \(\partial\rho_e/\partial t+\nabla\cdot\vet{J}=0\), com a mesma estrutura da equação
+      deste módulo. Mostre que, tomando a divergência da lei de Ampère sem o termo de
+      Maxwell, obtém-se \(\nabla\cdot\vet{J}=0\), em contradição com a conservação de carga, e
+      explique como o termo de corrente de deslocamento resolve o problema.</li>
+
+      <li><b>2.11</b> Em meia página: a equação da continuidade não tem nenhuma constante
+      material, enquanto a lei de Fourier tem a condutividade e a de Fick tem o coeficiente de
+      difusão. Explique por que, e diga a que categoria pertence cada uma das três.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula01.html"><small>Módulo anterior</small>← 1. O contínuo e o fluxo</a>
+    <span class="em-breve"><small>Em preparação</small>3. Elemento de fluido</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611082321"></script>
+</body>
+</html>

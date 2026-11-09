@@ -685,6 +685,474 @@
     registrarRedesenho(desenhar);
   };
 
+  /* =================================================================
+     4. Divergência e o balanço numa caixa
+     O teorema da divergência é fácil de enunciar e difícil de sentir.
+     Aqui o aluno escolhe um campo linear, vê as quatro faces de uma
+     caixa com os seus fluxos calculados um a um, e compara a soma com
+     a divergência vezes a área. Os dois números são iguais, sempre, e
+     é essa igualdade que vira a equação da continuidade.
+     ================================================================= */
+  REGISTRO.divergencia = function (raiz) {
+    var est = { a: 0.8, b: -0.3 };
+    var X0 = 0.45, Y0 = 0.30, H = 0.55;   // caixa de controle, em unidades do quadro
+
+    var corpo = moldura(raiz, 'O fluxo que entra, o que sai e a divergência');
+
+    var par = el('div', { class: 'paineis' });
+    var cv = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'taxa de abertura em x, ∂j<sub>x</sub>/∂x', -1, 1, 0.05, 0.8,
+      function (v) { est.a = v; desenhar(); },
+      function (v) { return F.fmt(v, 2); });
+    deslizante(ctr, 'taxa de abertura em y, ∂j<sub>y</sub>/∂y', -1, 1, 0.05, -0.3,
+      function (v) { est.b = v; desenhar(); },
+      function (v) { return F.fmt(v, 2); });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'face direita', k: 'd' },
+      { rot: 'face esquerda', k: 'e' },
+      { rot: 'face de cima', k: 'c' },
+      { rot: 'face de baixo', k: 'b' },
+      { rot: 'soma das quatro', k: 's' },
+      { rot: '(∇·j) × área', k: 'div' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    /* Campo linear j = (a x, b y). O fluxo por face sai exato, porque a
+       componente normal é constante em cada face. */
+    function fluxos() {
+      var h = H;
+      return {
+        d: est.a * (X0 + h / 2) * h,
+        e: -est.a * (X0 - h / 2) * h,
+        c: est.b * (Y0 + h / 2) * h,
+        b: -est.b * (Y0 - h / 2) * h
+      };
+    }
+
+    function desenhar() {
+      var f = fluxos(), soma = f.d + f.e + f.c + f.b, div = (est.a + est.b) * H * H;
+
+      /* ---- o campo e a caixa ---- */
+      var p = G.preparar(cv, 320);
+      var ct = p.ct;
+      var lado = Math.min(p.L - 20, p.A - 20);
+      var ox = (p.L - lado) / 2, oy = (p.A + lado) / 2;   // origem no canto de baixo
+      function PX(x) { return ox + x * lado; }
+      function PY(y) { return oy - y * lado; }
+
+      var i, j, esc = lado * 0.30;
+      for (i = 0; i <= 7; i++) for (j = 0; j <= 7; j++) {
+        var x = i / 7, y = j / 7;
+        var jx = est.a * x, jy = est.b * y;
+        var m = Math.sqrt(jx * jx + jy * jy);
+        if (m < 1e-6) continue;
+        seta(ct, PX(x), PY(y), PX(x) + jx * esc, PY(y) - jy * esc,
+          'rgba(63,67,145,.55)', 1.6);
+      }
+
+      var cxe = PX(X0 - H / 2), cxd = PX(X0 + H / 2);
+      var cyb = PY(Y0 - H / 2), cyc = PY(Y0 + H / 2);
+      ct.fillStyle = soma > 0 ? 'rgba(140,47,57,.12)' : 'rgba(63,67,145,.12)';
+      ct.fillRect(cxe, cyc, cxd - cxe, cyb - cyc);
+      ct.strokeStyle = soma > 0 ? G.COR.vinho : G.COR.mestra;
+      ct.lineWidth = 2.2;
+      ct.strokeRect(cxe, cyc, cxd - cxe, cyb - cyc);
+      rotulo(ct, soma > 0 ? 'ralo: sai mais do que entra'
+                          : 'criadouro: entra mais do que sai',
+        (cxe + cxd) / 2, cyc - 10, soma > 0 ? G.COR.vinho : G.COR.mestra,
+        'center', 'bottom');
+
+      ct.strokeStyle = G.COR.suave; ct.lineWidth = 1.2;
+      ct.beginPath();
+      ct.moveTo(PX(0), PY(0)); ct.lineTo(PX(1.02), PY(0));
+      ct.moveTo(PX(0), PY(0)); ct.lineTo(PX(0), PY(1.02));
+      ct.stroke();
+      rotulo(ct, 'x', PX(1.0), PY(0) + 12, G.COR.suave, 'center', 'top');
+      rotulo(ct, 'y', PX(0) - 12, PY(1.0), G.COR.suave, 'right');
+
+      /* ---- as quatro parcelas em barras ---- */
+      var lim = Math.max(0.35, Math.abs(f.d), Math.abs(f.e),
+        Math.abs(f.c), Math.abs(f.b), Math.abs(soma)) * 1.2;
+      var gr = G.eixos(cv2, {
+        altura: 320, xmin: -0.5, xmax: 5.5, ymin: -lim, ymax: lim,
+        margem: { e: 56, d: 14, c: 14, b: 44 }, divY: 4,
+        rotY: 'fluxo através da face',
+        marcasX: [{ v: 0, r: 'dir' }, { v: 1, r: 'esq' }, { v: 2, r: 'cima' },
+                  { v: 3, r: 'baixo' }, { v: 4, r: 'soma' }, { v: 5, r: '∇·j A' }],
+        formataY: function (v) { return F.fmt(v, 2); }
+      });
+      G.barras(gr, [{ x: 0, y: f.d }, { x: 1, y: f.e }, { x: 2, y: f.c },
+                    { x: 3, y: f.b }], G.COR.clara, 0.6);
+      G.barras(gr, [{ x: 4, y: soma }], G.COR.mestra, 0.6);
+      G.barras(gr, [{ x: 5, y: div }], G.COR.bronze, 0.6);
+      var gc = gr.ct;
+      gc.strokeStyle = G.COR.suave; gc.lineWidth = 1.2;
+      gc.beginPath(); gc.moveTo(gr.x0, gr.Y(0)); gc.lineTo(gr.x1, gr.Y(0)); gc.stroke();
+
+      mostrar({
+        d: F.fmt(f.d, 4), e: F.fmt(f.e, 4), c: F.fmt(f.c, 4), b: F.fmt(f.b, 4),
+        s: F.fmt(soma, 4), div: F.fmt(div, 4)
+      });
+
+      nota.innerHTML =
+        '<p>O campo do desenho é \\(\\vet{j}=(ax,\\,by)\\), com \\(a\\) e \\(b\\) nos '
+        + 'deslizantes, e a caixa é um volume de controle quadrado de lado \\(h\\). Em cada '
+        + 'face a componente normal é constante, de modo que o fluxo sai sem integral '
+        + 'nenhuma. Na face da direita, por exemplo, a normal aponta no sentido de \\(x\\) '
+        + 'crescente e</p>'
+        + '\\[\\Phi_{\\rm dir}=j_x\\left(x_0+\\tfrac{h}{2}\\right)h'
+        + '=a\\left(x_0+\\tfrac{h}{2}\\right)h.\\]'
+        + '<p>Na face da esquerda a normal aponta no sentido contrário, o que troca o sinal, e '
+        + 'o que sobra da soma das duas é</p>'
+        + '\\[\\Phi_{\\rm dir}+\\Phi_{\\rm esq}=a\\,h^2=\\pder{j_x}{x}\\,h^2.\\]'
+        + '<p>O mesmo vale no outro par de faces. Somando os quatro, o fluxo líquido para fora '
+        + 'da caixa vale \\(\\left(a+b\\right)h^2\\), que é exatamente '
+        + '\\(\\left(\\nabla\\cdot\\vet{j}\\right)\\) vezes a área. As duas últimas barras do '
+        + 'gráfico mostram esses dois números, e eles coincidem para qualquer escolha dos '
+        + 'deslizantes.</p>'
+        + '<p>É esse o conteúdo do <strong>teorema da divergência</strong>, aqui em duas '
+        + 'dimensões e para um campo linear, mas o argumento é geral: empilhando caixas '
+        + 'infinitesimais, as faces internas se cancelam duas a duas e sobra a fronteira '
+        + 'externa,</p>'
+        + '\\[\\oint_S\\vet{j}\\cdot d\\vet{A}'
+        + '=\\iiint_\\Omega\\left(\\nabla\\cdot\\vet{j}\\right)d\\Omega.\\]'
+        + '<p>A divergência positiva é um <strong>ralo</strong> do ponto de vista do volume, '
+        + 'porque sai mais do que entra e o que há dentro diminui. A divergência negativa é um '
+        + '<strong>criadouro</strong>. Em um fluido comum não existem nem um nem outro, e é '
+        + 'essa ausência que vai produzir a equação da continuidade.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     5. A continuidade em ação
+     Um pulso de densidade empurrado por um escoamento que acelera ou
+     desacelera. O que se quer mostrar é que a massa dentro do tubo não
+     se conserva sozinha: ela obedece a um balanço, e o balanço é
+     verificado número a número enquanto a animação roda.
+     ================================================================= */
+  REGISTRO.continuidade = function (raiz) {
+    var N = 300, DX = 1 / N;
+    var est = { k: 0.9, t: 0, rodando: true };
+    var rho = new Float64Array(N + 1), ini = new Float64Array(N + 1);
+    var Mant = 0, dMdt = 0, difMedia = 0;
+
+    function vel(x) { return 0.25 * (1 + est.k * x); }
+
+    function reiniciar() {
+      for (var i = 0; i <= N; i++) {
+        var x = i * DX, z = (x - 0.15) / 0.05;
+        rho[i] = 1 + 0.9 * Math.exp(-z * z);
+        ini[i] = rho[i];
+      }
+      est.t = 0;
+      Mant = massa();
+    }
+
+    /* A soma vai de 1 a N porque o ponto 0 é a entrada, mantida fixa, e
+       não faz parte do volume de controle. Com esse recorte o esquema é
+       conservativo de forma exata: somando a atualização célula a célula,
+       tudo se cancela menos o fluxo nas duas pontas, e dM/dt = j(0) − j(N)
+       vale para o método numérico, e não apenas no papel. */
+    function massa() {
+      var s = 0;
+      for (var i = 1; i <= N; i++) s += rho[i] * DX;
+      return s;
+    }
+
+    /* Upwind de primeira ordem: a velocidade é sempre positiva, de modo
+       que a informação vem da esquerda e a derivada do fluxo é tomada
+       para trás. É o esquema do módulo 9, usado aqui antes da hora. */
+    function passo(dt) {
+      var novo = new Float64Array(N + 1), i;
+      var j0 = rho[0] * vel(0), jN = rho[N] * vel(1);
+      for (i = 1; i <= N; i++) {
+        var ja = rho[i - 1] * vel((i - 1) * DX);
+        var jb = rho[i] * vel(i * DX);
+        novo[i] = rho[i] - dt * (jb - ja) / DX;
+      }
+      novo[0] = 1;                       // entrada mantida em ρ = 1
+      for (i = 0; i <= N; i++) rho[i] = novo[i];
+      return j0 - jN;
+    }
+
+    var corpo = moldura(raiz, 'A massa que entra, a que sai e a que fica');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'aceleração do escoamento', -0.6, 2, 0.1, 0.9,
+      function (v) { est.k = v; }, function (v) { return F.fmt(v, 1); });
+    opcoes(ctr, [{ rot: 'pausar', v: 0 }, { rot: 'recomeçar', v: 1 }], -1,
+      function (v) {
+        if (v === 0) est.rodando = !est.rodando;
+        else { reiniciar(); est.rodando = true; }
+      });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'massa no tubo', k: 'M' },
+      { rot: 'j na entrada', k: 'je' },
+      { rot: 'j na saída', k: 'js' },
+      { rot: 'j entrada − j saída, média', k: 'dif' },
+      { rot: 'dM/dt medido', k: 'dm' },
+      { rot: 'densidade máxima', k: 'max' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var i, jx = new Array(N + 1), mx = 0, imax = 0;
+      for (i = 0; i <= N; i++) {
+        jx[i] = rho[i] * vel(i * DX);
+        if (rho[i] > mx) { mx = rho[i]; imax = i; }
+      }
+
+      var g1 = G.eixos(cv1, {
+        altura: 290, xmin: 0, xmax: 1, ymin: 0, ymax: 2.2,
+        margem: { e: 52, d: 14, c: 14, b: 42 },
+        rotX: 'posição ao longo do tubo', rotY: 'densidade ρ',
+        marcasX: G.marcasLineares(0, 1, 5, 1),
+        formataY: function (v) { return F.fmt(v, 1); }
+      });
+      G.curva(g1, function (x) {
+        var k = Math.round(x * N); return ini[Math.max(0, Math.min(N, k))];
+      }, G.COR.suave, 1.6, [5, 4]);
+      G.curva(g1, function (x) {
+        var k = Math.round(x * N); return rho[Math.max(0, Math.min(N, k))];
+      }, G.COR.mestra, 2.6);
+      G.legenda(g1, [
+        { texto: 'ρ agora', cor: G.COR.mestra },
+        { texto: 'ρ no início', cor: G.COR.suave }
+      ]);
+      rotulo(g1.ct, 't = ' + F.fmt(est.t, 2), g1.x0 + 8, g1.y0 + 12,
+        G.COR.suave, 'left');
+
+      var g2 = G.eixos(cv2, {
+        altura: 290, xmin: 0, xmax: 1, ymin: 0, ymax: 1.5,
+        margem: { e: 52, d: 14, c: 14, b: 42 },
+        rotX: 'posição ao longo do tubo', rotY: 'velocidade e corrente',
+        marcasX: G.marcasLineares(0, 1, 5, 1),
+        formataY: function (v) { return F.fmt(v, 1); }
+      });
+      G.curva(g2, vel, G.COR.bronze, 2.2, [6, 4]);
+      G.curva(g2, function (x) {
+        var k = Math.round(x * N); return jx[Math.max(0, Math.min(N, k))];
+      }, G.COR.vinho, 2.6);
+      G.legenda(g2, [
+        { texto: 'j = ρu', cor: G.COR.vinho },
+        { texto: 'u(x)', cor: G.COR.bronze }
+      ]);
+
+      mostrar({
+        M: F.fmt(massa(), 4),
+        je: F.fmt(jx[0], 4),
+        js: F.fmt(jx[N], 4),
+        dif: F.fmt(difMedia, 4),
+        dm: F.fmt(dMdt, 4),
+        max: F.fmt(mx, 3) + ' em x = ' + F.fmt(imax * DX, 2)
+      });
+    }
+
+    function escreverNota() {
+      nota.innerHTML =
+        '<p>Falta um passo para fechar o raciocínio do módulo anterior. A taxa com que a massa '
+        + 'varia dentro de um volume fixo \\(\\Omega\\) pode ser calculada diretamente, '
+        + 'derivando a integral:</p>'
+        + '\\[\\dot m_\\Omega=\\der{}{t}\\iiint_\\Omega\\rho\\,d\\Omega'
+        + '=\\iiint_\\Omega\\pder{\\rho}{t}\\,d\\Omega,\\]'
+        + '<p>onde a derivada entrou na integral porque o volume não se move. Essa variação só '
+        + 'pode vir do fluxo através da superfície, já que massa não é criada nem destruída, e '
+        + 'com a normal para fora o fluxo positivo tira massa de dentro:</p>'
+        + '\\[\\iiint_\\Omega\\pder{\\rho}{t}\\,d\\Omega'
+        + '+\\iiint_\\Omega\\nabla\\cdot\\left(\\rho\\vet{u}\\right)d\\Omega=0.\\]'
+        + '<p>O volume é arbitrário, e uma integral que se anula em qualquer volume só pode ter '
+        + 'integrando nulo. Daí a <strong>equação da continuidade</strong>:</p>'
+        + '\\[\\pder{\\rho}{t}+\\nabla\\cdot\\left(\\rho\\vet{u}\\right)=0.\\]'
+        + '<p>O widget resolve essa equação em uma dimensão, com a velocidade crescendo ou '
+        + 'diminuindo ao longo do tubo conforme o deslizante. Vale olhar para dois fatos ao '
+        + 'mesmo tempo. O primeiro é local: onde o escoamento acelera, a mesma massa é '
+        + 'esticada por um trecho maior e a densidade cai, o que se vê o pulso achatar '
+        + 'enquanto avança. O segundo é global: os cartões comparam \\(dM/dt\\), medido pela '
+        + 'variação da massa dentro do tubo, com a diferença entre a corrente que entra e a '
+        + 'que sai. Os dois números são iguais a cada instante, e é esse o balanço que a '
+        + 'equação expressa ponto a ponto.</p>'
+        + '<p>Nada aqui é específico de massa. Trocando \\(\\rho\\) por densidade de energia ou '
+        + 'por concentração de uma espécie química, a mesma equação aparece de novo nos '
+        + 'módulos 10 e 13, e com um termo extra do lado direito quando houver fonte, como uma '
+        + 'reação química ou um aquecimento por efeito Joule.</p>';
+      tipografar(corpo);
+    }
+
+    reiniciar();
+    escreverNota();
+    registrarRedesenho(desenhar);
+
+    (function animar() {
+      if (est.rodando) {
+        var umax = Math.max(vel(0), vel(1));
+        var dt = 0.4 * DX / umax, acc = 0;
+        for (var s = 0; s < 6; s++) { acc += passo(dt) * dt; est.t += dt; }
+        var M = massa();
+        /* os dois números são medidos no mesmo intervalo: a variação da
+           massa de um lado, a média da diferença de correntes do outro */
+        dMdt = (M - Mant) / (6 * dt);
+        difMedia = acc / (6 * dt);
+        Mant = M;
+        if (est.t > 3.2) reiniciar();
+        desenhar();
+      }
+      requestAnimationFrame(animar);
+    })();
+  };
+
+  /* =================================================================
+     6. O bico da mangueira
+     A conta mais usada do assunto, feita com o desenho ao lado para
+     que a razão entre os diâmetros e a razão entre as velocidades
+     deixem de ser dois números soltos.
+     ================================================================= */
+  REGISTRO.tubo = function (raiz) {
+    var est = { d2: 0.10 };
+    var D1 = 0.20, U1 = 1.0, RHO = 1000;
+
+    var corpo = moldura(raiz, 'O tubo que estreita');
+
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'diâmetro do bico', 0.04, 0.26, 0.005, 0.10,
+      function (v) { est.d2 = v; desenhar(); },
+      function (v) { return F.fmt(v * 100, 1) + ' cm'; });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'razão de diâmetros', k: 'rd' },
+      { rot: 'razão de áreas', k: 'ra' },
+      { rot: 'velocidade no bico', k: 'u2' },
+      { rot: 'vazão volumétrica', k: 'qv' },
+      { rot: 'vazão mássica', k: 'qm' },
+      { rot: 'energia cinética por kg', k: 'ec' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var r = est.d2 / D1, u2 = U1 / (r * r);
+
+      var p = G.preparar(cv, 250);
+      var ct = p.ct;
+      var cy = p.A * 0.46, esc = p.A * 0.40 / D1;
+      var xa = p.L * 0.06, xb = p.L * 0.46, xc = p.L * 0.62, xd = p.L * 0.95;
+      var h1 = D1 * esc / 2, h2 = est.d2 * esc / 2;
+
+      function perfil(x) {
+        if (x <= xb) return h1;
+        if (x >= xc) return h2;
+        var s = (x - xb) / (xc - xb);
+        return h1 + (h2 - h1) * (1 - Math.cos(Math.PI * s)) / 2;
+      }
+
+      ct.fillStyle = 'rgba(63,67,145,.12)';
+      ct.beginPath();
+      var x, i;
+      ct.moveTo(xa, cy - perfil(xa));
+      for (x = xa; x <= xd; x += 2) ct.lineTo(x, cy - perfil(x));
+      for (x = xd; x >= xa; x -= 2) ct.lineTo(x, cy + perfil(x));
+      ct.closePath(); ct.fill();
+
+      ct.strokeStyle = G.COR.tinta; ct.lineWidth = 2.4;
+      [-1, 1].forEach(function (s) {
+        ct.beginPath();
+        ct.moveTo(xa, cy + s * perfil(xa));
+        for (x = xa; x <= xd; x += 2) ct.lineTo(x, cy + s * perfil(x));
+        ct.stroke();
+      });
+
+      /* linhas de corrente: a mesma fração do raio em cada seção, de modo
+         que o aperto entre elas mostra a aceleração */
+      ct.strokeStyle = 'rgba(63,67,145,.45)'; ct.lineWidth = 1.2;
+      for (i = 1; i <= 3; i++) {
+        [-1, 1].forEach(function (s) {
+          ct.beginPath();
+          ct.moveTo(xa, cy + s * perfil(xa) * i / 4);
+          for (x = xa; x <= xd; x += 2) ct.lineTo(x, cy + s * perfil(x) * i / 4);
+          ct.stroke();
+        });
+      }
+
+      /* setas de velocidade, com comprimento proporcional a u */
+      var L1 = p.L * 0.07;
+      seta(ct, xa + 12, cy, xa + 12 + L1, cy, G.COR.mestra, 2.6);
+      rotulo(ct, 'u₁ = ' + F.fmt(U1, 1) + ' m/s', xa + 12 + L1 / 2, cy - 12,
+        G.COR.mestra, 'center', 'bottom');
+      var L2 = Math.min(p.L * 0.30, L1 * u2 / U1);
+      seta(ct, xc + 8, cy, xc + 8 + L2, cy, G.COR.vinho, 2.6);
+      rotulo(ct, 'u₂ = ' + F.fmt(u2, 2) + ' m/s', xc + 8 + L2 / 2, cy + 12,
+        G.COR.vinho, 'center', 'top');
+
+      /* cotas dos diâmetros */
+      [[xa + 30, h1, 'D₁ = ' + F.fmt(D1 * 100, 0) + ' cm', G.COR.tinta],
+       [xd - 30, h2, 'D₂ = ' + F.fmt(est.d2 * 100, 1) + ' cm', G.COR.tinta]
+      ].forEach(function (q) {
+        seta(ct, q[0], cy - q[1], q[0], cy + q[1], q[3], 1.4);
+        seta(ct, q[0], cy + q[1], q[0], cy - q[1], q[3], 1.4);
+        rotulo(ct, q[2], q[0], cy + q[1] + 14, q[3], 'center', 'top');
+      });
+
+      var qv = U1 * Math.PI * D1 * D1 / 4;
+      mostrar({
+        rd: F.fmt(r, 3),
+        ra: F.fmt(r * r, 4),
+        u2: F.fmt(u2, 3) + ' m/s',
+        qv: F.fmt(qv * 1000, 2) + ' L/s',
+        qm: F.fmt(qv * RHO, 2) + ' kg/s',
+        ec: F.fmt(u2 * u2 / 2, 2) + ' J/kg'
+      });
+
+      nota.innerHTML =
+        '<p>Num escoamento incompressível a densidade não varia nem no tempo nem no espaço, de '
+        + 'modo que a equação da continuidade se reduz a</p>'
+        + '\\[\\nabla\\cdot\\vet{u}=0.\\]'
+        + '<p>Aplicada a um trecho de tubo, essa condição diz que a massa que entra por uma '
+        + 'seção tem de sair pela outra. Com \\(u\\) entendida como a velocidade média na '
+        + 'seção,</p>'
+        + '\\[\\dot Q=\\rho u_1S_1=\\rho u_2S_2,\\]'
+        + '<p>e, como a seção de um tubo circular vale \\(S=\\pi D^2/4\\), a razão entre as '
+        + 'velocidades é o inverso do quadrado da razão entre os diâmetros:</p>'
+        + '\\[\\frac{u_2}{u_1}=\\left(\\frac{D_1}{D_2}\\right)^2.\\]'
+        + '<p>É uma dependência violenta, e o deslizante deixa isso evidente: reduzir o '
+        + 'diâmetro à metade multiplica a velocidade por quatro. Com \\(D_1=20\\) cm e '
+        + '\\(u_1=1\\) m/s, o bico que faz a água sair a \\(4\\) m/s tem de ter exatamente '
+        + '\\(10\\) cm, porque \\(D_2=D_1\\sqrt{u_1/u_2}\\).</p>'
+        + '<p>O último cartão mostra o que essa aceleração custa. A energia cinética por '
+        + 'unidade de massa vai com \\(u^2\\), e portanto com a quarta potência da razão de '
+        + 'diâmetros, o que já antecipa o teorema de Bernoulli do módulo 5: a energia que '
+        + 'aparece como movimento tem de sair da pressão, e é por isso que a pressão cai onde '
+        + 'o tubo estreita.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {
