@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 9: Advecção e difusão no computador | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090048">
+<script src="assets/js/comum.js?v=202611090048"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
+      <a href="aula06.html" class="num" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
+      <a href="aula07.html" class="num" title="Módulo 7: Tensão superficial e capilaridade">7</a>
+      <span class="grupo">Numérico</span>
+      <a href="aula08.html" class="num" title="Módulo 8: Campos no computador: relaxação e convergência">8</a>
+      <a href="aula09.html" class="num ativo" title="Módulo 9: Advecção e difusão no computador">9</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. A equação de advecção-difusão</a></li>
+    <li><a href="#s2">2. Os dois tempos e o Péclet</a></li>
+    <li><a href="#s3">3. Difusão pura pelo esquema explícito</a></li>
+    <li><a href="#s4">4. Implícito e Crank-Nicolson</a></li>
+    <li><a href="#s5">5. Advecção pura e o desastre do FTCS</a></li>
+    <li><a href="#s6">6. Upwind e a difusão numérica</a></li>
+    <li><a href="#s7">7. Lax-Wendroff e a dispersão numérica</a></li>
+    <li><a href="#s8">8. Juntando os dois: o Péclet de malha</a></li>
+    <li><a href="#s9">9. Duas dimensões e a divisão de operadores</a></li>
+    <li><a href="#s10">10. Exercícios resolvidos</a></li>
+    <li><a href="#s11">11. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 9 · Métodos numéricos para transporte</p>
+  <h1>Advecção e difusão no computador</h1>
+  <p class="subtitulo">O módulo anterior tratou de um campo que não muda com o tempo, e ali o
+  tempo da iteração era uma ficção conveniente. Agora o tempo é de verdade, e com ele aparecem
+  as duas dificuldades que organizam toda a disciplina de métodos numéricos para transporte:
+  limites de estabilidade que amarram o passo de tempo e erros de truncamento que se disfarçam
+  de física.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Obter a equação de advecção-difusão a partir do balanço de um volume de controle e
+      identificar o número de Péclet.</li>
+      <li>Analisar a estabilidade dos esquemas explícito, implícito e de Crank-Nicolson pelo
+      método de von Neumann.</li>
+      <li>Implementar o algoritmo de Thomas para sistemas tridiagonais.</li>
+      <li>Reconhecer a difusão numérica do upwind e a dispersão numérica do Lax-Wendroff, e
+      quantificar as duas pela equação modificada.</li>
+      <li>Escolher a malha e o passo a partir do Péclet de malha e da condição de
+      Courant-Friedrichs-Lewy.</li>
+    </ul>
+  </div>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Como estudar este módulo</span>
+    <p>Este módulo tem um único widget, de propósito. Tudo o mais aqui é para ser rodado no seu
+    computador, em Python, e os programas das seções seguintes são curtos justamente para que
+    você os digite, mexa neles e veja quebrar. Os exercícios propostos são, quase todos,
+    pequenos experimentos numéricos, e a resposta de cada um é um gráfico que você produziu, e
+    não um número no fim de uma conta.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. A equação de advecção-difusão</h2>
+
+  <p>O balanço de um volume de controle já apareceu no módulo 2 para a massa. Repetindo-o para
+  uma grandeza qualquer de densidade \(c\), o que varia dentro do volume é o que entra menos o
+  que sai, e isso é a divergência do fluxo com sinal trocado:</p>
+
+  <p>\[\pder{c}{t}+\nabla\cdot\vet{j}=0.\]</p>
+
+  <p>O conteúdo físico está em dizer o que é \(\vet{j}\). Há dois modos de uma grandeza se
+  mover, e eles são independentes. O primeiro é ser carregada pelo escoamento, o que dá
+  \(\vet{j}_{\text{adv}}=c\,\vet{u}\); o segundo é se espalhar sozinha, por agitação
+  molecular, o que dá \(\vet{j}_{\text{dif}}=-D\nabla c\). Somando os dois e substituindo, com
+  \(\vet{u}\) incompressível e \(D\) uniforme,</p>
+
+  <p>\[\pder{c}{t}+\vet{u}\cdot\nabla c=D\nabla^2c.\]</p>
+
+  <p>Convém insistir no nome, porque ele será usado nos módulos seguintes. O termo de
+  transporte pelo escoamento é a <strong>advecção</strong>, o termo de espalhamento é a
+  <strong>difusão</strong>, e a palavra <strong>convecção</strong> designa os dois ocorrendo
+  juntos, que é o caso desta equação e de quase todo problema real.</p>
+
+  <p>Em uma dimensão, com \(u\) constante, ela fica</p>
+
+  <p>\[\pder{c}{t}+u\pder{c}{x}=D\dpar{c}{x},\]</p>
+
+  <p>e é esta que será discretizada. Ela é o esqueleto de três módulos ainda por vir: com
+  \(c=T\) e \(D=\alpha\) é a equação do calor do módulo 10, com \(c\) a concentração de uma
+  espécie é a lei de Fick do módulo 13, e com \(c=u\) e \(D=\nu\) é a própria Navier-Stokes
+  sem o termo de pressão.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. Os dois tempos e o Péclet</h2>
+
+  <p>Antes de discretizar, vale saber qual dos dois termos manda. Numa região de tamanho \(L\),
+  a advecção leva a grandeza de um lado a outro num tempo \(t_{\text{adv}}=L/u\), enquanto a
+  difusão precisa de \(t_{\text{dif}}=L^2/D\), porque a distância difusiva cresce com a raiz do
+  tempo e não com o tempo. A razão entre os dois tempos é o <strong>número de Péclet</strong>,
+  em homenagem a Jean Claude Eugène Péclet:</p>
+
+  <p>\[\mathrm{Pe}=\frac{t_{\text{dif}}}{t_{\text{adv}}}=\frac{uL}{D}.\]</p>
+
+  <p>Com \(\mathrm{Pe}\ll1\) a difusão domina e o problema é parabólico e suave; com
+  \(\mathrm{Pe}\gg1\) a advecção domina e o problema se aproxima de uma equação hiperbólica,
+  que é onde moram as dificuldades numéricas. Para dar escala aos números: um corante numa
+  xícara de café com \(L=5\) cm, \(u=5\) cm/s e \(D\approx10^{-9}\) m²/s tem
+  \(\mathrm{Pe}\approx2{,}5\times10^6\), o que é dizer que mexer a colher resolve em segundos o
+  que a difusão levaria quase um mês para fazer.</p>
+
+  <p>O Péclet é para o transporte de massa o que o número de Reynolds é para a quantidade de
+  movimento, e o módulo 11 mostrará que o de Prandtl relaciona os dois.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. Difusão pura pelo esquema explícito</h2>
+
+  <p>Desligando a advecção, sobra a equação da difusão. Discretizando o tempo por diferença
+  adiantada e o espaço pela segunda diferença centrada do módulo 8,</p>
+
+  <p>\[\frac{c_i^{n+1}-c_i^{n}}{\Delta t}
+  =D\,\frac{c_{i+1}^{n}-2c_i^{n}+c_{i-1}^{n}}{\Delta x^2},\]</p>
+
+  <p>o que se resolve diretamente para o valor novo e dá o esquema <strong>explícito</strong>,
+  ou FTCS, de <em>forward time, centered space</em>:</p>
+
+  <p>\[c_i^{n+1}=c_i^{n}+s\left(c_{i+1}^{n}-2c_i^{n}+c_{i-1}^{n}\right),
+  \qquad s=\frac{D\,\Delta t}{\Delta x^2}.\]</p>
+
+  <p>A estabilidade se analisa como na seção 6 do módulo 8. Pondo
+  \(c_i^n=g^n e^{\mathrm{i}k i\Delta x}\) e usando
+  \(e^{\mathrm{i}\theta}+e^{-\mathrm{i}\theta}-2=-4\sen^2(\theta/2)\),</p>
+
+  <p>\[g=1-4s\,\sen^2\!\left(\frac{k\Delta x}{2}\right),\]</p>
+
+  <p>e a condição \(|g|\le1\) para todo \(k\), no pior caso \(\sen^2=1\), exige</p>
+
+  <p>\[s=\frac{D\,\Delta t}{\Delta x^2}\le\frac12.\]</p>
+
+  <p>Esse limite é severo e é a razão de existir a seção seguinte. Refinando a malha pela
+  metade, o passo de tempo tem de cair a um quarto, e o número de passos para percorrer o mesmo
+  intervalo físico cresce por oito. Numa malha de mil pontos sobre um metro, com a
+  difusividade térmica do aço, \(\alpha\approx1{,}2\times10^{-5}\) m²/s, o passo máximo é</p>
+
+  <p>\[\Delta t\le\frac{\Delta x^2}{2D}=\frac{(10^{-3})^2}{2\times1{,}2\times10^{-5}}
+  \approx0{,}04\ \text{s},\]</p>
+
+  <p>de modo que simular uma hora de forno custa noventa mil passos. O programa é este, e
+  convém digitá-lo antes de ler a seção seguinte:</p>
+
+  <pre class="codigo"><span class="leg">difusão 1D, esquema explícito</span><b>import</b> numpy <b>as</b> np
+
+<b>def</b> difusao_explicita(c0, D, dx, dt, n):
+    s = D * dt / dx**2
+    <b>if</b> s &gt; 0.5:
+        <b>raise</b> ValueError(<i>f"instável: s = {s:.3f} &gt; 0,5"</i>)
+    c = c0.copy()
+    <b>for</b> _ <b>in</b> range(n):
+        c[1:-1] = c[1:-1] + s * (c[2:] - 2*c[1:-1] + c[:-2])
+        <i># contorno de Dirichlet: as pontas ficam onde estão</i>
+    <b>return</b> c</pre>
+
+  <p>Trocar o <code>raise</code> por um aviso e rodar com \(s=0{,}51\) é instrutivo: a solução
+  fica quadriculada e, em duzentos passos, o máximo salta de 1 para \(7\times10^{1}\). Com
+  \(s=0{,}50\) o mesmo pulso decai ordeiramente para \(0{,}056\).</p>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. Implícito e Crank-Nicolson</h2>
+
+  <p>A origem do limite de estabilidade é escrever o lado direito no instante velho. Avaliando
+  o laplaciano no instante <strong>novo</strong>, o esquema fica implícito:</p>
+
+  <p>\[c_i^{n+1}-s\left(c_{i+1}^{n+1}-2c_i^{n+1}+c_{i-1}^{n+1}\right)=c_i^{n}.\]</p>
+
+  <p>Agora o valor novo de cada ponto depende do valor novo dos vizinhos, de modo que não há
+  fórmula explícita e é preciso resolver um sistema linear a cada passo. O ganho aparece na
+  análise de von Neumann:</p>
+
+  <p>\[g=\frac{1}{1+4s\,\sen^2\!\left(k\Delta x/2\right)},\]</p>
+
+  <p>que é positivo e menor que 1 para qualquer \(s\). O esquema é
+  <strong>incondicionalmente estável</strong>: o passo de tempo passa a ser escolhido por
+  precisão, e não por estabilidade.</p>
+
+  <p>O sistema a resolver é tridiagonal, porque cada equação envolve apenas três incógnitas
+  vizinhas, e sistemas tridiagonais têm solução direta barata pelo <strong>algoritmo de
+  Thomas</strong>, que é a eliminação de Gauss escrita para esse caso. O custo é proporcional
+  ao número de pontos, e não ao cubo dele.</p>
+
+  <p>Resta a precisão. O esquema explícito e o implícito são ambos de primeira ordem no tempo,
+  porque a diferença adiantada o é. Tomando a média aritmética dos dois, o erro de primeira
+  ordem se cancela e sobra um esquema de segunda ordem no tempo e no espaço, que é o de
+  <strong>Crank-Nicolson</strong>:</p>
+
+  <p>\[c_i^{n+1}-\frac{s}{2}\delta^2c_i^{n+1}
+  =c_i^{n}+\frac{s}{2}\delta^2c_i^{n},\]</p>
+
+  <p>com \(\delta^2c_i=c_{i+1}-2c_i+c_{i-1}\). O fator de amplificação dele é</p>
+
+  <p>\[g=\frac{1-2s\,\sen^2\!\left(k\Delta x/2\right)}
+  {1+2s\,\sen^2\!\left(k\Delta x/2\right)},\]</p>
+
+  <p>cujo módulo é menor que 1 para todo \(s\), de modo que também é incondicionalmente
+  estável. Há um detalhe que convém saber antes de ser surpreendido por ele: para \(s\) grande,
+  \(g\) tende a \(-1\) nos modos curtos, o que não faz a solução crescer mas produz oscilações
+  que trocam de sinal a cada passo, visíveis quando a condição inicial tem um degrau. A cura é
+  não exagerar no passo, mantendo \(s\) da ordem de 1.</p>
+
+  <pre class="codigo"><span class="leg">Thomas e Crank-Nicolson</span><b>import</b> numpy <b>as</b> np
+
+<b>def</b> thomas(a, b, c, d):
+    <i># resolve o sistema tridiagonal com subdiagonal a, diagonal b,</i>
+    <i># superdiagonal c e lado direito d; não altera os vetores dados</i>
+    n = len(d)
+    cl, dl = np.zeros(n), np.zeros(n)
+    cl[0], dl[0] = c[0] / b[0], d[0] / b[0]
+    <b>for</b> i <b>in</b> range(1, n):
+        m = b[i] - a[i] * cl[i-1]
+        cl[i] = c[i] / m
+        dl[i] = (d[i] - a[i] * dl[i-1]) / m
+    x = np.zeros(n)
+    x[-1] = dl[-1]
+    <b>for</b> i <b>in</b> range(n-2, -1, -1):
+        x[i] = dl[i] - cl[i] * x[i+1]
+    <b>return</b> x
+
+<b>def</b> crank_nicolson(c0, D, dx, dt, n):
+    s = D * dt / dx**2
+    m = len(c0) - 2                      <i># pontos internos</i>
+    a = np.full(m, -s/2); b = np.full(m, 1 + s); c = np.full(m, -s/2)
+    a[0] = 0.0; c[-1] = 0.0
+    u = c0.copy()
+    <b>for</b> _ <b>in</b> range(n):
+        d = u[1:-1] + s/2 * (u[2:] - 2*u[1:-1] + u[:-2])
+        d[0]  += s/2 * u[0]              <i># contorno entra no lado direito</i>
+        d[-1] += s/2 * u[-1]
+        u[1:-1] = thomas(a, b, c, d)
+    <b>return</b> u</pre>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. Advecção pura e o desastre do FTCS</h2>
+
+  <p>Desligando agora a difusão, sobra a equação de advecção, \(\partial c/\partial t+
+  u\,\partial c/\partial x=0\), cuja solução é conhecida e trivial: o perfil inicial se desloca
+  com velocidade \(u\) sem mudar de forma. É justamente por ser trivial que ela serve de teste,
+  porque qualquer diferença entre o resultado numérico e um perfil deslocado é erro do
+  esquema, e não física.</p>
+
+  <p>A tentação é repetir o que funcionou na difusão, com diferença adiantada no tempo e
+  centrada no espaço:</p>
+
+  <p>\[c_i^{n+1}=c_i^{n}-\frac{C}{2}\left(c_{i+1}^{n}-c_{i-1}^{n}\right),
+  \qquad C=\frac{u\,\Delta t}{\Delta x},\]</p>
+
+  <p>com \(C\) o <strong>número de Courant</strong>. A análise de von Neumann é curta e
+  devastadora. Como \(e^{\mathrm{i}\theta}-e^{-\mathrm{i}\theta}=2\mathrm{i}\sen\theta\),</p>
+
+  <p>\[g=1-\mathrm{i}\,C\sen\left(k\Delta x\right),
+  \qquad |g|^2=1+C^2\sen^2\left(k\Delta x\right)\ge1.\]</p>
+
+  <p>O módulo é maior que 1 para todo \(C\) diferente de zero e para quase todo \(k\). O
+  esquema é <strong>incondicionalmente instável</strong>, e não existe passo de tempo que o
+  salve. Rodando com \(C=0{,}5\) numa malha de 200 pontos, o máximo da solução vale \(1{,}15\)
+  depois de 100 passos, \(1{,}1\times10^{3}\) depois de 400 e \(2\times10^{22}\) depois de 800.
+  O widget da seção seguinte permite assistir a isso.</p>
+
+  <p>A razão física é instrutiva. A diferença centrada pergunta aos dois vizinhos o que
+  acontece, e numa equação de advecção a informação só vem de um lado, o de onde o fluido vem.
+  Usar o vizinho de jusante é consultar o futuro, e a instabilidade é o preço disso.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. Upwind e a difusão numérica</h2>
+
+  <p>A correção é escolher o vizinho de acordo com o sentido do escoamento, que é o que faz o
+  esquema <strong>upwind</strong>, ou de diferenças a montante:</p>
+
+  <p>\[c_i^{n+1}=c_i^{n}-C\left(c_i^{n}-c_{i-1}^{n}\right)\quad\text{para }u>0.\]</p>
+
+  <p>O fator de amplificação sai
+  \(g=1-C\left(1-e^{-\mathrm{i}k\Delta x}\right)\), e o módulo quadrado se arruma como</p>
+
+  <p>\[|g|^2=1-2C\left(1-C\right)\left(1-\cos k\Delta x\right),\]</p>
+
+  <p>que é menor ou igual a 1 exatamente quando \(0\le C\le1\). Essa é a condição de
+  <strong>Courant-Friedrichs-Lewy</strong>, e ela tem uma leitura física direta: em um passo de
+  tempo a informação não pode atravessar mais de uma célula, porque o esquema só olha para a
+  célula vizinha.</p>
+
+  <p>A estabilidade, porém, não saiu de graça, e o modo de descobrir o preço é a
+  <strong>equação modificada</strong>. Expandindo em Taylor os termos do esquema upwind em
+  torno de \((x_i,t_n)\) e usando a própria equação para trocar derivadas temporais por
+  espaciais, o que o esquema resolve de fato não é a equação de advecção, e sim</p>
+
+  <p>\[\pder{c}{t}+u\pder{c}{x}
+  =D_{\text{num}}\dpar{c}{x}+O\left(\Delta x^2\right),
+  \qquad
+  D_{\text{num}}=\frac{u\,\Delta x}{2}\left(1-C\right).\]</p>
+
+  <p>Há uma difusão que ninguém pediu, de difusividade proporcional ao passo da malha. Ela não
+  é um detalhe teórico: um pulso que deveria atravessar o domínio sem mudar de forma chega do
+  outro lado mais baixo e mais largo, e um usuário desavisado pode interpretar esse alargamento
+  como dispersão física do poluente que está simulando.</p>
+
+  <div class="bloco ex">
+    <span class="rotulo">A previsão contra a medida</span>
+    <p>Com uma gaussiana de largura inicial \(\sigma_0=0{,}05\) num anel de comprimento 1, com
+    \(u=1\), 200 células e tempo total \(t=0{,}5\), a largura final prevista por
+    \(\sigma=\sqrt{\sigma_0^2+2D_{\text{num}}t}\) e a largura medida no resultado numérico
+    são:</p>
+    <ul>
+      <li>\(C=0{,}25\): prevista \(0{,}06614\), medida \(0{,}06614\)</li>
+      <li>\(C=0{,}50\): prevista \(0{,}06124\), medida \(0{,}06124\)</li>
+      <li>\(C=0{,}75\): prevista \(0{,}05589\), medida \(0{,}05589\)</li>
+      <li>\(C=1{,}00\): prevista \(0{,}05000\), medida \(0{,}05000\)</li>
+    </ul>
+    <p>A concordância em cinco casas mostra que a equação modificada não é uma analogia e sim
+    a equação que o programa realmente resolve. O caso \(C=1\) merece atenção: ali
+    \(D_{\text{num}}\) se anula e o esquema fica exato, porque a fórmula se reduz a
+    \(c_i^{n+1}=c_{i-1}^{n}\), isto é, copiar cada valor para a célula seguinte. Essa sorte
+    desaparece assim que a velocidade varia de ponto a ponto ou o problema passa a duas
+    dimensões, e por isso não se deve contar com ela.</p>
+  </div>
+
+  <div data-widget="adveccao"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. Lax-Wendroff e a dispersão numérica</h2>
+
+  <p>O upwind é de primeira ordem, e a difusão numérica é a cara do erro de truncamento dele.
+  Para subir a segunda ordem, o caminho clássico é expandir \(c(x,t+\Delta t)\) em Taylor até
+  \(\Delta t^2\) e trocar as derivadas temporais pelas espaciais usando a equação,
+  \(\partial_t c=-u\partial_xc\) e portanto \(\partial_t^2c=u^2\partial_x^2c\). O resultado é o
+  esquema de <strong>Lax-Wendroff</strong>:</p>
+
+  <p>\[c_i^{n+1}=c_i^{n}-\frac{C}{2}\left(c_{i+1}^{n}-c_{i-1}^{n}\right)
+  +\frac{C^2}{2}\left(c_{i+1}^{n}-2c_i^{n}+c_{i-1}^{n}\right).\]</p>
+
+  <p>O último termo é exatamente uma difusão de coeficiente \(u^2\Delta t/2\), acrescentada de
+  propósito para cancelar o erro de segunda ordem e, de passagem, estabilizar o esquema para
+  \(C\le1\). Um pulso suave agora atravessa o domínio sem achatar visivelmente.</p>
+
+  <p>O defeito aparece nas descontinuidades. O erro dominante do Lax-Wendroff não é mais uma
+  derivada segunda, e sim uma terceira, que é um termo <strong>dispersivo</strong>: cada
+  comprimento de onda viaja com velocidade ligeiramente diferente, e as componentes curtas
+  ficam para trás da descontinuidade, onde se somam em oscilações. Num degrau com
+  \(C=0{,}8\), depois de 200 passos, a solução numérica vai de \(-0{,}186\) a \(1{,}186\),
+  quando deveria ficar entre 0 e 1.</p>
+
+  <p>Oscilar não é apenas feio. Se \(c\) é uma concentração, valores negativos não existem; se
+  é uma temperatura absoluta, também não; e se o resultado alimenta uma reação química cuja
+  taxa depende de \(c\), o programa quebra logo adiante por uma razão que parecerá não ter
+  relação com o esquema de advecção.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">O teorema de Godunov</span>
+    <p>A escolha entre achatar e oscilar não é falta de engenho. Sergei Godunov demonstrou em
+    1959 que <strong>nenhum esquema linear de ordem maior que um preserva a
+    monotonicidade</strong>, isto é, nenhum deles deixa de criar máximos e mínimos novos.
+    Primeira ordem com difusão numérica ou segunda ordem com oscilações: dentro da classe dos
+    esquemas lineares, não há terceira opção.</p>
+    <p>A saída, descoberta nos anos setenta, é abandonar a linearidade. Os esquemas de alta
+    resolução usam <strong>limitadores de fluxo</strong>, que medem localmente a suavidade da
+    solução e escolhem, célula a célula, entre a fórmula de segunda ordem e a de primeira:
+    segunda ordem onde a solução é suave, primeira onde há um degrau. O coeficiente depende da
+    própria solução, e é isso que os põe fora do alcance do teorema. Os nomes que se encontram
+    nos códigos são minmod, superbee, van Leer e MUSCL.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. Juntando os dois: o Péclet de malha</h2>
+
+  <p>Com advecção e difusão ao mesmo tempo, o esquema explícito mais simples usa upwind no
+  primeiro termo e diferença centrada no segundo:</p>
+
+  <p>\[c_i^{n+1}=c_i^{n}-C\left(c_i^{n}-c_{i-1}^{n}\right)
+  +s\left(c_{i+1}^{n}-2c_i^{n}+c_{i-1}^{n}\right),\]</p>
+
+  <p>e a condição de estabilidade combina as duas, numa forma suficiente e fácil de lembrar:</p>
+
+  <p>\[C+2s\le1.\]</p>
+
+  <p>Falta uma pergunta que a estabilidade não responde. Por que não usar diferença centrada
+  também na advecção, já que ela é de segunda ordem e o termo difusivo poderia estabilizá-la?
+  A resposta está no <strong>Péclet de malha</strong>, que é o Péclet construído com o passo da
+  malha em vez do tamanho do domínio:</p>
+
+  <p>\[\mathrm{Pe}_\Delta=\frac{u\,\Delta x}{D}.\]</p>
+
+  <p>Analisando a solução estacionária do esquema centrado, encontra-se que ela oscila de
+  célula a célula sempre que \(\mathrm{Pe}_\Delta>2\), que é o exercício 9.1. A condição é
+  severa: para o corante na xícara, com \(\mathrm{Pe}\approx2{,}5\times10^6\), manter
+  \(\mathrm{Pe}_\Delta\le2\) exigiria mais de um milhão de células em cada direção.</p>
+
+  <p>Essa é a encruzilhada prática de toda simulação de convecção, e as três saídas usuais
+  são: refinar a malha onde o gradiente é forte, em vez de refinar tudo; usar upwind e aceitar
+  a difusão numérica, desde que ela seja comprovadamente menor que a difusão física, o que se
+  testa comparando \(D_{\text{num}}\) com \(D\); ou usar um esquema com limitador. A pior
+  escolha é a quarta, que é usar diferença centrada numa malha grossa e acreditar nas
+  oscilações.</p>
+
+  <pre class="codigo"><span class="leg">advecção-difusão explícita, upwind + centrada</span><b>import</b> numpy <b>as</b> np
+
+<b>def</b> passo_ad(c, u, D, dx, dt):
+    C = u * dt / dx
+    s = D * dt / dx**2
+    <b>if</b> C + 2*s &gt; 1:
+        <b>raise</b> ValueError(<i>f"instável: C + 2s = {C + 2*s:.3f}"</i>)
+    <i># np.roll fecha o domínio em anel; troque pelas condições que quiser</i>
+    cm, cp = np.roll(c, 1), np.roll(c, -1)
+    <b>return</b> c - C * (c - cm) + s * (cp - 2*c + cm)
+
+<b>def</b> diagnostico(u, D, dx, dt):
+    <b>return</b> {<i>"Courant"</i>: u*dt/dx, <i>"s"</i>: D*dt/dx**2,
+            <i>"Peclet de malha"</i>: u*dx/D,
+            <i>"D numerico"</i>: u*dx*(1 - u*dt/dx)/2,
+            <i>"D numerico / D"</i>: u*dx*(1 - u*dt/dx)/(2*D)}</pre>
+
+  <p>A função de diagnóstico é mais importante que a do passo. Rodar uma simulação de
+  convecção sem olhar a razão \(D_{\text{num}}/D\) é aceitar um resultado cuja física pode ter
+  sido fabricada pela malha, e esse número custa uma linha.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Duas dimensões e a divisão de operadores</h2>
+
+  <p>Em duas dimensões o esquema explícito se estende sem novidade conceitual, e a condição de
+  estabilidade difusiva fica mais apertada,</p>
+
+  <p>\[s_x+s_y\le\frac12,\]</p>
+
+  <p>que para \(\Delta x=\Delta y\) é o \(s\le1/4\) já encontrado no módulo 8, como tinha de
+  ser, já que lá o laço de relaxação era uma difusão. A dificuldade está no lado implícito: em
+  uma dimensão o sistema era tridiagonal e barato, e em duas ele deixa de ser, porque cada
+  ponto passa a ter quatro vizinhos e a matriz ganha duas diagonais afastadas.</p>
+
+  <p>A saída clássica é a <strong>divisão de operadores</strong>. Em vez de tratar
+  \(\partial_x^2+\partial_y^2\) de uma vez, faz-se meio passo implícito em \(x\) e explícito em
+  \(y\), e depois meio passo implícito em \(y\) e explícito em \(x\). Cada meia etapa resolve
+  um conjunto de sistemas tridiagonais, um por linha ou por coluna, e o resultado é
+  incondicionalmente estável e de segunda ordem no tempo. O método tem nome, ADI, de
+  <em>alternating direction implicit</em>, e foi proposto por Peaceman e Rachford em 1955 para
+  simular reservatórios de petróleo.</p>
+
+  <p>A mesma ideia serve para separar fenômenos, e não apenas direções: um passo de advecção
+  com um esquema bom para advecção, seguido de um passo de difusão com um esquema bom para
+  difusão. A divisão introduz um erro próprio, de ordem \(\Delta t\), que cai para
+  \(\Delta t^2\) se as etapas forem alternadas simetricamente, o que se chama divisão de
+  Strang. É assim que estão escritos praticamente todos os códigos de transporte em uso.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">9.1 Por que o esquema centrado oscila acima de \(\mathrm{Pe}_\Delta=2\)</span>
+    <p>Considere o estado estacionário da equação de advecção-difusão discretizada com
+    diferenças centradas nos dois termos, e mostre que a solução oscila de célula a célula
+    quando \(\mathrm{Pe}_\Delta=u\Delta x/D>2\).</p>
+    <p>No estacionário a equação discreta fica</p>
+    <p>\[\frac{u}{2\Delta x}\left(c_{i+1}-c_{i-1}\right)
+    =\frac{D}{\Delta x^2}\left(c_{i+1}-2c_i+c_{i-1}\right).\]</p>
+    <p>Multiplicando por \(\Delta x^2/D\) e escrevendo
+    \(P=\mathrm{Pe}_\Delta\), vem</p>
+    <p>\[\left(1-\frac{P}{2}\right)c_{i+1}-2c_i+\left(1+\frac{P}{2}\right)c_{i-1}=0.\]</p>
+    <p>Essa é uma recorrência linear, e a solução se procura na forma \(c_i=\lambda^i\).
+    Substituindo e dividindo por \(\lambda^{i-1}\),</p>
+    <p>\[\left(1-\frac{P}{2}\right)\lambda^2-2\lambda+\left(1+\frac{P}{2}\right)=0,\]</p>
+    <p>cujas raízes são \(\lambda_1=1\) e</p>
+    <p>\[\lambda_2=\frac{1+P/2}{1-P/2}=\frac{2+P}{2-P}.\]</p>
+    <p>A solução geral é \(c_i=A+B\lambda_2^{\,i}\). Para \(P&lt;2\) o denominador é positivo e
+    \(\lambda_2>0\), de modo que \(\lambda_2^{\,i}\) tem sempre o mesmo sinal e a solução é
+    monótona. Para \(P>2\) o denominador fica negativo, \(\lambda_2&lt;0\), e
+    \(\lambda_2^{\,i}\) troca de sinal a cada célula: a solução numérica serrilha, com
+    amplitude que cresce na direção do escoamento porque \(|\lambda_2|>1\).</p>
+    <p>Em \(P=2\) exatamente o coeficiente de \(c_{i+1}\) se anula e a recorrência degenera, o
+    que corresponde ao caso limite. Repare que o upwind, no mesmo cálculo, dá
+    \(\lambda_2=1+P\), sempre positivo: ele não oscila nunca, e é isso que se compra com a
+    difusão numérica.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">9.2 Escolhendo malha e passo para um problema concreto</span>
+    <p>Um poluente é lançado num canal com \(u=0{,}30\) m/s e difusividade turbulenta
+    \(D=0{,}05\) m²/s. O trecho de interesse tem \(L=600\) m e se quer simular três horas.
+    Escolha \(\Delta x\) e \(\Delta t\) para o esquema explícito com upwind, e verifique se a
+    difusão numérica é aceitável.</p>
+    <p>O Péclet do problema é \(\mathrm{Pe}=uL/D=0{,}30\times600/0{,}05=3600\), de modo que a
+    advecção domina, como seria de esperar num rio.</p>
+    <p>Tentando \(\Delta x=2\) m, que dá 300 células, o Péclet de malha fica</p>
+    <p>\[\mathrm{Pe}_\Delta=\frac{0{,}30\times2}{0{,}05}=12,\]</p>
+    <p>bem acima de 2, o que já elimina o esquema centrado e confirma a escolha do upwind. O
+    passo de tempo sai da condição \(C+2s\le1\). Com \(\Delta t=3\) s,</p>
+    <p>\[C=\frac{0{,}30\times3}{2}=0{,}45,\qquad
+    s=\frac{0{,}05\times3}{4}=0{,}0375,\qquad
+    C+2s=0{,}525,\]</p>
+    <p>confortavelmente dentro do limite. Três horas são 3600 passos, o que é instantâneo.</p>
+    <p>Falta a verificação que importa:</p>
+    <p>\[D_{\text{num}}=\frac{u\Delta x}{2}\left(1-C\right)
+    =\frac{0{,}30\times2}{2}\left(1-0{,}45\right)=0{,}165\ \text{m²/s},\]</p>
+    <p>que é <strong>três vezes maior</strong> que a difusividade física de \(0{,}05\). O
+    espalhamento da pluma seria dominado pela malha, e o resultado, inútil.</p>
+    <p>A correção pode vir de dois lados. Aumentando \(C\) para \(0{,}9\), com
+    \(\Delta t=6\) s, cai para \(D_{\text{num}}=0{,}03\) m²/s, abaixo da física, e
+    \(C+2s=0{,}975\) ainda cabe. Ou refinando para \(\Delta x=0{,}5\) m com o mesmo
+    \(C=0{,}45\), que dá \(D_{\text{num}}=0{,}041\) m²/s, ao custo de quatro vezes mais
+    células e quatro vezes mais passos. A primeira saída é mais barata, mas deixa o esquema
+    perto do limite de estabilidade, e a segunda é mais robusta. Em qualquer caso, a conta de
+    uma linha foi o que impediu de publicar um resultado errado.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <p>Os exercícios de 9.3 a 9.9 são para programar e rodar. Entregue, em cada um, o programa
+    e o gráfico que responde à pergunta.</p>
+    <ol>
+      <li><b>9.3</b> Implemente a difusão explícita e verifique o limite \(s\le1/2\) rodando
+      com \(s=0{,}45\), \(0{,}50\) e \(0{,}55\) a partir de um pulso num único ponto. Faça o
+      gráfico do máximo da solução contra o número de passos nos três casos, em escala
+      logarítmica.</li>
+
+      <li><b>9.4</b> Compare a difusão explícita com a solução analítica da gaussiana que se
+      espalha, \(c(x,t)=\left(4\pi Dt\right)^{-1/2}e^{-x^2/4Dt}\), e meça a ordem de
+      convergência em \(\Delta x\) com \(s\) fixo. Explique por que manter \(s\) fixo significa
+      refinar também o tempo, e diga qual ordem você espera medir.</li>
+
+      <li><b>9.5</b> Implemente o algoritmo de Thomas e verifique-o contra
+      <code>numpy.linalg.solve</code> numa matriz tridiagonal aleatória de ordem 200. Compare
+      os tempos de execução e explique a diferença pela contagem de operações.</li>
+
+      <li><b>9.6</b> Rode Crank-Nicolson com \(s=0{,}5\), \(s=5\) e \(s=50\) a partir de um
+      degrau. Verifique que nenhum dos três diverge e descreva o que acontece com os modos
+      curtos no último caso, relacionando com o fator de amplificação tender a \(-1\).</li>
+
+      <li><b>9.7</b> Meça a difusão numérica do upwind: advecte uma gaussiana por uma volta
+      completa num anel, ajuste uma gaussiana ao resultado e compare a largura com
+      \(\sqrt{\sigma_0^2+2D_{\text{num}}t}\). Faça o gráfico do erro relativo contra \(C\),
+      para \(C\) de \(0{,}1\) a \(1{,}0\).</li>
+
+      <li><b>9.8</b> Implemente o Lax-Wendroff e advecte um degrau. Meça a amplitude da maior
+      oscilação e verifique que ela não diminui ao refinar a malha com \(C\) fixo, o que é o
+      conteúdo prático do teorema de Godunov.</li>
+
+      <li><b>9.9</b> Implemente o limitador minmod sobre o Lax-Wendroff e repita o exercício
+      anterior. Mostre que as oscilações desaparecem e que, numa gaussiana suave, a ordem de
+      convergência continua sendo 2.</li>
+
+      <li><b>9.10</b> Deduza a equação modificada do esquema upwind, obtendo
+      \(D_{\text{num}}=u\Delta x(1-C)/2\). Parta da expansão de Taylor de \(c_i^{n+1}\) e
+      \(c_{i-1}^{n}\) e use \(\partial_t^2c=u^2\partial_x^2c\) para eliminar a derivada
+      temporal segunda.</li>
+
+      <li><b>9.11</b> Mostre que a condição \(C+2s\le1\) é suficiente para a estabilidade do
+      esquema da seção 8, partindo do fator de amplificação
+      \(g=1-C\left(1-e^{-\mathrm{i}\theta}\right)-4s\sen^2(\theta/2)\). Determine se ela é
+      também necessária.</li>
+
+      <li><b>9.12</b> Em meia página: a seção 6 mostrou que o upwind com \(C=1\) é exato.
+      Explique por que esse resultado não ajuda num escoamento com velocidade variável, e por
+      que, em duas dimensões, não existe escolha de \(\Delta t\) que torne o esquema exato
+      mesmo com velocidade uniforme.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula08.html"><small>Módulo anterior</small>← 8. Relaxação</a>
+    <span class="em-breve"><small>Em preparação</small>10. Condução</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611090048"></script>
+</body>
+</html>

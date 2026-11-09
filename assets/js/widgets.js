@@ -3834,6 +3834,188 @@
     registrarRedesenho(desenhar);
   };
 
+  /* =================================================================
+     20. Advecção numérica
+     O único widget do módulo 9. Os alunos rodam os programas no
+     computador; o que vale a pena ver na tela é a comparação lado a
+     lado dos três esquemas com a solução exata, porque é ali que a
+     difusão numérica e a dispersão numérica ficam evidentes.
+     ================================================================= */
+  REGISTRO.adveccao = function (raiz) {
+    var N = 200, L = 1, U = 1, S0 = 0.05;
+    var est = { esq: 'upwind', perfil: 'gauss', C: 0.5, rodando: true };
+    var c = new Float64Array(N), novo = new Float64Array(N);
+    var passos = 0, t = 0, dx = L / N, dt = 0;
+
+    function inicial(x) {
+      var d = x - 0.25;
+      if (d > L / 2) d -= L;
+      if (d < -L / 2) d += L;
+      if (est.perfil === 'gauss') return Math.exp(-d * d / (2 * S0 * S0));
+      return (Math.abs(d) < 0.08) ? 1 : 0;
+    }
+
+    function reiniciar() {
+      for (var i = 0; i < N; i++) c[i] = inicial(i * dx);
+      passos = 0; t = 0; dt = est.C * dx / U;
+    }
+
+    function passo() {
+      var i, im, ip, C = est.C;
+      for (i = 0; i < N; i++) {
+        im = (i - 1 + N) % N; ip = (i + 1) % N;
+        if (est.esq === 'ftcs') novo[i] = c[i] - C / 2 * (c[ip] - c[im]);
+        else if (est.esq === 'upwind') novo[i] = c[i] - C * (c[i] - c[im]);
+        else novo[i] = c[i] - C / 2 * (c[ip] - c[im])
+                     + C * C / 2 * (c[ip] - 2 * c[i] + c[im]);
+      }
+      c.set(novo);
+      passos++; t += dt;
+    }
+
+    /* largura do pulso pelo segundo momento, com centroide calculado em
+       coordenada angular para não sofrer com a periodicidade */
+    function largura() {
+      var i, S = 0, sx = 0, sy = 0, th;
+      for (i = 0; i < N; i++) {
+        th = 2 * Math.PI * i / N;
+        S += c[i]; sx += c[i] * Math.cos(th); sy += c[i] * Math.sin(th);
+      }
+      if (!(S > 1e-6)) return NaN;
+      var tb = Math.atan2(sy / S, sx / S), M2 = 0;
+      for (i = 0; i < N; i++) {
+        var d = 2 * Math.PI * i / N - tb;
+        while (d > Math.PI) d -= 2 * Math.PI;
+        while (d < -Math.PI) d += 2 * Math.PI;
+        M2 += c[i] * Math.pow(d * L / (2 * Math.PI), 2);
+      }
+      return Math.sqrt(M2 / S);
+    }
+
+    var corpo = moldura(raiz, 'Três esquemas contra a solução exata');
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    opcoes(ctr, [{ rot: 'FTCS', v: 'ftcs' }, { rot: 'upwind', v: 'upwind' },
+                 { rot: 'Lax-Wendroff', v: 'lw' }], 1,
+      function (v) { est.esq = v; reiniciar(); });
+    opcoes(ctr, [{ rot: 'gaussiana', v: 'gauss' }, { rot: 'degrau', v: 'degrau' }], 0,
+      function (v) { est.perfil = v; reiniciar(); });
+    deslizante(ctr, 'número de Courant C = u Δt / Δx', 0.1, 1.3, 0.05, 0.5,
+      function (v) { est.C = v; reiniciar(); }, function (v) { return F.fmt(v, 2); });
+    opcoes(ctr, [{ rot: 'pausar', v: 0 }, { rot: 'recomeçar', v: 1 }], -1,
+      function (v) {
+        if (v === 0) est.rodando = !est.rodando; else { reiniciar(); est.rodando = true; }
+      });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'passos dados', k: 'n' },
+      { rot: 'voltas completas', k: 'v' },
+      { rot: 'largura medida', k: 'sm' },
+      { rot: 'largura prevista', k: 'sp' },
+      { rot: 'menor valor de c', k: 'mn' },
+      { rot: 'maior valor de c', k: 'mx' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var gr = G.eixos(cv, {
+        altura: 300, xmin: 0, xmax: L, ymin: -0.4, ymax: 1.4, divY: 9,
+        margem: { e: 58, d: 16, c: 16, b: 44 },
+        rotX: 'x', rotY: 'c',
+        marcasX: G.marcasLineares(0, L, 5, 1),
+        formataY: function (v) { return F.fmt(v, 1); }
+      });
+      var ct = gr.ct, i;
+      /* solução exata: o perfil inicial deslocado de u t */
+      ct.strokeStyle = G.COR.suave; ct.lineWidth = 1.6;
+      ct.setLineDash([6, 4]);
+      ct.beginPath();
+      for (i = 0; i <= N; i++) {
+        var x = i * dx, xe = x - U * t;
+        xe = xe - L * Math.floor(xe / L);
+        var y = inicial(xe);
+        if (i === 0) ct.moveTo(gr.X(x), gr.Y(y)); else ct.lineTo(gr.X(x), gr.Y(y));
+      }
+      ct.stroke(); ct.setLineDash([]);
+      /* numérica */
+      ct.strokeStyle = G.COR.mestra; ct.lineWidth = 2.2;
+      ct.beginPath();
+      for (i = 0; i <= N; i++) {
+        var v = Math.max(-0.4, Math.min(1.4, c[i % N]));
+        if (i === 0) ct.moveTo(gr.X(i * dx), gr.Y(v)); else ct.lineTo(gr.X(i * dx), gr.Y(v));
+      }
+      ct.stroke();
+      G.legenda(gr, [{ cor: G.COR.suave, texto: 'exata' },
+                     { cor: G.COR.mestra, texto: 'numérica' }]);
+
+      var mn = Infinity, mx = -Infinity;
+      for (i = 0; i < N; i++) { mn = Math.min(mn, c[i]); mx = Math.max(mx, c[i]); }
+      var sm = largura();
+      var Dn = U * dx * (1 - est.C) / 2;
+      var prev = (est.esq === 'upwind' && est.perfil === 'gauss')
+        ? F.fmt(Math.sqrt(S0 * S0 + 2 * Dn * t), 5) : '—';
+
+      mostrar({
+        n: String(passos),
+        v: F.fmt(t * U / L, 2),
+        sm: isFinite(sm) ? F.fmt(sm, 5) : '—',
+        sp: prev,
+        mn: isFinite(mn) ? F.fmt(mn, 3) : '—',
+        mx: isFinite(mx) ? F.fmt(mx, 3) : '—'
+      });
+    }
+
+    nota.innerHTML =
+      '<p>O problema é o mais inofensivo possível: um perfil que deve apenas se deslocar com '
+      + 'velocidade \\(u\\) constante num anel periódico, sem mudar de forma. A curva '
+      + 'tracejada é a resposta certa, e tudo o que a curva cheia faz de diferente dela é '
+      + 'erro do esquema.</p>'
+      + '<p>O <strong>FTCS</strong>, que usa diferença centrada no espaço e adiantada no '
+      + 'tempo, é o esquema que qualquer pessoa escreve primeiro, e ele não funciona para '
+      + 'nenhum valor de \\(C\\). A análise de von Neumann dá '
+      + '\\(|g|^2=1+C^2\\sen^2(k\\Delta x)>1\\), e o que se vê na tela é a oscilação de '
+      + 'malha crescendo até estourar a escala em poucas centenas de passos.</p>'
+      + '<p>O <strong>upwind</strong> troca a diferença centrada por uma que olha para o lado '
+      + 'de onde o fluido vem, e com isso fica estável para \\(0\\le C\\le1\\). O preço está '
+      + 'à vista: o pulso achata e alarga, embora a equação resolvida não tenha difusão '
+      + 'nenhuma. O cartão da largura prevista usa a difusividade numérica</p>'
+      + '\\[D_{\\text{num}}=\\frac{u\\,\\Delta x}{2}\\left(1-C\\right),\\]'
+      + '<p>que sai da equação modificada do esquema, e a previsão bate com a medida em todas '
+      + 'as casas mostradas. Repare no caso \\(C=1\\): a difusividade numérica se anula e o '
+      + 'pulso atravessa o domínio sem perder nada, porque ali o esquema apenas copia cada '
+      + 'valor para a célula seguinte. Essa é a única situação em que o upwind é exato, e ela '
+      + 'não sobrevive a velocidade variável nem a duas dimensões.</p>'
+      + '<p>O <strong>Lax-Wendroff</strong> é de segunda ordem e não achata o pulso, mas o '
+      + 'degrau mostra o defeito dele: aparecem oscilações junto das descontinuidades, com '
+      + 'valores negativos de \\(c\\) que, se \\(c\\) for uma concentração ou uma temperatura '
+      + 'absoluta, não significam coisa alguma. A origem é dispersiva, isto é, cada '
+      + 'comprimento de onda viaja com velocidade um pouco diferente, e as componentes curtas '
+      + 'ficam para trás. Não há como escolher entre achatar e oscilar dentro da classe dos '
+      + 'esquemas lineares, e é esse o teorema de Godunov: nenhum esquema linear de ordem '
+      + 'maior que um preserva a monotonicidade. Os esquemas modernos escapam dele sendo não '
+      + 'lineares, com limitadores que detectam a descontinuidade e reduzem a ordem só ali.</p>';
+
+    reiniciar();
+    tipografar(corpo);
+    registrarRedesenho(desenhar);
+
+    (function animar() {
+      if (est.rodando) {
+        for (var s = 0; s < 3; s++) {
+          var ok = true, i;
+          for (i = 0; i < N; i++) if (!isFinite(c[i]) || Math.abs(c[i]) > 1e6) ok = false;
+          if (ok) passo();
+        }
+        desenhar();
+      }
+      requestAnimationFrame(animar);
+    })();
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {
