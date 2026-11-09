@@ -1153,6 +1153,336 @@
     registrarRedesenho(desenhar);
   };
 
+  /* =================================================================
+     7. A derivada material
+     O escoamento é permanente, a velocidade em cada ponto não muda com
+     o tempo, e ainda assim o elemento de fluido acelera. Esse é o
+     ponto que mais custa a entrar, e ele só convence quando se vê a
+     mesma partícula passando por pontos de velocidades diferentes.
+     ================================================================= */
+  REGISTRO.material = function (raiz) {
+    var est = { k: 1.6, t: 0, x: 0.05, rodando: true };
+    var U0 = 0.22, XP = 0.55;          // sonda fixa em x = 0,55
+    var hist = [];
+
+    function vel(x) { return U0 * (1 + est.k * x); }
+    function dvel() { return U0 * est.k; }          // du/dx, constante
+
+    function reiniciar() { est.t = 0; est.x = 0.05; hist = []; }
+
+    var corpo = moldura(raiz, 'Escoamento permanente, partícula acelerada');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'aceleração do escoamento', 0, 3, 0.1, 1.6,
+      function (v) { est.k = v; reiniciar(); }, function (v) { return F.fmt(v, 1); });
+    opcoes(ctr, [{ rot: 'pausar', v: 0 }, { rot: 'recomeçar', v: 1 }], -1,
+      function (v) {
+        if (v === 0) est.rodando = !est.rodando;
+        else { reiniciar(); est.rodando = true; }
+      });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'posição da partícula', k: 'x' },
+      { rot: 'velocidade dela', k: 'u' },
+      { rot: '∂u/∂t na sonda', k: 'dt' },
+      { rot: 'u ∂u/∂x', k: 'conv' },
+      { rot: 'Du/Dt', k: 'mat' },
+      { rot: 'u na sonda fixa', k: 'sonda' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var u = vel(est.x), conv = u * dvel();
+
+      /* ---- o tubo, as setas e a partícula ---- */
+      var p = G.preparar(cv1, 250);
+      var ct = p.ct;
+      var xa = p.L * 0.06, xb = p.L * 0.94, cy = p.A * 0.45, h = p.A * 0.22;
+      ct.fillStyle = 'rgba(63,67,145,.08)';
+      ct.fillRect(xa, cy - h, xb - xa, 2 * h);
+      ct.strokeStyle = G.COR.tinta; ct.lineWidth = 2;
+      ct.beginPath();
+      ct.moveTo(xa, cy - h); ct.lineTo(xb, cy - h);
+      ct.moveTo(xa, cy + h); ct.lineTo(xb, cy + h);
+      ct.stroke();
+
+      var i;
+      for (i = 0; i <= 9; i++) {
+        var xx = i / 9, px = xa + xx * (xb - xa);
+        var c = vel(xx) / vel(1) * (xb - xa) * 0.085;
+        seta(ct, px, cy - h * 0.55, px + c, cy - h * 0.55, 'rgba(63,67,145,.55)', 1.8);
+        seta(ct, px, cy + h * 0.55, px + c, cy + h * 0.55, 'rgba(63,67,145,.55)', 1.8);
+      }
+
+      var ppx = xa + Math.min(1, est.x) * (xb - xa);
+      ct.fillStyle = G.COR.vinho;
+      ct.beginPath(); ct.arc(ppx, cy, 7, 0, 2 * Math.PI); ct.fill();
+      seta(ct, ppx, cy, ppx + u / vel(1) * (xb - xa) * 0.16, cy, G.COR.vinho, 2.6);
+      rotulo(ct, 'partícula', ppx, cy - 14, G.COR.vinho, 'center', 'bottom');
+
+      var spx = xa + XP * (xb - xa);
+      ct.strokeStyle = G.COR.bronze; ct.lineWidth = 2;
+      ct.setLineDash([4, 3]);
+      ct.beginPath(); ct.moveTo(spx, cy - h - 10); ct.lineTo(spx, cy + h + 10); ct.stroke();
+      ct.setLineDash([]);
+      rotulo(ct, 'sonda fixa', spx, cy + h + 14, G.COR.bronze, 'center', 'top');
+
+      /* ---- as duas leituras de velocidade contra o tempo ---- */
+      var gr = G.eixos(cv2, {
+        altura: 250, xmin: 0, xmax: 3, ymin: 0, ymax: U0 * (1 + est.k) * 1.15 + 0.01,
+        margem: { e: 54, d: 14, c: 14, b: 42 },
+        rotX: 'tempo', rotY: 'velocidade',
+        marcasX: G.marcasLineares(0, 3, 6, 1),
+        formataY: function (v) { return F.fmt(v, 2); }
+      });
+      G.curva(gr, function () { return vel(XP); }, G.COR.bronze, 2.2, [6, 4]);
+      var gc = gr.ct;
+      gc.strokeStyle = G.COR.vinho; gc.lineWidth = 2.6;
+      gc.beginPath();
+      hist.forEach(function (q, i) {
+        var px = gr.X(q[0]), py = gr.Y(Math.min(gr.ymax, q[1]));
+        if (i === 0) gc.moveTo(px, py); else gc.lineTo(px, py);
+      });
+      gc.stroke();
+      G.legenda(gr, [
+        { texto: 'a partícula sente', cor: G.COR.vinho },
+        { texto: 'a sonda mede', cor: G.COR.bronze }
+      ]);
+
+      mostrar({
+        x: F.fmt(est.x, 3),
+        u: F.fmt(u, 4),
+        dt: '0',
+        conv: F.fmt(conv, 4),
+        mat: F.fmt(conv, 4),
+        sonda: F.fmt(vel(XP), 4)
+      });
+    }
+
+    function escreverNota() {
+      nota.innerHTML =
+        '<p>Há duas maneiras de medir a velocidade de um fluido. Uma é fincar uma sonda num '
+        + 'ponto do espaço e anotar o que passa por ali, que é o ponto de vista de '
+        + '<strong>Euler</strong>. A outra é marcar um elemento de fluido com corante e '
+        + 'seguir esse elemento, que é o ponto de vista de <strong>Lagrange</strong>. As duas '
+        + 'medidas respondem perguntas diferentes, e a segunda lei de Newton só vale para a '
+        + 'segunda, porque é o elemento de fluido que tem massa.</p>'
+        + '<p>No desenho o escoamento é <strong>permanente</strong>: a velocidade em cada '
+        + 'ponto não muda com o tempo, de modo que a sonda fixa mede sempre o mesmo valor e '
+        + '\\(\\pder{\\vet{u}}{t}=0\\). A partícula marcada, no entanto, acelera, porque ela '
+        + 'vai ocupando pontos onde a velocidade é maior. Não há contradição alguma: são duas '
+        + 'derivadas diferentes da mesma função.</p>'
+        + '<p>Para escrever a aceleração do elemento basta aplicar a regra da cadeia à '
+        + 'velocidade avaliada na posição da partícula, \\(\\vet{u}(x(t),y(t),z(t),t)\\):</p>'
+        + '\\[\\frac{D\\vet{u}}{Dt}=\\pder{\\vet{u}}{t}'
+        + '+\\pder{\\vet{u}}{x}\\der{x}{t}'
+        + '+\\pder{\\vet{u}}{y}\\der{y}{t}'
+        + '+\\pder{\\vet{u}}{z}\\der{z}{t}.\\]'
+        + '<p>As três derivadas das coordenadas são as próprias componentes da velocidade, e o '
+        + 'que sobra se escreve de forma compacta como</p>'
+        + '\\[\\frac{D\\vet{u}}{Dt}=\\pder{\\vet{u}}{t}'
+        + '+\\left(\\vet{u}\\cdot\\nabla\\right)\\vet{u}.\\]'
+        + '<p>O primeiro termo é a parte <strong>local</strong>, que mede se o escoamento '
+        + 'inteiro está mudando com o tempo. O segundo é a parte <strong>convectiva</strong>, '
+        + 'que mede o que a partícula encontra ao se deslocar. Os cartões mostram os dois '
+        + 'separadamente: aqui o local é exatamente zero e todo o resto da aceleração vem da '
+        + 'convecção.</p>'
+        + '<p>O exemplo prático desse termo é o bocal de uma mangueira. A água dentro dele está '
+        + 'em regime permanente, nada muda com o tempo, e mesmo assim ela sai muito mais '
+        + 'rápido do que entrou. Quem acelera essa água é a diferença de pressão entre a '
+        + 'entrada e a saída do bocal, e é exatamente isso que a equação de Euler vai '
+        + 'afirmar.</p>';
+      tipografar(corpo);
+    }
+
+    escreverNota();
+    registrarRedesenho(desenhar);
+
+    (function animar() {
+      if (est.rodando) {
+        var dt = 0.012, s;
+        for (s = 0; s < 2; s++) {
+          /* Runge-Kutta de segunda ordem para dx/dt = u(x) */
+          var k1 = vel(est.x), k2 = vel(est.x + dt * k1 / 2);
+          est.x += dt * k2;
+          est.t += dt;
+          hist.push([est.t, vel(est.x)]);
+        }
+        if (est.x > 1 || est.t > 3) reiniciar();
+        desenhar();
+      }
+      requestAnimationFrame(animar);
+    })();
+  };
+
+  /* =================================================================
+     8. A pressão e o empuxo
+     As forças de contato entram na equação como o gradiente de uma
+     pressão, e isso soa abstrato. O cubo mergulhado mostra o que esse
+     gradiente faz: a face de baixo está mais fundo, logo sob pressão
+     maior, e a diferença entre as duas faces é o empuxo de Arquimedes.
+     ================================================================= */
+  REGISTRO.empuxo = function (raiz) {
+    var est = { rc: 700, a: 0.20, h: 1.20 };
+    var RHO = 1000, G0 = 9.80665, PATM = 101325;
+
+    var corpo = moldura(raiz, 'De onde sai o empuxo');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'densidade do corpo', 200, 2000, 20, 700,
+      function (v) { est.rc = v; desenhar(); },
+      function (v) { return F.fmt(v, 0) + ' kg/m³'; });
+    deslizante(ctr, 'profundidade do centro', 0.3, 2.5, 0.05, 1.2,
+      function (v) { est.h = v; desenhar(); },
+      function (v) { return F.fmt(v, 2) + ' m'; });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'pressão no topo', k: 'pt' },
+      { rot: 'pressão no fundo', k: 'pf' },
+      { rot: 'força no topo', k: 'ft' },
+      { rot: 'força no fundo', k: 'ff' },
+      { rot: 'resultante das pressões', k: 'res' },
+      { rot: 'peso do corpo', k: 'peso' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var a = est.a, V = a * a * a, A = a * a;
+      var zt = est.h - a / 2, zf = est.h + a / 2;      // profundidades das faces
+      var pt = PATM + RHO * G0 * zt, pf = PATM + RHO * G0 * zf;
+      var ft = pt * A, ff = pf * A;
+      var res = ff - ft;                                 // empuxo, para cima
+      var peso = est.rc * V * G0;
+      var acel = (res - peso) / (est.rc * V);
+
+      /* ---- o tanque e o cubo ----
+         O cubo é desenhado com tamanho fixo e a profundidade entra como
+         cota, porque em escala verdadeira ele ficaria do tamanho de uma
+         unha ao lado de dois metros de água. As setas de pressão, essas
+         sim, são proporcionais à pressão manométrica de cada face, que
+         é o que o desenho precisa mostrar. */
+      var p = G.preparar(cv1, 300);
+      var ct = p.ct;
+      var sup = 26;
+      ct.fillStyle = 'rgba(63,67,145,.09)';
+      ct.fillRect(8, sup, p.L - 16, p.A - sup - 6);
+      ct.strokeStyle = G.COR.mestra; ct.lineWidth = 2;
+      ct.beginPath(); ct.moveTo(8, sup); ct.lineTo(p.L - 8, sup); ct.stroke();
+      rotulo(ct, 'superfície livre', p.L - 12, sup - 5, G.COR.mestra, 'right', 'bottom');
+
+      var la = Math.min(96, p.L * 0.26);
+      var cx = p.L * 0.46, cy = p.A * 0.60;
+      var esl = 62 / (RHO * G0 * 2.6);          // pascal manométrico para pixel
+
+      var n = 3, i, fx, fy;
+      for (i = 0; i < n; i++) {
+        fx = cx - la / 2 + la * (i + 0.5) / n;
+        seta(ct, fx, cy - la / 2 - RHO * G0 * zt * esl, fx, cy - la / 2,
+          G.COR.mestra, 2);
+        seta(ct, fx, cy + la / 2 + RHO * G0 * zf * esl, fx, cy + la / 2,
+          G.COR.mestra, 2);
+        fy = cy - la / 2 + la * (i + 0.5) / n;
+        var cl = RHO * G0 * (zt + (zf - zt) * (i + 0.5) / n) * esl;
+        seta(ct, cx - la / 2 - cl, fy, cx - la / 2, fy, 'rgba(63,67,145,.40)', 1.6);
+        seta(ct, cx + la / 2 + cl, fy, cx + la / 2, fy, 'rgba(63,67,145,.40)', 1.6);
+      }
+
+      ct.fillStyle = 'rgba(140,47,57,.18)';
+      ct.fillRect(cx - la / 2, cy - la / 2, la, la);
+      ct.strokeStyle = G.COR.vinho; ct.lineWidth = 2;
+      ct.strokeRect(cx - la / 2, cy - la / 2, la, la);
+      rotulo(ct, 'lado a = ' + F.fmt(a * 100, 0) + ' cm', cx, cy,
+        G.COR.vinho, 'center', 'middle');
+
+      /* cota da profundidade até a face de cima */
+      var xq = cx - la / 2 - 70;
+      seta(ct, xq, sup, xq, cy - la / 2, G.COR.suave, 1.4);
+      seta(ct, xq, cy - la / 2, xq, sup, G.COR.suave, 1.4);
+      rotulo(ct, F.fmt(zt, 2) + ' m', xq - 6, (sup + cy - la / 2) / 2,
+        G.COR.suave, 'right');
+
+      rotulo(ct, 'p no topo', cx, cy - la / 2 - RHO * G0 * zt * esl - 6,
+        G.COR.mestra, 'center', 'bottom');
+      rotulo(ct, 'p no fundo', cx, cy + la / 2 + RHO * G0 * zf * esl + 6,
+        G.COR.mestra, 'center', 'top');
+      rotulo(ct, 'as laterais se cancelam', cx + la / 2 + 56, cy,
+        G.COR.suave, 'left');
+
+      /* ---- as forças verticais em barras ---- */
+      var lim = Math.max(res, peso) * 1.3 + 1;
+      var gr = G.eixos(cv2, {
+        altura: 300, xmin: -0.5, xmax: 2.5, ymin: 0, ymax: lim,
+        margem: { e: 62, d: 14, c: 14, b: 44 }, divY: 4,
+        rotY: 'força (N)',
+        marcasX: [{ v: 0, r: 'empuxo' }, { v: 1, r: 'ρf g V' }, { v: 2, r: 'peso' }],
+        formataY: function (v) { return F.fmt(v, 0); }
+      });
+      G.barras(gr, [{ x: 0, y: res }], G.COR.mestra, 0.5);
+      G.barras(gr, [{ x: 1, y: RHO * G0 * V }], G.COR.clara, 0.5);
+      G.barras(gr, [{ x: 2, y: peso }], G.COR.vinho, 0.5);
+      rotulo(gr.ct, acel > 0.005 ? 'sobe' : (acel < -0.005 ? 'desce' : 'equilíbrio'),
+        gr.X(1), gr.y0 + 14,
+        acel > 0.005 ? G.COR.mestra : (acel < -0.005 ? G.COR.vinho : G.COR.suave));
+      rotulo(gr.ct, 'a = ' + F.fmt(acel, 2) + ' m/s²', gr.X(1), gr.y0 + 30,
+        G.COR.suave);
+
+      mostrar({
+        pt: F.fmt(pt / 1000, 2) + ' kPa',
+        pf: F.fmt(pf / 1000, 2) + ' kPa',
+        ft: F.fmt(ft, 0) + ' N',
+        ff: F.fmt(ff, 0) + ' N',
+        res: F.fmt(res, 2) + ' N',
+        peso: F.fmt(peso, 2) + ' N'
+      });
+
+      nota.innerHTML =
+        '<p>A pressão é o resultado das trocas de momento linear através da superfície que '
+        + 'separa dois elementos vizinhos, e ela atua sempre no sentido contrário à normal '
+        + 'externa. A força de contato sobre o elemento inteiro é, portanto,</p>'
+        + '\\[-\\oint_S p\\,d\\vet{A}=-\\iiint_\\Omega\\nabla p\\,d\\Omega,\\]'
+        + '<p>onde o teorema da divergência foi aplicado componente a componente. O que entra '
+        + 'na equação de movimento não é a pressão, é o seu <strong>gradiente</strong>: um '
+        + 'corpo mergulhado a dez metros ou a mil, com pressão uniforme à sua volta, não '
+        + 'sentiria força nenhuma.</p>'
+        + '<p>O cubo do desenho mostra o gradiente em ação. As quatro faces laterais estão aos '
+        + 'pares em profundidades iguais, de modo que as forças horizontais se cancelam. As '
+        + 'faces de cima e de baixo não: a de baixo está mais fundo e sofre pressão maior. A '
+        + 'diferença vale</p>'
+        + '\\[E=\\left(p_{\\rm f}-p_{\\rm t}\\right)A'
+        + '=\\varrho_{\\rm f}\\,g\\,a\\cdot a^2=\\varrho_{\\rm f}\\,g\\,V,\\]'
+        + '<p>que é o <strong>empuxo de Arquimedes</strong>, igual ao peso do fluido '
+        + 'deslocado. As duas primeiras barras do gráfico mostram a resultante medida face a '
+        + 'face e a previsão \\(\\varrho_{\\rm f}gV\\), e elas coincidem. Arquimedes deixa de '
+        + 'ser um princípio à parte e passa a ser uma consequência de \\(-\\nabla p\\).</p>'
+        + '<p>Repare que as pressões absolutas são enormes, da ordem de uma centena de '
+        + 'quilopascal, e que a resultante é pequena. Quase tudo o que as duas faces sofrem é '
+        + 'a pressão atmosférica, que se cancela exatamente por ser a mesma em cima e embaixo. '
+        + 'Essa é a razão prática de se trabalhar com a pressão manométrica, medida a partir '
+        + 'da atmosférica, em quase todo problema de hidrostática.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {

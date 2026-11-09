@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 3: Dinâmica do elemento de fluido | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611082327">
+<script src="assets/js/comum.js?v=202611082327"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num ativo" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. Duas maneiras de olhar</a></li>
+    <li><a href="#s2">2. A derivada material</a></li>
+    <li><a href="#s3">3. O momento do elemento de fluido</a></li>
+    <li><a href="#s4">4. Forças de campo</a></li>
+    <li><a href="#s5">5. Forças de contato: a pressão</a></li>
+    <li><a href="#s6">6. A equação de Euler</a></li>
+    <li><a href="#s7">7. O que ficou de fora</a></li>
+    <li><a href="#s8">8. Exercícios resolvidos</a></li>
+    <li><a href="#s9">9. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 3 · Transporte de quantidade de movimento</p>
+  <h1>Dinâmica do elemento de fluido</h1>
+  <p class="subtitulo">A segunda lei de Newton foi escrita para uma partícula que se pode
+  apontar com o dedo e seguir com os olhos. Um fluido não oferece isso: o que se mede é um
+  campo, definido em pontos fixos do espaço por onde passa matéria sempre diferente. Traduzir
+  \(\vet{F}=m\vet{a}\) para essa linguagem é o trabalho deste módulo, e o resultado é a
+  equação de Euler.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Distinguir a descrição euleriana da lagrangiana e saber qual delas a segunda lei de
+      Newton exige.</li>
+      <li>Construir a derivada material pela regra da cadeia e separar a parte local da
+      convectiva.</li>
+      <li>Escrever as forças de campo e as de contato como integrais de volume, usando o
+      teorema da divergência na força de pressão.</li>
+      <li>Obter a equação de Euler do fluido ideal e reconhecer o que ela ainda não
+      contém.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. Duas maneiras de olhar</h2>
+
+  <p>Uma sonda cravada num ponto do rio mede a velocidade da água que passa por ali. Uma
+  rolha solta na correnteza mede a velocidade da água que a acompanha. As duas medidas são
+  legítimas, respondem perguntas diferentes, e confundi-las é a origem de quase todo erro de
+  sinal em mecânica dos fluidos.</p>
+
+  <p>A descrição por campos, chamada <strong>euleriana</strong>, atribui a cada ponto do
+  espaço e a cada instante uma velocidade \(\vet{u}(\vet{r},t)\), uma densidade e uma pressão.
+  É a descrição natural para quem mede, porque os instrumentos ficam parados. A descrição
+  <strong>lagrangiana</strong> acompanha cada elemento de fluido e registra o que acontece com
+  ele. É a descrição natural para quem aplica a segunda lei de Newton, porque é o elemento de
+  fluido que tem massa e que é acelerado por forças.</p>
+
+  <p>A ponte entre as duas é uma derivada, e construí-la é o primeiro passo.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. A derivada material</h2>
+
+  <p>Considere um contínuo de massa com velocidade \(\vet{u}\), tal que o momento linear do
+  elemento de massa \(dm\) é \(d\vet{P}=\vet{u}\,dm\). A variação temporal do momento contido
+  num volume \(\Omega\) que acompanha o fluido é</p>
+
+  <p>\[\der{\vet{P}}{t}=\der{}{t}\iiint_\Omega \rho\vet{u}\,d\Omega
+  =\iiint_\Omega \rho\left(\pder{\vet{u}}{t}
+  +\pder{\vet{u}}{x}\der{x}{t}
+  +\pder{\vet{u}}{y}\der{y}{t}
+  +\pder{\vet{u}}{z}\der{z}{t}\right)d\Omega,\]</p>
+
+  <p>onde a derivada foi aplicada pela regra da cadeia, porque a velocidade é avaliada na
+  posição do elemento e essa posição depende do tempo. As componentes da velocidade são
+  justamente \(u_x=dx/dt\), \(u_y=dy/dt\) e \(u_z=dz/dt\), de modo que</p>
+
+  <p>\[\der{\vet{P}}{t}=\iiint_\Omega \rho\left(\pder{\vet{u}}{t}
+  +u_x\pder{\vet{u}}{x}+u_y\pder{\vet{u}}{y}+u_z\pder{\vet{u}}{z}\right)d\Omega.\]</p>
+
+  <p>As três últimas parcelas definem um operador que vai aparecer em todas as equações que
+  faltam:</p>
+
+  <p>\[u_x\pder{\vet{u}}{x}+u_y\pder{\vet{u}}{y}+u_z\pder{\vet{u}}{z}
+  \equiv\left(\vet{u}\cdot\nabla\right)\vet{u},\]</p>
+
+  <p>chamado <strong>derivada convectiva</strong>. Juntando as duas partes, a aceleração de um
+  elemento de fluido é</p>
+
+  <p>\[\frac{D\vet{u}}{Dt}=\pder{\vet{u}}{t}+\left(\vet{u}\cdot\nabla\right)\vet{u}.\]</p>
+
+  <div data-widget="material"></div>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Por que o termo convectivo complica tudo</span>
+    <p>A parte local é linear em \(\vet{u}\). A convectiva não: ela é o produto da velocidade
+    pela sua própria derivada. Essa única não linearidade é responsável por quase tudo o que
+    torna a mecânica dos fluidos difícil, da turbulência à inexistência de uma teoria geral de
+    existência e unicidade para Navier-Stokes.</p>
+    <p>Ela também é responsável por um fato que o widget deixa ver: um escoamento permanente,
+    em que nada depende do tempo, pode acelerar violentamente o fluido. Permanente quer dizer
+    que a fotografia do campo é sempre a mesma, e não que as partículas andem com velocidade
+    constante.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. O momento do elemento de fluido</h2>
+
+  <p>Com o operador definido, a taxa de variação do momento no volume que acompanha o fluido
+  fica</p>
+
+  <p>\[\der{\vet{P}}{t}=\iiint_\Omega \rho\left(\pder{\vet{u}}{t}
+  +\left(\vet{u}\cdot\nabla\right)\vet{u}\right)d\Omega,\]</p>
+
+  <p>e pela segunda lei de Newton essa é a força total que atua sobre o elemento. Resta
+  identificar quais forças são essas. Elas vêm em dois tipos: as de campo, que agem sobre todo
+  o volume sem precisar de contato, e as de contato, que agem na fronteira.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. Forças de campo</h2>
+
+  <p>As forças de campo transferem momento diretamente para o elemento de fluido, sem
+  necessidade de contato. A mais comum em mecânica dos fluidos é a gravitacional: para um
+  elemento próximo de uma massa extensa, como um planeta, o peso é</p>
+
+  <p>\[\vet{\wp}=\int \vet{g}\,dm=\iiint_\Omega \rho\vet{g}\,d\Omega,\]</p>
+
+  <p>onde \(\vet{g}\) é a aceleração local da gravidade. Outras forças de campo aparecem em
+  situações específicas: a de Lorentz num fluido condutor, que é o assunto da
+  magneto-hidrodinâmica, e a força centrífuga e de Coriolis num referencial girante, que
+  dominam a dinâmica da atmosfera e dos oceanos. O módulo 4 trata ainda de um caso em que a
+  própria massa do fluido gera o campo que age sobre ela.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. Forças de contato: a pressão</h2>
+
+  <p>A outra fonte de momento linear é a pressão do fluido. A pressão é o resultado das trocas
+  macroscópicas de momento linear através da superfície que separa dois elementos vizinhos, e
+  ela atua sempre no sentido contrário à normal externa. Em cada área infinitesimal
+  \(d\vet{A}\) a força vale \(-p\,d\vet{A}\), e somando sobre toda a superfície que limita o
+  elemento,</p>
+
+  <p>\[-\oint_S p\,d\vet{A}.\]</p>
+
+  <p>Essa é uma integral de superfície, enquanto todo o resto da equação já está escrito como
+  integral de volume. Convertê-la exige o teorema da divergência aplicado componente a
+  componente, com o resultado</p>
+
+  <p>\[\oint_S p\,d\vet{A}=\iiint_\Omega \nabla p\,d\Omega.\]</p>
+
+  <p>Quem empurra o fluido não é a pressão, e sim a variação dela de um lado ao outro do
+  elemento. O widget abaixo mergulha um cubo num fluido em repouso e mostra o que esse
+  gradiente produz.</p>
+
+  <div data-widget="empuxo"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. A equação de Euler</h2>
+
+  <p>Agora é só juntar. A taxa de variação do momento iguala a soma do peso com a força de
+  pressão:</p>
+
+  <p>\[\iiint_\Omega \rho\left(\pder{\vet{u}}{t}
+  +\left(\vet{u}\cdot\nabla\right)\vet{u}\right)d\Omega
+  =\iiint_\Omega \rho\vet{g}\,d\Omega-\iiint_\Omega \nabla p\,d\Omega.\]</p>
+
+  <p>As três integrais são sobre o mesmo volume arbitrário, e o argumento da seção 3 do módulo
+  anterior se aplica outra vez: se a igualdade vale para qualquer volume, os integrandos são
+  iguais. Daí a <strong>equação do fluido ideal de Euler</strong>:</p>
+
+  <p>\[\rho\left(\pder{\vet{u}}{t}+\left(\vet{u}\cdot\nabla\right)\vet{u}\right)
+  =\rho\vet{g}-\nabla p.\]</p>
+
+  <div class="bloco def">
+    <span class="rotulo">O que ela é, linha por linha</span>
+    <p>Do lado esquerdo, massa por unidade de volume vezes aceleração do elemento, com a
+    aceleração escrita na linguagem de campos. Do lado direito, as duas forças por unidade de
+    volume. É \(\vet{F}=m\vet{a}\) dividida pelo volume do elemento, nada mais do que
+    isso.</p>
+    <p>Junto com a equação da continuidade do módulo 2 e com uma relação entre pressão e
+    densidade, ela forma um sistema fechado. São quatro equações escalares para quatro
+    incógnitas, \(u_x\), \(u_y\), \(u_z\) e \(p\), no caso incompressível em que \(\rho\) é
+    dado.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. O que ficou de fora</h2>
+
+  <p>Na área infinitesimal \(d\vet{A}\) podem atuar também forças de
+  <strong>cisalhamento</strong>, perpendiculares à normal, que agem ao longo da superfície em
+  vez de contra ela. Elas aparecem sempre que camadas vizinhas de fluido deslizam uma sobre a
+  outra com velocidades diferentes, e são a manifestação macroscópica da viscosidade.</p>
+
+  <p>Deixá-las de fora define o <strong>fluido ideal</strong>, e isso tem uma consequência
+  imediata e desconfortável: sem cisalhamento não há atrito com as paredes, de modo que a
+  condição de contorno em uma parede fixa passa a ser apenas a de não atravessá-la, e o fluido
+  pode deslizar livremente ao longo dela. A experiência diz o contrário, e foi essa
+  contradição que produziu o paradoxo de d'Alembert, segundo o qual um corpo em escoamento
+  ideal não sofre arrasto nenhum.</p>
+
+  <p>A equação de Euler continua sendo extremamente útil longe das paredes, onde os efeitos
+  viscosos são desprezíveis, e é dela que sairão a hidrostática do módulo 4 e o teorema de
+  Bernoulli do módulo 5. O módulo 6 acrescenta o tensor de tensão viscosa e transforma a
+  equação de Euler na de Navier-Stokes.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">3.1 Aceleração num bocal permanente</span>
+    <p>Água escoa em regime permanente por um bocal em que a velocidade, no eixo, vale
+    \(u(x)=u_1+(u_2-u_1)x/L\), com \(u_1=1{,}0\) m/s, \(u_2=4{,}0\) m/s e \(L=0{,}15\) m.
+    Qual a aceleração de um elemento de fluido na saída?</p>
+    <p>O escoamento é permanente, de modo que \(\partial u/\partial t=0\) e toda a aceleração
+    é convectiva:</p>
+    <p>\[a=u\pder{u}{x}=u_2\,\frac{u_2-u_1}{L}
+    =4{,}0\times\frac{3{,}0}{0{,}15}=80\ \text{m/s}^2.\]</p>
+    <p>São oito vezes a aceleração da gravidade, num escoamento em que nada muda com o tempo e
+    num bocal de quinze centímetros. É o termo convectivo trabalhando, e a força que o produz
+    vem do gradiente de pressão ao longo do bocal.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">3.2 O gradiente de pressão que acelera</span>
+    <p>No bocal do exercício anterior, desprezando a gravidade por ser horizontal, qual o
+    gradiente de pressão médio necessário?</p>
+    <p>Da equação de Euler na direção do escoamento,</p>
+    <p>\[\pder{p}{x}=-\rho\,u\pder{u}{x}.\]</p>
+    <p>Na saída isso dá \(-1000\times80=-8{,}0\times10^{4}\) Pa/m. A queda total de pressão ao
+    longo dos quinze centímetros sai integrando, e o resultado é
+    \(\Delta p=-\rho(u_2^2-u_1^2)/2=-7{,}5\) kPa. Esse já é o teorema de Bernoulli, obtido
+    aqui como um caso particular, e o módulo 5 o deduz em geral.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">3.3 O cubo de madeira</span>
+    <p>Um cubo de \(20\) cm de lado e densidade \(700\) kg/m³ está totalmente submerso em água,
+    preso por um fio. Qual a tração no fio, e qual a aceleração inicial se o fio for
+    cortado?</p>
+    <p>O volume vale \(V=8{,}0\times10^{-3}\) m³. O empuxo é o peso do fluido deslocado,
+    \(E=\rho_f gV=78{,}5\) N, e o peso do cubo é \(P=\rho_c gV=54{,}9\) N. Com o fio, o
+    equilíbrio exige que a tração puxe para baixo:</p>
+    <p>\[T=E-P=23{,}5\ \text{N}.\]</p>
+    <p>Cortado o fio, a aceleração é \(a=(E-P)/m=(\rho_f-\rho_c)g/\rho_c=4{,}20\) m/s², para
+    cima. Note que ela não depende do tamanho do cubo, apenas da razão de densidades, e que
+    esse cálculo ignora o arrasto, que na prática limita a subida em uma fração de segundo.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">3.4 Um campo que não pode ser permanente</span>
+    <p>Mostre que o campo \(\vet{u}=(ky,0,0)\), com \(k\) constante, satisfaz a continuidade
+    incompressível, e calcule a sua aceleração material.</p>
+    <p>A divergência vale \(\partial(ky)/\partial x=0\), de modo que o campo é admissível. A
+    aceleração material é</p>
+    <p>\[\frac{D\vet{u}}{Dt}=\left(\vet{u}\cdot\nabla\right)\vet{u}
+    =ky\pder{}{x}\left(ky,0,0\right)=\vet{0}.\]</p>
+    <p>A aceleração é nula apesar de o campo não ser uniforme, porque cada partícula se move ao
+    longo de uma linha de \(y\) constante, onde a velocidade não muda. Pela equação de Euler
+    isso exige \(\nabla p=\rho\vet{g}\), isto é, a pressão apenas hidrostática. Este é o perfil
+    de cisalhamento puro, e é exatamente a situação em que o fluido ideal falha: um fluido real
+    com esse perfil desenvolve tensões viscosas entre as camadas, e é delas que trata o módulo
+    6.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>3.5</b> Mostre a identidade
+      \(\left(\vet{u}\cdot\nabla\right)\vet{u}
+      =\nabla\left(u^2/2\right)-\vet{u}\times\left(\nabla\times\vet{u}\right)\)
+      e diga o que acontece com o segundo termo num escoamento irrotacional. Guarde o
+      resultado: ele é o atalho para o teorema de Bernoulli do módulo 5.</li>
+
+      <li><b>3.6</b> Um tanque cilíndrico de raio \(R\) gira em torno do seu eixo com
+      velocidade angular \(\Omega\), carregando o líquido em rotação rígida
+      \(\vet{u}=\Omega r\vers{\varphi}\). Calcule a aceleração material, aplique a equação de
+      Euler em coordenadas cilíndricas e obtenha a forma da superfície livre. Mostre que ela é
+      um paraboloide e calcule a diferença de altura entre o centro e a borda.</li>
+
+      <li><b>3.7</b> Verifique, pela definição, que a derivada material de uma função escalar
+      \(T(\vet{r},t)\) é \(DT/Dt=\partial T/\partial t+\vet{u}\cdot\nabla T\), e interprete
+      cada termo no caso de um termômetro arrastado pela correnteza de um rio que se aquece ao
+      longo do dia.</li>
+
+      <li><b>3.8</b> Um balão meteorológico sobe na atmosfera isotérmica do exercício 1.7.
+      Supondo o gás interno sempre em equilíbrio de pressão com o ar externo e à mesma
+      temperatura, mostre que o empuxo e o peso do balão caem na mesma proporção com a
+      altitude, e explique por que, mesmo assim, existe uma altitude de equilíbrio.</li>
+
+      <li><b>3.9</b> Deduza a equação de Euler em coordenadas cilíndricas para um escoamento
+      com simetria axial e identifique o termo \(-u_\varphi^2/r\) na componente radial. Que
+      nome esse termo tem na mecânica de uma partícula, e por que ele aparece aqui sem que
+      nenhuma força nova tenha sido adicionada?</li>
+
+      <li><b>3.10</b> Um elemento de fluido descreve a trajetória de um escoamento
+      bidimensional \(\vet{u}=(ax,-ay,0)\). Integre as equações da trajetória, mostre que o
+      caminho é uma hipérbole \(xy=\) constante e calcule a aceleração material em função da
+      posição. Compare o resultado com a derivada temporal da velocidade ao longo da
+      trajetória obtida.</li>
+
+      <li><b>3.11</b> Em meia página: a equação de Euler tem quatro incógnitas e três
+      componentes. Que equação adicional fecha o sistema no caso incompressível, e qual é o
+      papel da pressão nesse caso? Compare com o caso compressível, em que a equação de estado
+      entra no lugar.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula02.html"><small>Módulo anterior</small>← 2. Continuidade</a>
+    <span class="em-breve"><small>Em preparação</small>4. Hidrostática</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611082327"></script>
+</body>
+</html>
