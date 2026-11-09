@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 6: Viscosidade e a equação de Navier-Stokes | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611082355">
+<script src="assets/js/comum.js?v=202611082355"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
+      <a href="aula06.html" class="num ativo" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. O que a viscosidade mede</a></li>
+    <li><a href="#s2">2. Newtonianos e os outros</a></li>
+    <li><a href="#s3">3. Tensão: o objeto de dois índices</a></li>
+    <li><a href="#s4">4. A força resultante numa face</a></li>
+    <li><a href="#s5">5. O tensor de tensão viscosa</a></li>
+    <li><a href="#s6">6. Tensões normais de origem viscosa</a></li>
+    <li><a href="#s7">7. A equação de Navier-Stokes</a></li>
+    <li><a href="#s8">8. Hagen-Poiseuille</a></li>
+    <li><a href="#s9">9. Exercícios resolvidos</a></li>
+    <li><a href="#s10">10. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 6 · Transporte de quantidade de movimento</p>
+  <h1>Viscosidade e a equação de Navier-Stokes</h1>
+  <p class="subtitulo">O módulo 3 deixou de fora as forças que agem ao longo da superfície do
+  elemento, e com elas ficou de fora o atrito interno do fluido. Recuperá-las exige um objeto
+  novo, com dois índices em vez de um, e produz a equação que governa praticamente todo
+  escoamento real.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Definir viscosidade a partir do experimento das duas placas e distinguir fluidos
+      newtonianos dos demais.</li>
+      <li>Construir o tensor de tensões, entender por que ele precisa de dois índices e
+      reconhecer o papel de cada componente.</li>
+      <li>Obter a força viscosa resultante num elemento como divergente do tensor e chegar à
+      equação de Navier-Stokes.</li>
+      <li>Resolver o escoamento de Hagen-Poiseuille e saber até onde a solução vale.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. O que a viscosidade mede</h2>
+
+  <p>Viscosidade é uma medida da resistência de um fluido ao movimento ou à deformação.
+  Quando se tenta mover uma camada de fluido sobre outra, a viscosidade determina o quanto
+  essas camadas resistem ao deslizamento.</p>
+
+  <p>Imagine duas placas paralelas com fluido entre elas. Empurrando a placa superior para a
+  direita enquanto a inferior fica parada, o fluido próximo à placa superior se move mais
+  rapidamente que o fluido próximo à inferior, e esse movimento gera uma diferença de
+  velocidade entre as camadas.</p>
+
+  <div data-widget="cisalhamento"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. Newtonianos e os outros</h2>
+
+  <p>Traçando a taxa de deformação \(\dot\gamma\) contra a tensão de cisalhamento \(\tau\),
+  a inclinação local da curva é a viscosidade aparente do fluido. Para os fluidos chamados
+  <strong>newtonianos</strong> essa inclinação é constante, de modo que o gráfico é uma reta
+  que parte da origem, e vale</p>
+
+  <p>\[\tau=\mu\dot\gamma.\]</p>
+
+  <p>Caso a viscosidade não seja constante, o fluido é chamado de não newtoniano, e os três
+  desvios mais comuns aparecem no widget acima: o pseudoplástico, que afina sob agitação, o
+  dilatante, que engrossa, e o plástico de Bingham, que só começa a escoar acima de uma
+  tensão mínima.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Duas convenções de sinal</span>
+    <p>Parte da literatura de fenômenos de transporte, a começar pelo Bird, escreve a lei de
+    Newton como \(\tau_{yx}=-\mu\,\partial u_x/\partial y\), com um sinal negativo. Não é um
+    erro nem uma física diferente: naquela convenção \(\tau\) não é interpretada como tensão,
+    e sim como <em>fluxo de quantidade de movimento</em>, e o sinal negativo a coloca na mesma
+    forma da lei de Fourier, \(\vet{J}_q=-\kappa\nabla T\), e da lei de Fick,
+    \(\vet{J}=-D\nabla c\). A vantagem didática é enorme, porque as três leis constitutivas
+    do curso passam a ter exatamente a mesma cara, com momento, calor e massa fluindo do mais
+    para o menos.</p>
+    <p>Esta página usa a convenção de tensão, sem o sinal, porque é a que leva diretamente ao
+    tensor de Cauchy e à equação de Navier-Stokes na forma usual. Ao comparar com outros
+    textos, o primeiro passo é verificar qual das duas está em uso, do mesmo jeito que no
+    módulo 4 foi preciso verificar a convenção do índice politrópico.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. Tensão: o objeto de dois índices</h2>
+
+  <p>Tensão é a razão entre uma força aplicada numa área e essa área. Como tanto a força
+  quanto a área têm orientação, a definição por si só não basta: é preciso dizer em que
+  superfície a força age e em que direção ela aponta. Define-se o vetor de tensão sobre uma
+  superfície dada como</p>
+
+  <p>\[\vet{\tau}=\lim_{\delta A\to0}\frac{\delta\vet{F}}{\delta A},\]</p>
+
+  <p>e a componente \(\tau_{ij}\) é a força na direção \(i\) por unidade de área, agindo sobre
+  a face cuja normal aponta na direção \(j\). São duas orientações independentes, e é por isso
+  que a tensão precisa de dois índices: ela é um <strong>tensor</strong>, e não um vetor.</p>
+
+  <p>As componentes com índices iguais, \(\tau_{xx}\), \(\tau_{yy}\) e \(\tau_{zz}\), têm
+  força e normal na mesma direção e são tensões <strong>normais</strong>. As de índices
+  diferentes agem paralelamente à superfície e são tensões de
+  <strong>cisalhamento</strong>. São essas últimas que o módulo 3 deixou de fora.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. A força resultante numa face</h2>
+
+  <p>Considere a tensão \(\tau_{yx}\) agindo nas duas faces horizontais de um elemento de
+  fluido, uma em \(y\) e outra em \(y+dy\). Ao longo da espessura \(dy\) o gradiente de
+  velocidade muda, de modo que a tensão também muda, e em primeira ordem</p>
+
+  <p>\[\tau_{yx}\left(y+dy\right)=\tau_{yx}\left(y\right)
+  +\pder{\tau_{yx}}{y}\,dy.\]</p>
+
+  <p>A tensão resultante das duas faces é a diferença entre elas, que deixa apenas o termo do
+  gradiente:</p>
+
+  <p>\[\Delta\tau_{yx}=\pder{\tau_{yx}}{y}\,dy.\]</p>
+
+  <p>Multiplicando por \(dA_{xz}\), a área da face, chega-se à força de cisalhamento</p>
+
+  <p>\[F_{\tau_{yx}}=\pder{\tau_{yx}}{y}\,dy\,dA_{xz}
+  =\pder{\tau_{yx}}{y}\,d\Omega,\]</p>
+
+  <p>porque \(d\Omega=dy\,dA_{xz}\) é o volume do elemento. O mesmo raciocínio vale para as
+  demais faces, e o padrão é sempre este: a força por unidade de volume é a
+  <em>derivada</em> da tensão, não a tensão. Tensão uniforme não empurra nada, exatamente
+  como pressão uniforme não empurra nada.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. O tensor de tensão viscosa</h2>
+
+  <p>Num escoamento tridimensional a velocidade muda nas três direções, e a tensão de
+  cisalhamento numa face deixa de depender de um único gradiente. A observação de que, nos
+  fluidos, as tensões não respondem à deformação acumulada e sim à <em>taxa</em> de
+  deformação é devida a Stokes, e leva à forma</p>
+
+  <p>\[\tau_{ij}=\mu\left(\pder{u_i}{x_j}+\pder{u_j}{x_i}\right),\]</p>
+
+  <p>que por extenso é a matriz simétrica</p>
+
+  <p>\[\Ten{\tau}=\mu\begin{pmatrix}
+  2\pder{u_x}{x} & \pder{u_x}{y}+\pder{u_y}{x} & \pder{u_x}{z}+\pder{u_z}{x}\\[4pt]
+  \pder{u_y}{x}+\pder{u_x}{y} & 2\pder{u_y}{y} & \pder{u_y}{z}+\pder{u_z}{y}\\[4pt]
+  \pder{u_z}{x}+\pder{u_x}{z} & \pder{u_z}{y}+\pder{u_y}{z} & 2\pder{u_z}{z}
+  \end{pmatrix}.\]</p>
+
+  <p>A simetrização não é um capricho de notação. Sem ela, uma rotação rígida do fluido, em
+  que não há deformação alguma, produziria tensões viscosas, e o fluido resistiria a girar
+  como um bloco sólido. Com a soma dos dois gradientes, a parte antissimétrica, que é
+  justamente a rotação, se cancela, e só a taxa de deformação sobrevive.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. Tensões normais de origem viscosa</h2>
+
+  <p>Os elementos da diagonal mostram que a viscosidade gera não apenas cisalhamento, mas
+  também tensões normais, \(\tau_{xx}=2\mu\,\partial u_x/\partial x\) e análogas. Elas são
+  diferentes da pressão em dois sentidos. A pressão estática existe mesmo no fluido parado e
+  age contra a normal externa, empurrando o elemento; a tensão normal viscosa só existe se
+  houver deformação, e age no sentido da normal. A tensão normal total na direção \(x\)
+  é, portanto,</p>
+
+  <p>\[\sigma_x=p-2\mu\pder{u_x}{x},\]</p>
+
+  <p>com o sinal escrito na convenção em que \(\sigma\) positivo comprime. De forma compacta,
+  o <strong>tensor de tensões de Cauchy</strong> reúne as duas contribuições:</p>
+
+  <p>\[\sigma_{ij}=-p\,\delta_{ij}+\tau_{ij},\]</p>
+
+  <p>onde \(\delta_{ij}\) é o delta de Kronecker. A força de contato total sobre o elemento é
+  o fluxo desse tensor pela superfície,</p>
+
+  <p>\[F_i=\oint_S\left(-p\,\delta_{ij}+\tau_{ij}\right)dA_j
+  =-\oint_S p\,dA_i+\oint_S\tau_{ij}\,dA_j,\]</p>
+
+  <p>em que a primeira parcela é a força de pressão do módulo 3 e a segunda é a novidade.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. A equação de Navier-Stokes</h2>
+
+  <p>Voltando à segunda lei de Newton para o elemento de fluido, agora com as duas forças de
+  contato,</p>
+
+  <p>\[\iiint_\Omega\rho\left(\pder{\vet{u}}{t}
+  +\left(\vet{u}\cdot\nabla\right)\vet{u}\right)d\Omega
+  =\iiint_\Omega\rho\vet{g}\,d\Omega
+  +\oint_S\left(-p\,\Ten{1}+\Ten{\tau}\right)\cdot d\vet{A},\]</p>
+
+  <p>e aplicando o teorema de Gauss à integral de superfície, a equação local fica</p>
+
+  <p>\[\rho\left(\pder{\vet{u}}{t}+\left(\vet{u}\cdot\nabla\right)\vet{u}\right)
+  =\rho\vet{g}+\nabla\cdot\left(-p\,\Ten{1}+\Ten{\tau}\right).\]</p>
+
+  <p>Resta calcular o divergente do tensor viscoso. Tomando a componente \(x\) e supondo
+  \(\mu\) uniforme,</p>
+
+  <p>\[\left(\nabla\cdot\Ten{\tau}\right)_x
+  =\mu\left[\frac{\partial^2u_x}{\partial x^2}
+  +\frac{\partial^2u_x}{\partial y^2}
+  +\frac{\partial^2u_x}{\partial z^2}\right]
+  +\mu\pder{}{x}\left(\pder{u_x}{x}+\pder{u_y}{y}+\pder{u_z}{z}\right),\]</p>
+
+  <p>onde os termos foram reagrupados de modo a isolar um laplaciano e um divergente. Para
+  escoamento <strong>incompressível</strong> o segundo parêntese é nulo pela equação da
+  continuidade, e o que sobra, nas três componentes juntas, é simplesmente
+  \(\mu\nabla^2\vet{u}\). Chega-se assim à <strong>equação de Navier-Stokes</strong>:</p>
+
+  <p>\[\rho\left(\pder{\vet{u}}{t}+\left(\vet{u}\cdot\nabla\right)\vet{u}\right)
+  =\rho\vet{g}-\nabla p+\mu\nabla^2\vet{u}.\]</p>
+
+  <div class="bloco def">
+    <span class="rotulo">O que mudou em relação a Euler</span>
+    <p>Um único termo, \(\mu\nabla^2\vet{u}\), e com ele três consequências. A equação passa
+    a ser de segunda ordem no espaço, o que permite impor a condição de não deslizamento nas
+    paredes, impossível em Euler. O termo é dissipativo, de modo que a energia mecânica deixa
+    de se conservar e o teorema de Bernoulli vira uma desigualdade. E a vorticidade ganha uma
+    fonte: a equação do módulo 5 adquire o termo \(\nu\nabla^2\vet{\omega}\), que difunde
+    vorticidade a partir das paredes.</p>
+    <p>As soluções raramente são simples. Sem o termo convectivo a equação é linear e
+    tratável, e é desse caso que sai a seção seguinte; com ele, a existência e a unicidade de
+    soluções suaves em três dimensões continuam sendo um problema em aberto.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. Hagen-Poiseuille</h2>
+
+  <p>Para um escoamento estacionário, \(\partial\vet{u}/\partial t=\vet{0}\), e lento o
+  bastante para que \(\left(\vet{u}\cdot\nabla\right)\vet{u}\approx\vet{0}\), a equação se
+  reduz a um equilíbrio entre pressão e viscosidade. Desprezando a gravidade, por ser
+  perpendicular ao escoamento num tubo horizontal,</p>
+
+  <p>\[\nabla p=\mu\nabla^2\vet{u}.\]</p>
+
+  <p>Num tubo cilíndrico de raio \(R\) e comprimento \(L\), com simetria azimutal, a
+  continuidade obriga \(u_r=0\) e a simetria obriga \(u_\theta=0\), de modo que sobra apenas
+  \(u_z(r)\). A componente ao longo do eixo fica</p>
+
+  <p>\[\pder{p}{z}=\mu\left[\frac{1}{r}\pder{}{r}\left(r\pder{u_z}{r}\right)\right],\]</p>
+
+  <p>e como \(u_z\) depende só de \(r\) as derivadas parciais viram totais. Separando,</p>
+
+  <p>\[\der{p}{z}\frac{r}{\mu}\,dr=d\left(r\der{u_z}{r}\right),\]</p>
+
+  <p>e integrando duas vezes,</p>
+
+  <p>\[u_z=\frac{r^2}{4\mu}\der{p}{z}+C\ln r+D.\]</p>
+
+  <p>Duas condições fixam as constantes. A velocidade tem de ser finita no eixo, o que obriga
+  \(C=0\), e tem de ser nula na parede pelo não deslizamento, o que dá
+  \(D=-\frac{R^2}{4\mu}\frac{dp}{dz}\). Com \(dp/dz=-\Delta p/L\), a solução é</p>
+
+  <p>\[u_z=\frac{\Delta p}{4\mu L}\left(R^2-r^2\right),\]</p>
+
+  <p>o perfil parabólico. A vazão sai integrando sobre a seção em anéis de área
+  \(2\pi r\,dr\):</p>
+
+  <p>\[Q=\int_0^{2\pi}\!\!\int_0^R u_z\,r\,dr\,d\theta
+  =\frac{\pi R^4\Delta p}{8\mu L}.\]</p>
+
+  <div data-widget="poiseuille"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">6.1 A placa que desliza no óleo</span>
+    <p>Uma placa de \(0{,}50\) m² desliza a \(0{,}80\) m/s sobre uma camada de óleo de
+    \(\mu=0{,}29\) Pa·s e \(1{,}5\) mm de espessura. Qual a força necessária e a potência
+    dissipada?</p>
+    <p>A taxa de deformação é \(\dot\gamma=U/h=0{,}80/1{,}5\times10^{-3}=533\) s⁻¹, e a
+    tensão vale \(\tau=\mu\dot\gamma=155\) Pa. Logo</p>
+    <p>\[F=\tau A=155\times0{,}50=77{,}3\ \text{N},
+    \qquad
+    P=FU=61{,}8\ \text{W}.\]</p>
+    <p>Toda essa potência vira calor dentro do óleo. É o mesmo mecanismo que aquece o óleo de
+    um motor e o que faz um amortecedor esquentar depois de uma estrada ruim.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">6.2 Quanto tempo o momento leva para atravessar</span>
+    <p>Uma placa é posta subitamente em movimento sobre uma camada de água de \(2\) mm.
+    Quanto tempo leva até o perfil linear se estabelecer?</p>
+    <p>O momento se espalha por difusão, com difusividade \(\nu=\mu/\rho=1{,}0\times10^{-6}\)
+    m²/s para a água. O tempo característico é</p>
+    <p>\[t\sim\frac{h^2}{\nu}=\frac{\left(2\times10^{-3}\right)^2}{1{,}0\times10^{-6}}
+    =4{,}0\ \text{s}.\]</p>
+    <p>Com óleo SAE 30 a viscosidade cinemática é \(3{,}3\times10^{-4}\) m²/s, umas trezentas
+    vezes maior, e o tempo cai para \(12\) ms. O óleo transmite momento muito mais depressa
+    que a água, o que vai contra a intuição de que óleo é mais lento: o que é lento no óleo é
+    escoar, não transmitir momento. Essa separação entre as duas coisas, com \(\mu\) medindo a
+    resistência a escoar e \(\nu\) medindo a rapidez com que o momento se espalha, vai
+    reaparecer no módulo 11 no número de Prandtl.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">6.3 A artéria que estreita</span>
+    <p>Uma artéria tem o raio reduzido em \(20\%\) por uma placa de ateroma. Mantida a mesma
+    diferença de pressão, em quanto cai o fluxo?</p>
+    <p>Pela lei de Hagen-Poiseuille o fluxo vai com \(R^4\), de modo que</p>
+    <p>\[\frac{Q}{Q_0}=\left(0{,}80\right)^4=0{,}41.\]</p>
+    <p>O fluxo cai para \(41\%\) do original com uma redução de apenas um quinto no raio. Para
+    manter a mesma vazão, a pressão teria de subir por um fator \(1/0{,}41=2{,}4\), e é essa a
+    origem fisiológica da hipertensão associada à aterosclerose. Note que a área da seção caiu
+    só \(36\%\): a diferença entre \(R^2\) e \(R^4\) é o atrito viscoso junto à parede, que a
+    intuição geométrica não captura.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">6.4 Até onde Poiseuille vale</span>
+    <p>Água escoa num tubo de \(10\) mm de diâmetro. Qual a maior vazão compatível com o
+    regime laminar?</p>
+    <p>A transição ocorre perto de \(Re=2300\), com \(Re=\rho\bar uD/\mu\). Isolando a
+    velocidade média,</p>
+    <p>\[\bar u=\frac{2300\,\mu}{\rho D}
+    =\frac{2300\times1{,}0\times10^{-3}}{998\times0{,}010}=0{,}23\ \text{m/s},\]</p>
+    <p>o que dá \(Q=\bar u\pi R^2=18\) mL/s. Acima disso o perfil deixa de ser parabólico,
+    fica achatado no centro com uma camada fina junto à parede, e a queda de pressão passa a
+    crescer com o quadrado da vazão em vez de linearmente. Uma torneira doméstica comum já
+    opera bem acima desse limite.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>6.5</b> Mostre que, para uma rotação rígida \(\vet{u}=\vet{\Omega}\cruz\vet{r}\),
+      todas as componentes do tensor \(\tau_{ij}=\mu(\partial_ju_i+\partial_iu_j)\) se anulam.
+      Em seguida mostre que o tensor não simetrizado, \(\mu\,\partial_ju_i\), não se anula, e
+      explique por que isso tornaria a definição fisicamente inaceitável.</li>
+
+      <li><b>6.6</b> Obtenha o perfil de velocidade para o escoamento entre duas placas
+      paralelas separadas por \(2h\), com gradiente de pressão constante e ambas as placas
+      paradas. Compare a vazão com a do tubo cilíndrico e mostre que, neste caso, ela vai com
+      \(h^3\) e não com a quarta potência.</li>
+
+      <li><b>6.7</b> Combine os dois casos: placa superior movendo-se a \(U\) e gradiente de
+      pressão simultâneo, o chamado escoamento de Couette-Poiseuille. Obtenha o perfil, e
+      determine para que valor do gradiente aparece refluxo junto à placa parada.</li>
+
+      <li><b>6.8</b> Um viscosímetro de cilindros concêntricos tem raio interno \(R_1\),
+      externo \(R_2\) e altura \(H\). O cilindro interno gira a \(\Omega\) e mede-se o torque
+      \(M\). Mostre que
+      \(\mu=M\left(R_2^2-R_1^2\right)/\left(4\pi H\Omega R_1^2R_2^2\right)\) e discuta por que
+      convém que a folga seja pequena.</li>
+
+      <li><b>6.9</b> Uma esfera de raio \(a\) cai lentamente num fluido viscoso e sofre
+      arrasto \(F=6\pi\mu av\), a lei de Stokes. Obtenha a velocidade terminal em função das
+      densidades e mostre que ela vai com \(a^2\). Calcule a velocidade de sedimentação de uma
+      partícula de \(10\) μm de areia em água e comente o resultado.</li>
+
+      <li><b>6.10</b> Escreva a equação de Navier-Stokes em variáveis adimensionais, usando
+      uma velocidade \(U\) e um comprimento \(L\) característicos, e mostre que o único
+      parâmetro que sobra é o número de Reynolds. Interprete os limites \(Re\ll1\) e
+      \(Re\gg1\) em termos dos termos que sobrevivem.</li>
+
+      <li><b>6.11</b> Em meia página: o módulo 3 obteve a equação de Euler e o módulo 5
+      mostrou que num fluido ideal a vorticidade não pode nascer. Explique como o termo
+      \(\mu\nabla^2\vet{u}\) desfaz esse teorema, e por que a vorticidade de um escoamento
+      real é sempre gerada nas paredes.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula05.html"><small>Módulo anterior</small>← 5. Irrotacional e Bernoulli</a>
+    <span class="em-breve"><small>Em preparação</small>7. Tensão superficial</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611082355"></script>
+</body>
+</html>
