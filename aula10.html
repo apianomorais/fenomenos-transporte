@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 10: Condução de calor | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090056">
+<script src="assets/js/comum.js?v=202611090056"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
+      <a href="aula06.html" class="num" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
+      <a href="aula07.html" class="num" title="Módulo 7: Tensão superficial e capilaridade">7</a>
+      <span class="grupo">Numérico</span>
+      <a href="aula08.html" class="num" title="Módulo 8: Campos no computador: relaxação e convergência">8</a>
+      <a href="aula09.html" class="num" title="Módulo 9: Advecção e difusão no computador">9</a>
+      <span class="grupo">Energia</span>
+      <a href="aula10.html" class="num ativo" title="Módulo 10: Condução de calor">10</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. Os três modos de transportar calor</a></li>
+    <li><a href="#s2">2. A lei de Fourier e as três leis</a></li>
+    <li><a href="#s3">3. A equação do calor</a></li>
+    <li><a href="#s4">4. Condução estacionária e a analogia elétrica</a></li>
+    <li><a href="#s5">5. Cilindros e o raio crítico</a></li>
+    <li><a href="#s6">6. O sólido semi-infinito</a></li>
+    <li><a href="#s7">7. A onda térmica</a></li>
+    <li><a href="#s8">8. Biot e o modelo concentrado</a></li>
+    <li><a href="#s9">9. Condução no computador</a></li>
+    <li><a href="#s10">10. Exercícios resolvidos</a></li>
+    <li><a href="#s11">11. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 10 · Transporte de energia</p>
+  <h1>Condução de calor</h1>
+  <p class="subtitulo">A unidade anterior tratou de quantidade de movimento, que se transporta
+  por contato entre camadas de fluido e se descreve pela viscosidade. Energia térmica se
+  transporta do mesmo modo, por contato entre vizinhos, e a lei que a descreve tem exatamente a
+  mesma forma. Daí em diante tudo é consequência.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Enunciar a lei de Fourier na convenção de fluxo e reconhecer nela a mesma estrutura
+      das leis de Newton e de Fick.</li>
+      <li>Obter a equação do calor pelo balanço de energia num volume de controle e identificar
+      a difusividade térmica.</li>
+      <li>Resolver a condução estacionária em paredes planas, cilíndricas e esféricas e montar
+      resistências térmicas em série e em paralelo.</li>
+      <li>Resolver o sólido semi-infinito e usar a efusividade para prever a temperatura de
+      contato entre dois corpos.</li>
+      <li>Obter a onda térmica periódica e aplicá-la ao solo e à inércia térmica de
+      paredes.</li>
+      <li>Decidir, pelo número de Biot, quando um corpo pode ser tratado como isotérmico.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. Os três modos de transportar calor</h2>
+
+  <p>Energia térmica vai de um lugar a outro por três mecanismos, e convém separá-los desde o
+  começo porque a matemática de cada um é diferente.</p>
+
+  <p>A <strong>condução</strong> é a transferência por contato, sem transporte de matéria: as
+  moléculas mais agitadas agitam as vizinhas, e num metal os elétrons livres fazem o mesmo
+  trabalho com muito mais eficiência. É o modo que funciona dentro de sólidos e, em fluidos
+  parados, é o único.</p>
+
+  <p>A <strong>convecção</strong> é a condução acompanhada de escoamento: o fluido que esquenta
+  junto da parede vai embora e leva a energia consigo. Não é um mecanismo novo no nível
+  microscópico, e sim a combinação da condução com a advecção do módulo 9, o que explica por
+  que o módulo 11 pode tratá-la com as equações que já temos.</p>
+
+  <p>A <strong>radiação</strong> não precisa de meio nenhum e obedece a leis de outra natureza,
+  com a quarta potência da temperatura em vez de um gradiente. É o assunto do módulo 12.</p>
+
+  <p>Este módulo trata da condução, e trata dela com cuidado porque ela é o esqueleto dos dois
+  módulos seguintes: a convecção aparece como condição de contorno de um problema de condução,
+  e a radiação disputa com ela em qualquer superfície quente.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. A lei de Fourier e as três leis</h2>
+
+  <p>Joseph Fourier propôs, na <em>Théorie analytique de la chaleur</em> de 1822, que o fluxo
+  de calor por unidade de área é proporcional ao gradiente de temperatura e aponta no sentido
+  oposto a ele:</p>
+
+  <p>\[\vet{q}=-k\,\nabla T.\]</p>
+
+  <p>A grandeza \(k\) é a <strong>condutividade térmica</strong>, com unidades de W/(m·K), e
+  \(\vet{q}\) é um fluxo, isto é, energia por unidade de área e de tempo, em W/m². O sinal
+  negativo diz que o calor desce o gradiente, do quente para o frio, e com ele a lei já
+  carrega a segunda lei da termodinâmica.</p>
+
+  <p>O módulo 6 prometeu voltar a este ponto. Escrevendo o transporte de quantidade de
+  movimento na convenção de Bird, as três leis constitutivas desta disciplina ficam com a mesma
+  cara:</p>
+
+  <div class="bloco def">
+    <span class="rotulo">As três leis, lado a lado</span>
+    <p>\[\tau_{yx}=-\mu\,\der{u_x}{y}
+    \qquad\text{(Newton, quantidade de movimento)}\]</p>
+    <p>\[q_y=-k\,\der{T}{y}
+    \qquad\text{(Fourier, energia)}\]</p>
+    <p>\[j_{A,y}=-D_{AB}\,\der{c_A}{y}
+    \qquad\text{(Fick, massa, módulo 13)}\]</p>
+    <p>Em cada uma, um fluxo de algo é proporcional ao gradiente da densidade desse algo, com
+    sinal negativo. Dividindo cada coeficiente pelo que for preciso para dar unidade de m²/s,
+    aparecem três difusividades comparáveis:</p>
+    <p>\[\nu=\frac{\mu}{\rho}\ \text{(momento)},\qquad
+    \alpha=\frac{k}{\rho c_p}\ \text{(calor)},\qquad
+    D_{AB}\ \text{(massa)},\]</p>
+    <p>e as razões entre elas são números adimensionais com nome: \(\mathrm{Pr}=\nu/\alpha\) de
+    Prandtl, \(\mathrm{Sc}=\nu/D\) de Schmidt e \(\mathrm{Le}=\alpha/D\) de Lewis. Essa
+    semelhança não é estética: é ela que permite, no módulo 14, transferir correlações medidas
+    para calor diretamente para massa.</p>
+  </div>
+
+  <p>Os valores de \(k\) variam por cinco ordens de grandeza, e a razão de cada caso é
+  diferente. Nos gases a teoria cinética dá \(k\approx\tfrac13 n\bar{c}\lambda c_v\), com o
+  livre caminho médio no lugar de destaque, e o resultado é pequeno: \(0{,}026\) W/mK para o
+  ar. Nos sólidos isolantes o transporte é por vibrações da rede, os fônons, e \(k\) fica entre
+  \(0{,}1\) e \(5\). Nos metais os elétrons de condução carregam quase todo o calor, e por isso
+  \(k\) acompanha a condutividade elétrica pela lei de Wiedemann-Franz, chegando a \(400\) W/mK
+  no cobre. Os isolantes comerciais, como o EPS com \(0{,}035\) W/mK, são melhores que o ar
+  parado porque suas células impedem que o ar circule por dentro deles.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. A equação do calor</h2>
+
+  <p>A lei de Fourier descreve o fluxo, não a evolução. Para obter a equação que governa
+  \(T(\vet{r},t)\) é preciso um balanço de energia num volume de controle, exatamente como o
+  módulo 2 fez para a massa.</p>
+
+  <p>A primeira lei da termodinâmica, aplicada a um elemento de volume que não realiza
+  trabalho, diz que o calor que entra aumenta a energia interna. Por unidade de volume, e para
+  uma variação pequena,</p>
+
+  <p>\[\delta q=\rho\,c_p\,dT,\]</p>
+
+  <p>com \(c_p\) o calor específico. A taxa de acúmulo num elemento fixo é portanto
+  \(\rho c_p\,\partial T/\partial t\), e ela tem de igualar o que entra por condução, que é
+  menos a divergência do fluxo, mais o que for gerado dentro, de taxa \(\dot{s}\) por unidade
+  de volume:</p>
+
+  <p>\[\rho c_p\pder{T}{t}=-\nabla\cdot\vet{q}+\dot{s}
+  =\nabla\cdot\left(k\nabla T\right)+\dot{s}.\]</p>
+
+  <p>Com \(k\) uniforme e sem geração, isso é a <strong>equação do calor</strong>:</p>
+
+  <p>\[\pder{T}{t}=\alpha\nabla^2T,\qquad
+  \alpha=\frac{k}{\rho c_p},\]</p>
+
+  <p>com \(\alpha\) a <strong>difusividade térmica</strong>, em m²/s. Convém não confundir as
+  duas grandezas, e a confusão é comum porque ambas são chamadas de propriedade térmica do
+  material. A condutividade \(k\) diz quanto calor passa em regime permanente; a difusividade
+  \(\alpha\) diz com que rapidez uma perturbação de temperatura se propaga. O aço inoxidável e
+  o vidro têm \(k\) diferentes por um fator trinta, mas um tijolo e a água têm \(\alpha\)
+  parecidos.</p>
+
+  <p>Se o meio escoa, o elemento de volume que acompanha o fluido é que satisfaz a relação, e a
+  derivada parcial vira a derivada material do módulo 3:</p>
+
+  <p>\[\rho c_p\left(\pder{T}{t}+\vet{u}\cdot\nabla T\right)=k\nabla^2T+\Phi,\]</p>
+
+  <p>onde \(\Phi\) é a dissipação viscosa, isto é, a energia mecânica que a viscosidade degrada
+  em calor. Essa é exatamente a equação de advecção-difusão do módulo 9, com \(T\) no lugar de
+  \(c\) e \(\alpha\) no lugar de \(D\), e tudo o que foi dito lá sobre esquemas numéricos vale
+  aqui sem mudar uma linha.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. Condução estacionária e a analogia elétrica</h2>
+
+  <p>Em regime permanente e sem geração, a equação do calor se reduz a \(\nabla^2T=0\), que é a
+  equação de Laplace do módulo 8. Numa parede plana de espessura \(L\), com as duas faces a
+  temperaturas fixas, a solução é uma reta, e o fluxo sai direto da lei de Fourier:</p>
+
+  <p>\[q=k\,\frac{T_1-T_2}{L}=\frac{T_1-T_2}{L/k}.\]</p>
+
+  <p>Escrever o denominador como \(R=L/k\) não é um capricho de notação. A expressão tem a
+  forma de uma lei de Ohm, com a diferença de temperatura no papel da diferença de potencial e
+  o fluxo no papel da corrente, e com isso toda a técnica de circuitos passa a valer. Camadas
+  sucessivas são resistências <strong>em série</strong>, e suas resistências se somam; caminhos
+  alternativos, como uma parede com uma viga de concreto atravessando o isolamento, são
+  resistências <strong>em paralelo</strong>.</p>
+
+  <p>Nas superfícies há mais uma resistência, que não é de condução. O ar junto da parede troca
+  calor por convecção, e a lei de resfriamento de Newton, assunto do módulo 11, dá
+  \(q=h\left(T_{\text{sup}}-T_\infty\right)\). Isso é uma resistência \(1/h\) por unidade de
+  área, em série com as demais. Juntando tudo,</p>
+
+  <p>\[q=\frac{T_e-T_i}{R_{\text{tot}}},\qquad
+  R_{\text{tot}}=\frac{1}{h_e}+\sum_i\frac{L_i}{k_i}+\frac{1}{h_i},\qquad
+  U=\frac{1}{R_{\text{tot}}}.\]</p>
+
+  <div data-widget="parede"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. Cilindros e o raio crítico</h2>
+
+  <p>Num tubo a área atravessada pelo calor cresce com o raio, e isso muda a forma da solução.
+  Em regime permanente, a taxa \(\dot{Q}\) que atravessa qualquer superfície cilíndrica de raio
+  \(r\) e comprimento \(L\) é a mesma, de modo que</p>
+
+  <p>\[\dot{Q}=-k\left(2\pi rL\right)\der{T}{r}
+  \quad\Longrightarrow\quad
+  \der{T}{r}=-\frac{\dot{Q}}{2\pi kL}\frac{1}{r},\]</p>
+
+  <p>e integrando entre \(r_1\) e \(r_2\),</p>
+
+  <p>\[\dot{Q}=\frac{2\pi kL\left(T_1-T_2\right)}{\ln\left(r_2/r_1\right)},
+  \qquad R_{\text{cil}}=\frac{\ln\left(r_2/r_1\right)}{2\pi kL}.\]</p>
+
+  <p>O perfil é logarítmico, e não linear. Para a esfera, o mesmo cálculo com área
+  \(4\pi r^2\) dá \(R_{\text{esf}}=\left(1/r_1-1/r_2\right)/4\pi k\), que tende a um valor
+  finito quando \(r_2\to\infty\), o que tem uma consequência curiosa: uma esfera quente num
+  meio infinito perde calor a uma taxa finita por condução pura, enquanto um cilindro infinito
+  não tem solução estacionária.</p>
+
+  <p>A geometria cilíndrica guarda uma armadilha. Acrescentando isolamento sobre um tubo fino,
+  a resistência de condução cresce com \(\ln(r_2/r_1)\), mas a resistência de convecção na
+  superfície externa, \(1/(h\,2\pi r_2L)\), <strong>diminui</strong>, porque a área externa
+  aumentou. Somando as duas e derivando em relação a \(r_2\), encontra-se um mínimo da
+  resistência total em</p>
+
+  <p>\[r_c=\frac{k}{h},\]</p>
+
+  <p>o <strong>raio crítico de isolamento</strong>. Abaixo dele, isolar faz o tubo perder
+  <em>mais</em> calor. Para um isolante com \(k=0{,}035\) W/mK e \(h=10\) W/m²K, o raio crítico
+  é de \(3{,}5\) mm, de modo que num tubo de água quente de polegada, com raio bem acima disso,
+  isolar sempre ajuda. Num fio elétrico fino, porém, o efeito é real e é usado de propósito: a
+  capa plástica de um cabo ajuda a dissipar o calor do efeito Joule, além de isolar
+  eletricamente. O exercício 10.3 pede os números.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. O sólido semi-infinito</h2>
+
+  <p>Sai agora o regime permanente. O problema transiente mais útil é o de um corpo que ocupa
+  \(x>0\), inicialmente todo a \(T_i\), cuja superfície é posta subitamente a \(T_s\). Ele
+  serve sempre que o tempo for curto o bastante para que a perturbação ainda não tenha chegado
+  ao outro lado do corpo, o que inclui o chão ao amanhecer, a casca de um assado nos primeiros
+  minutos e o resfriamento de uma peça recém-soldada.</p>
+
+  <p>A equação é \(\partial T/\partial t=\alpha\,\partial^2T/\partial x^2\), e o problema não
+  tem comprimento característico nenhum, o que é a deixa para procurar solução por
+  <strong>semelhança</strong>: só pode haver uma combinação adimensional de \(x\), \(t\) e
+  \(\alpha\), e ela é \(\eta=x/\sqrt{4\alpha t}\). Buscando \(T=T(\eta)\), a equação parcial
+  vira uma ordinária e a solução é</p>
+
+  <p>\[\frac{T(x,t)-T_s}{T_i-T_s}=\operatorname{erf}\left(\frac{x}{2\sqrt{\alpha t}}\right),
+  \qquad
+  \operatorname{erf}(z)=\frac{2}{\sqrt\pi}\int_0^ze^{-\xi^2}d\xi.\]</p>
+
+  <p>Como \(\operatorname{erf}(2)=0{,}995\), a perturbação se faz sentir até uma profundidade
+  da ordem de \(4\sqrt{\alpha t}\), e a lei de potência é a assinatura de toda difusão: a
+  profundidade vai com a raiz do tempo. Dobrar o alcance custa quatro vezes mais tempo, o que é
+  o mesmo que foi dito no módulo 9 sobre \(t_{\text{dif}}=L^2/D\).</p>
+
+  <p>O fluxo na superfície segue da derivada em \(x=0\):</p>
+
+  <p>\[q_s(t)=\frac{k\left(T_s-T_i\right)}{\sqrt{\pi\alpha t}},\]</p>
+
+  <p>que diverge em \(t=0\) e decai com \(1/\sqrt{t}\). Repare na combinação que aparece:
+  \(k/\sqrt{\alpha}=\sqrt{k\rho c_p}\). Essa grandeza tem nome próprio, é a
+  <strong>efusividade térmica</strong> \(e=\sqrt{k\rho c_p}\), e é ela, não a condutividade,
+  que governa quanto calor um corpo é capaz de puxar de outro nos primeiros instantes.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Por que o metal parece mais frio que a madeira</span>
+    <p>Dois corpos semi-infinitos, a \(T_1\) e \(T_2\), postos em contato súbito, atingem na
+    interface uma temperatura que se mantém constante no tempo. Igualando os fluxos dos dois
+    lados, cada um dado pela fórmula acima, encontra-se</p>
+    <p style="text-align:center">\(T_c=\dfrac{e_1T_1+e_2T_2}{e_1+e_2},\qquad
+    e=\sqrt{k\rho c_p}.\)</p>
+    <p>A temperatura de contato é a média das duas, ponderada pelas efusividades. Com a pele a
+    \(33\) °C, para a qual \(e\approx1180\) SI, e dois objetos na mesma sala a \(20\) °C:</p>
+    <ul>
+      <li>aço, com \(e\approx13\,800\): \(T_c=21{,}0\) °C</li>
+      <li>madeira, com \(e\approx465\): \(T_c=29{,}3\) °C</li>
+    </ul>
+    <p>A sensação térmica não mede a temperatura do objeto, e sim a temperatura que a pele
+    assume ao tocá-lo. Os dois estão a \(20\) °C, e ainda assim o aço leva a pele quase até
+    lá, enquanto a madeira quase não a esfria. A mesma conta explica por que andar descalço no
+    piso frio de cerâmica é desagradável e no tapete não é, e por que mergulhar a mão em água a
+    \(20\) °C é muito pior que ficar ao ar a \(20\) °C, já que a efusividade da água é cerca
+    de vinte vezes a do ar.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. A onda térmica</h2>
+
+  <p>Se a superfície, em vez de sofrer um degrau, oscila periodicamente, o problema também tem
+  solução fechada e é de grande utilidade prática. Impondo
+  \(T(0,t)=T_m+A\cos\omega t\) e procurando a solução periódica da equação do calor no
+  semi-espaço, encontra-se</p>
+
+  <p>\[T(x,t)=T_m+A\,e^{-x/\delta}\cos\left(\omega t-\frac{x}{\delta}\right),
+  \qquad
+  \delta=\sqrt{\frac{2\alpha}{\omega}}.\]</p>
+
+  <p>O mesmo comprimento \(\delta\) governa dois efeitos distintos: a amplitude cai por um
+  fator \(e\) a cada \(\delta\), e a fase atrasa de um radiano no mesmo trecho. O widget
+  explora as consequências disso para o solo, para o ciclo diário e para o anual.</p>
+
+  <div data-widget="ondatermica"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. Biot e o modelo concentrado</h2>
+
+  <p>Nem todo problema transiente precisa de equação diferencial parcial. Quando um corpo
+  conduz muito melhor do que troca com o ambiente, ele fica praticamente isotérmico por dentro,
+  e toda a resistência está na superfície. Nesse caso o balanço de energia é uma equação
+  ordinária:</p>
+
+  <p>\[\rho Vc_p\der{T}{t}=-hA\left(T-T_\infty\right)
+  \quad\Longrightarrow\quad
+  T(t)=T_\infty+\left(T_0-T_\infty\right)e^{-t/\tau},
+  \qquad \tau=\frac{\rho Vc_p}{hA}.\]</p>
+
+  <p>A condição para isso valer é que a resistência interna de condução seja muito menor que a
+  externa de convecção, e a razão entre as duas é o <strong>número de Biot</strong>:</p>
+
+  <p>\[\mathrm{Bi}=\frac{L_c/k}{1/h}=\frac{hL_c}{k},\qquad
+  L_c=\frac{V}{A}.\]</p>
+
+  <p>O critério usual é \(\mathrm{Bi}&lt;0{,}1\), que garante erro abaixo de uns cinco por
+  cento. Uma panela de cobre fina em água fervente tem Biot minúsculo e é isotérmica; uma
+  batata de \(4\) cm de raio num forno, com \(k\approx0{,}5\) W/mK e \(h\approx20\) W/m²K, tem
+  \(\mathrm{Bi}=1{,}6\), de modo que o centro dela fica muito atrás da casca, que é por que
+  assar leva tempo e queimar por fora é fácil.</p>
+
+  <p>Convém não confundir Biot com Nusselt, que será definido no módulo 11 e tem a mesma cara,
+  \(hL/k\). A diferença está em qual \(k\): no Biot é a condutividade <strong>do
+  sólido</strong>, e o número compara duas resistências; no Nusselt é a condutividade
+  <strong>do fluido</strong>, e o número compara a convecção com a condução dentro do próprio
+  fluido.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Condução no computador</h2>
+
+  <p>Tudo o que o módulo 9 estabeleceu se aplica aqui diretamente, com \(T\) no lugar de \(c\)
+  e \(\alpha\) no lugar de \(D\). O esquema explícito tem a mesma condição de estabilidade,
+  \(s=\alpha\Delta t/\Delta x^2\le1/2\), e o Crank-Nicolson continua incondicionalmente
+  estável.</p>
+
+  <p>A novidade está nas condições de contorno. O caso de temperatura prescrita é imediato, mas
+  o caso realista é o da superfície que troca por convecção, que é uma condição de
+  <strong>Robin</strong>, misturando valor e derivada:</p>
+
+  <p>\[-k\left.\pder{T}{x}\right|_{x=0}=h\left(T_\infty-T(0,t)\right).\]</p>
+
+  <p>Impor isso com uma diferença de um lado só estraga a ordem do método, como o módulo 8
+  advertiu. A técnica correta é o <strong>ponto fantasma</strong>: inventa-se um nó em
+  \(x=-\Delta x\), escreve-se a condição com diferença centrada para obter o valor dele em
+  função dos nós reais, e substitui-se no estêncil do nó da superfície. O resultado mantém a
+  segunda ordem.</p>
+
+  <pre class="codigo"><span class="leg">parede com convecção nas duas faces, explícito</span><b>import</b> numpy <b>as</b> np
+
+<b>def</b> passo_parede(T, alfa, k, h, Tinf, dx, dt):
+    s = alfa * dt / dx**2
+    Bi = h * dx / k                      <i># Biot da célula, não do corpo</i>
+    <b>if</b> s * (1 + Bi) &gt; 0.5:
+        <b>raise</b> ValueError(<i>f"instável: s(1+Bi) = {s*(1+Bi):.3f}"</i>)
+    novo = T.copy()
+    novo[1:-1] = T[1:-1] + s * (T[2:] - 2*T[1:-1] + T[:-2])
+    <i># ponto fantasma: T[-1] = T[1] + 2*dx*h/k*(Tinf - T[0])</i>
+    novo[0]  = T[0]  + 2*s*(T[1]  - T[0]  + Bi*(Tinf - T[0]))
+    novo[-1] = T[-1] + 2*s*(T[-2] - T[-1] + Bi*(Tinf - T[-1]))
+    <b>return</b> novo</pre>
+
+  <p>Repare que a condição de estabilidade ficou mais apertada nas células da superfície, onde
+  o limite passa a ser \(s(1+\mathrm{Bi}_\Delta)\le1/2\). Esquecer isso é um erro comum, e o
+  sintoma é uma simulação que fica estável no miolo e oscila só nas duas pontas.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">10.1 A parede de uma casa no Cariri</span>
+    <p>Uma parede tem, de fora para dentro, \(2{,}5\) cm de reboco
+    (\(k=1{,}15\)), \(14\) cm de tijolo maciço (\(k=0{,}72\)), \(5\) cm de EPS
+    (\(k=0{,}035\)) e mais \(2{,}5\) cm de reboco. Fora faz \(36\) °C e dentro se quer
+    \(24\) °C, com \(h_e=25\) e \(h_i=8\) W/m²K. Calcule o fluxo, a transmitância, a
+    temperatura da face interna e o que mudaria sem o isolante.</p>
+    <p>As resistências, em m²K/W, são</p>
+    <p>\[\frac{1}{25}=0{,}040;\quad
+    \frac{0{,}025}{1{,}15}=0{,}0217;\quad
+    \frac{0{,}14}{0{,}72}=0{,}1944;\quad
+    \frac{0{,}05}{0{,}035}=1{,}4286;\quad
+    0{,}0217;\quad
+    \frac{1}{8}=0{,}125,\]</p>
+    <p>que somam \(R_{\text{tot}}=1{,}8315\) m²K/W, de modo que
+    \(U=0{,}546\) W/m²K e</p>
+    <p>\[q=\frac{36-24}{1{,}8315}=6{,}55\ \text{W/m²}.\]</p>
+    <p>Os saltos em cada camada são \(\Delta T_i=qR_i\), e vale a pena listá-los: \(0{,}26\)
+    °C no filme externo, \(0{,}14\) no reboco, \(1{,}27\) no tijolo, <strong>\(9{,}36\) no
+    EPS</strong>, \(0{,}14\) no reboco interno e \(0{,}82\) no filme interno. A espuma, com
+    cinco centímetros, responde por 78% da queda, enquanto o tijolo, com quase três vezes mais
+    espessura, responde por 11%.</p>
+    <p>A temperatura da face interna sai somando tudo menos o filme interno:
+    \(36-6{,}55\times(1{,}8315-0{,}125)=24{,}82\) °C, menos de um grau acima do ar da sala.
+    Esse é o número que interessa ao conforto, porque é a face interna, e não o ar, que
+    irradia para quem está dentro.</p>
+    <p>Sem o EPS, \(R_{\text{tot}}\) cai para \(0{,}4029\) e o fluxo sobe para
+    \(29{,}78\) W/m², <strong>4,5 vezes maior</strong>. Numa casa de \(120\) m² de parede, a
+    diferença de \(23\) W/m² equivale a \(2{,}8\) kW de carga térmica, que é um
+    condicionador de ar inteiro rodando o dia todo por causa de cinco centímetros de
+    espuma.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">10.2 A temperatura de contato</span>
+    <p>Deduza \(T_c=(e_1T_1+e_2T_2)/(e_1+e_2)\) para dois sólidos semi-infinitos postos em
+    contato.</p>
+    <p>Suponha que a interface assuma uma temperatura \(T_c\) e permaneça nela, hipótese que o
+    resultado confirma. Cada sólido passa então a ser um semi-infinito com superfície a
+    \(T_c\), e o fluxo que sai do corpo 1 para a interface, pela fórmula da seção 6, é</p>
+    <p>\[q_1=\frac{k_1\left(T_1-T_c\right)}{\sqrt{\pi\alpha_1t}}
+    =\frac{e_1\left(T_1-T_c\right)}{\sqrt{\pi t}},\]</p>
+    <p>onde se usou \(k/\sqrt{\alpha}=k\sqrt{\rho c_p/k}=\sqrt{k\rho c_p}=e\). O fluxo que
+    entra no corpo 2 é, do mesmo modo, \(e_2(T_c-T_2)/\sqrt{\pi t}\). A interface não tem
+    massa e não pode acumular energia, de modo que os dois fluxos são iguais:</p>
+    <p>\[e_1\left(T_1-T_c\right)=e_2\left(T_c-T_2\right)
+    \quad\Longrightarrow\quad
+    T_c=\frac{e_1T_1+e_2T_2}{e_1+e_2}.\]</p>
+    <p>Os dois \(\sqrt{\pi t}\) se cancelaram, e é por isso que \(T_c\) não depende do tempo,
+    o que fecha a hipótese inicial. Repare no que o resultado diz e no que não diz: ele vale
+    enquanto os dois corpos puderem ser tratados como semi-infinitos, isto é, nos primeiros
+    instantes. Segurando a barra de aço por tempo suficiente, ela esquenta e a sensação muda,
+    o que é exatamente o que acontece.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>10.3</b> Deduza o raio crítico \(r_c=k/h\) somando as resistências de condução no
+      isolante e de convecção na superfície externa e minimizando a soma. Em seguida calcule,
+      para um cabo de \(1{,}5\) mm de raio com capa de PVC (\(k=0{,}19\) W/mK) e
+      \(h=12\) W/m²K, qual espessura de capa maximiza a dissipação, e de quanto ela aumenta
+      em relação ao cabo nu.</li>
+
+      <li><b>10.4</b> Use a onda térmica para projetar uma adega. Determine a profundidade em
+      que a variação anual cai abaixo de \(2\) °C para uma amplitude de superfície de
+      \(10\) °C, e a profundidade em que a estação se inverte, isto é, em que o mês mais
+      quente lá em cima é o mais frio lá embaixo. Compare com a profundidade típica de um
+      porão.</li>
+
+      <li><b>10.5</b> Obtenha a equação da aleta, \(d^2\theta/dx^2=m^2\theta\) com
+      \(m^2=hP/kA_c\), fazendo o balanço de energia num elemento de comprimento \(dx\) de uma
+      barra que conduz ao longo de \(x\) e perde calor por convecção pela lateral. Resolva
+      para uma aleta longa e obtenha a eficiência. Explique por que aletas são feitas de
+      alumínio e não de aço inoxidável.</li>
+
+      <li><b>10.6</b> Um solo a \(25\) °C é exposto a uma frente fria que põe a superfície a
+      \(-5\) °C. Usando a solução do semi-espaço, determine a profundidade da isoterma de
+      \(0\) °C depois de 1, 10 e 100 horas, e discuta o que a lei de potência implica para o
+      enterramento de tubulações em climas frios.</li>
+
+      <li><b>10.7</b> Uma batata esférica de \(4\) cm de raio, inicialmente a \(20\) °C, é
+      posta num forno a \(200\) °C com \(h=20\) W/m²K. Calcule o número de Biot e mostre que o
+      modelo concentrado não se aplica. Resolva então numericamente, com o programa da seção
+      9 adaptado para coordenadas esféricas, e determine quanto tempo o centro leva para
+      chegar a \(95\) °C.</li>
+
+      <li><b>10.8</b> Implemente a parede da seção 9 e verifique a ordem de convergência contra
+      a solução analítica do regime permanente. Repita impondo a condição de Robin por
+      diferença de um lado só e mostre que a ordem cai para 1, confirmando o que o módulo 8
+      previu.</li>
+
+      <li><b>10.9</b> A lei de Wiedemann-Franz afirma que \(k/\sigma T=L_0\), com
+      \(L_0=2{,}44\times10^{-8}\) W·Ω/K². Use a resistividade do cobre a \(300\) K,
+      \(1{,}68\times10^{-8}\) Ω·m, para estimar \(k\) e compare com o valor tabelado de
+      \(400\) W/mK. Discuta por que a concordância é boa no cobre e ruim no bismuto.</li>
+
+      <li><b>10.10</b> Em meia página: a solução do semi-espaço dá temperatura diferente de
+      zero em qualquer \(x\) para qualquer \(t>0\), por menor que seja, o que significa
+      velocidade infinita de propagação. Explique por que isso não contradiz a física que
+      gerou a equação, e descreva o que a equação de Cattaneo acrescenta para corrigir o
+      problema e em que situações a correção importa.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula09.html"><small>Módulo anterior</small>← 9. Advecção e difusão</a>
+    <span class="em-breve"><small>Em preparação</small>11. Convecção</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611090056"></script>
+</body>
+</html>

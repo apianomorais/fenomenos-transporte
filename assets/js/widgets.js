@@ -4016,6 +4016,312 @@
     })();
   };
 
+  /* =================================================================
+     21. Parede composta
+     O perfil de temperatura através das camadas, desenhado em escala,
+     com as resistências em série e o salto de cada uma. É o cálculo que
+     se faz para dimensionar isolamento, e o que ele mostra é que quase
+     todo o salto acontece na camada de maior resistência.
+     ================================================================= */
+  REGISTRO.parede = function (raiz) {
+    var est = { eps: 0.05, alv: 'tijolo', Te: 36, Ti: 24 };
+    var HI = 8, HE = 25;                 /* coeficientes de película, W/m²K */
+
+    var ALV = {
+      tijolo: { rot: 'tijolo maciço', k: 0.72 },
+      bloco: { rot: 'bloco de concreto', k: 1.05 },
+      concreto: { rot: 'concreto armado', k: 1.75 },
+      madeira: { rot: 'madeira', k: 0.15 }
+    };
+
+    function camadas() {
+      var c = [{ rot: 'reboco', L: 0.025, k: 1.15 },
+               { rot: ALV[est.alv].rot, L: 0.14, k: ALV[est.alv].k }];
+      if (est.eps > 0.0005) c.push({ rot: 'EPS', L: est.eps, k: 0.035 });
+      c.push({ rot: 'reboco', L: 0.025, k: 1.15 });
+      return c;
+    }
+
+    function resistencias() {
+      var cam = camadas();
+      var R = [{ rot: 'filme externo', R: 1 / HE, L: 0 }];
+      cam.forEach(function (c) { R.push({ rot: c.rot, R: c.L / c.k, L: c.L }); });
+      R.push({ rot: 'filme interno', R: 1 / HI, L: 0 });
+      return R;
+    }
+
+    var corpo = moldura(raiz, 'A parede composta e as resistências em série');
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'espessura do isolante (EPS)', 0, 0.10, 0.005, 0.05,
+      function (v) { est.eps = v; desenhar(); },
+      function (v) { return F.fmt(v * 100, 1) + ' cm'; });
+    deslizante(ctr, 'temperatura externa', 20, 45, 1, 36,
+      function (v) { est.Te = v; desenhar(); },
+      function (v) { return F.fmt(v, 0) + ' °C'; });
+    opcoes(ctr, Object.keys(ALV).map(function (k) {
+      return { rot: ALV[k].rot, v: k };
+    }), 0, function (v) { est.alv = v; desenhar(); });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'resistência total', k: 'R' },
+      { rot: 'transmitância U', k: 'U' },
+      { rot: 'fluxo de calor', k: 'q' },
+      { rot: 'temperatura da face interna', k: 'Ts' },
+      { rot: 'maior salto, e onde', k: 'sal' },
+      { rot: 'fluxo sem o isolante', k: 'sem' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var R = resistencias();
+      var Rt = R.reduce(function (a, b) { return a + b.R; }, 0);
+      var dT = est.Te - est.Ti;
+      var q = dT / Rt;
+
+      /* espessura desenhada: os filmes ganham uma faixa fictícia para
+         caberem no gráfico, já que fisicamente não têm espessura */
+      var FILME = 0.02;
+      var esp = R.map(function (r) { return r.L > 0 ? r.L : FILME; });
+      var total = esp.reduce(function (a, b) { return a + b; }, 0);
+
+      var Tmin = Math.min(est.Ti, est.Te) - 1.5, Tmax = Math.max(est.Ti, est.Te) + 1.5;
+      var gr = G.eixos(cv, {
+        altura: 330, xmin: 0, xmax: total, ymin: Tmin, ymax: Tmax, divY: 6,
+        margem: { e: 58, d: 16, c: 22, b: 46 },
+        rotX: 'posição através da parede (m)', rotY: 'temperatura (°C)',
+        marcasX: G.marcasLineares(0, total, 5, 2),
+        formataY: function (v) { return F.fmt(v, 0); }
+      });
+      var ct = gr.ct, i, x = 0, T = est.Te;
+      var CORES = ['#eef1f5', '#efe7dd', '#e3dcd2', '#e8f0e4', '#efe7dd', '#eef1f5'];
+
+      /* faixas das camadas */
+      for (i = 0; i < R.length; i++) {
+        var xa = gr.X(x), xb = gr.X(x + esp[i]);
+        ct.fillStyle = R[i].L > 0 ? CORES[i % CORES.length] : '#f3f4f8';
+        ct.fillRect(xa, gr.y0, xb - xa, gr.y1 - gr.y0);
+        ct.strokeStyle = '#fff'; ct.lineWidth = 1;
+        ct.beginPath(); ct.moveTo(xb, gr.y0); ct.lineTo(xb, gr.y1); ct.stroke();
+        rotulo(ct, R[i].L > 0 ? R[i].rot : (i === 0 ? 'ar ext.' : 'ar int.'),
+          (xa + xb) / 2, gr.y0 + 9, G.COR.suave, 'center', 'middle',
+          '600 10px system-ui, sans-serif');
+        x += esp[i];
+      }
+
+      /* perfil de temperatura */
+      x = 0; T = est.Te;
+      ct.strokeStyle = G.COR.vinho; ct.lineWidth = 2.6;
+      ct.beginPath(); ct.moveTo(gr.X(0), gr.Y(T));
+      var maiorSalto = 0, ondeSalto = '';
+      for (i = 0; i < R.length; i++) {
+        var salto = q * R[i].R;
+        if (salto > maiorSalto) { maiorSalto = salto; ondeSalto = R[i].rot; }
+        x += esp[i]; T -= salto;
+        ct.lineTo(gr.X(x), gr.Y(T));
+      }
+      ct.stroke();
+
+      /* a mesma parede sem isolante, para comparação */
+      var epsGuardado = est.eps;
+      est.eps = 0;
+      var Rsem = resistencias().reduce(function (a, b) { return a + b.R; }, 0);
+      est.eps = epsGuardado;
+      var qsem = dT / Rsem;
+
+      var Tface = est.Te - q * (Rt - 1 / HI);
+      mostrar({
+        R: F.fmt(Rt, 3) + ' m²K/W',
+        U: F.fmt(1 / Rt, 3) + ' W/m²K',
+        q: F.fmt(q, 2) + ' W/m²',
+        Ts: F.fmt(Tface, 2) + ' °C',
+        sal: F.fmt(maiorSalto, 2) + ' °C no ' + ondeSalto,
+        sem: F.fmt(qsem, 2) + ' W/m², ' + F.fmt(qsem / q, 1) + '×'
+      });
+
+      nota.innerHTML =
+        '<p>Em regime permanente o mesmo fluxo \\(q\\) atravessa todas as camadas, porque não '
+        + 'há onde a energia se acumular. Cada camada responde a esse fluxo com um salto de '
+        + 'temperatura \\(\\Delta T_i=qR_i\\), de modo que as resistências se somam como num '
+        + 'circuito em série e a parede inteira se resume a</p>'
+        + '\\[q=\\frac{T_e-T_i}{R_{\\text{tot}}},\\qquad '
+        + 'R_{\\text{tot}}=\\frac{1}{h_e}+\\sum_i\\frac{L_i}{k_i}+\\frac{1}{h_i}.\\]'
+        + '<p>O inverso de \\(R_{\\text{tot}}\\) é a transmitância \\(U\\), que é o número '
+        + 'usado em norma e em projeto. A NBR 15220 pede, para a zona bioclimática do Cariri, '
+        + 'paredes com \\(U\\le3{,}7\\) W/m²K, o que qualquer alvenaria cumpre; o que não se '
+        + 'cumpre por acidente é o conforto, e para isso o número que interessa é a '
+        + 'temperatura da face interna, que é a que troca calor com quem está na sala.</p>'
+        + '<p>O desenho mostra o ponto que a soma de resistências torna óbvio e a intuição '
+        + 'não: a inclinação do perfil dentro de cada camada é \\(-q/k_i\\), de modo que o '
+        + 'salto se concentra inteiramente onde \\(k\\) é pequeno. Com cinco centímetros de '
+        + 'EPS, que tem \\(k=0{,}035\\) W/mK, a espuma sozinha responde por quase oitenta por '
+        + 'cento da queda de temperatura, enquanto os quatorze centímetros de tijolo '
+        + 'respondem por cerca de dez. Levando o deslizante do isolante a zero, o fluxo salta '
+        + 'por um fator de quatro e meio: é a espessura de menor custo e menor massa que faz '
+        + 'quase todo o trabalho.</p>'
+        + '<p>Os dois filmes de ar nas pontas não são enfeite. Eles representam a convecção '
+        + 'nas superfícies, pela lei de resfriamento de Newton \\(q=h\\Delta T\\) do módulo '
+        + '11, e valem \\(1/h\\) de resistência cada um. O filme interno, com '
+        + '\\(h_i=8\\) W/m²K, vale \\(0{,}125\\) m²K/W, que é dois terços da resistência de '
+        + 'todo o tijolo, e o externo vale apenas \\(0{,}04\\), porque lá fora o vento agita o '
+        + 'ar e o filme é mais fino. É por isso que ventilar o lado de dentro muda a sensação '
+        + 'na sala sem que nada da parede tenha mudado.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     22. A onda térmica
+     A solução periódica da equação do calor num semi-espaço, que é o
+     que explica a adega, a temperatura do solo e a inércia térmica de
+     uma parede grossa.
+     ================================================================= */
+  REGISTRO.ondatermica = function (raiz) {
+    var est = { periodo: 365 * 86400, alfa: 0.5e-6, A: 10, fase: 0 };
+    var MAT = {
+      solo: { rot: 'solo úmido', a: 0.5e-6 },
+      arenoso: { rot: 'solo arenoso seco', a: 0.24e-6 },
+      concreto: { rot: 'concreto', a: 0.72e-6 },
+      granito: { rot: 'granito', a: 1.3e-6 }
+    };
+
+    function delta() { return Math.sqrt(2 * est.alfa / (2 * Math.PI / est.periodo)); }
+    function T(x, t) {
+      var d = delta(), w = 2 * Math.PI / est.periodo;
+      return est.A * Math.exp(-x / d) * Math.cos(w * t - x / d);
+    }
+
+    var corpo = moldura(raiz, 'A onda térmica no subsolo');
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas'), cv2 = el('canvas');
+    par.appendChild(cv1); par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    opcoes(ctr, [{ rot: 'ciclo anual', v: 365 * 86400 },
+                 { rot: 'ciclo diário', v: 86400 }], 0,
+      function (v) { est.periodo = v; desenhar(); });
+    opcoes(ctr, Object.keys(MAT).map(function (k) {
+      return { rot: MAT[k].rot, v: MAT[k].a };
+    }), 0, function (v) { est.alfa = v; desenhar(); });
+    deslizante(ctr, 'momento do ciclo', 0, 1, 0.02, 0,
+      function (v) { est.fase = v; desenhar(); },
+      function (v) {
+        var dias = v * est.periodo / 86400;
+        return est.periodo > 86400 ? F.fmt(dias, 0) + ' dias'
+          : F.fmt(dias * 24, 1) + ' h';
+      });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'profundidade de penetração δ', k: 'd' },
+      { rot: 'onde a amplitude cai a 1%', k: 'p1' },
+      { rot: 'amplitude a 3 m', k: 'a3' },
+      { rot: 'atraso a 3 m', k: 'at' },
+      { rot: 'amplitude a 50 cm', k: 'a05' },
+      { rot: 'atraso a 50 cm', k: 'at05' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var d = delta(), xmax = Math.min(14, Math.max(0.6, 5.2 * d));
+      var t = est.fase * est.periodo;
+
+      /* painel 1: perfil com a profundidade, em vários momentos */
+      var g1 = G.eixos(cv1, {
+        altura: 310, xmin: 0, xmax: xmax, ymin: -est.A * 1.1, ymax: est.A * 1.1, divY: 6,
+        margem: { e: 56, d: 14, c: 14, b: 44 },
+        rotX: 'profundidade (m)', rotY: 'desvio de temperatura (°C)',
+        marcasX: G.marcasLineares(0, xmax, 5, xmax < 1 ? 2 : 1),
+        formataY: function (v) { return F.fmt(v, 0); }
+      });
+      var k;
+      for (k = 0; k < 6; k++) {
+        var tt = k / 6 * est.periodo;
+        G.curva(g1, function (x) { return T(x, tt); }, G.COR.clara, 1.2);
+      }
+      G.curva(g1, function (x) { return est.A * Math.exp(-x / d); },
+        G.COR.suave, 1.4, [5, 4]);
+      G.curva(g1, function (x) { return -est.A * Math.exp(-x / d); },
+        G.COR.suave, 1.4, [5, 4]);
+      G.curva(g1, function (x) { return T(x, t); }, G.COR.vinho, 2.6);
+      G.vertical(g1, d, G.COR.mestra, 'δ');
+      rotulo(g1.ct, 'envoltória e^(−x/δ)', g1.X(xmax * 0.52),
+        g1.Y(est.A * Math.exp(-xmax * 0.52 / d)) - 12, G.COR.suave);
+
+      /* painel 2: história no tempo, em três profundidades */
+      var PROF = [0, 1, 3];
+      var g2 = G.eixos(cv2, {
+        altura: 310, xmin: 0, xmax: 1, ymin: -est.A * 1.1, ymax: est.A * 1.1, divY: 6,
+        margem: { e: 56, d: 14, c: 14, b: 44 },
+        rotX: est.periodo > 86400 ? 'tempo (anos)' : 'tempo (dias)',
+        rotY: 'desvio de temperatura (°C)',
+        marcasX: G.marcasLineares(0, 1, 5, 1),
+        formataY: function (v) { return F.fmt(v, 0); }
+      });
+      var CORP = [G.COR.vinho, G.COR.bronze, G.COR.mestra];
+      PROF.forEach(function (p, i) {
+        G.curva(g2, function (f) { return T(p, f * est.periodo); }, CORP[i], 2.2);
+      });
+      G.vertical(g2, est.fase, G.COR.suave, '', true);
+      G.legenda(g2, PROF.map(function (p, i) {
+        return { cor: CORP[i], texto: p === 0 ? 'superfície' : p + ' m' };
+      }));
+
+      var seg = est.periodo / (2 * Math.PI);
+      function atraso(x) {
+        var s = (x / d) * seg;
+        return est.periodo > 86400 ? F.fmt(s / 86400, 0) + ' dias'
+          : F.fmt(s / 3600, 1) + ' h';
+      }
+      mostrar({
+        d: F.fmt(d, 3) + ' m',
+        p1: F.fmt(4.605 * d, 2) + ' m',
+        a3: F.fmt(est.A * Math.exp(-3 / d), 2) + ' °C',
+        at: atraso(3),
+        a05: F.fmt(est.A * Math.exp(-0.5 / d), 2) + ' °C',
+        at05: atraso(0.5)
+      });
+
+      nota.innerHTML =
+        '<p>Impondo na superfície de um semi-espaço uma temperatura que oscila, '
+        + '\\(T(0,t)=A\\cos\\omega t\\), e procurando uma solução periódica da equação do '
+        + 'calor, encontra-se</p>'
+        + '\\[T(x,t)=A\\,e^{-x/\\delta}\\cos\\left(\\omega t-\\frac{x}{\\delta}\\right),'
+        + '\\qquad\\delta=\\sqrt{\\frac{2\\alpha}{\\omega}}.\\]'
+        + '<p>São dois efeitos no mesmo comprimento \\(\\delta\\), e é isso que torna o '
+        + 'resultado memorável. A amplitude cai por \\(e\\) a cada \\(\\delta\\) de '
+        + 'profundidade, e a fase atrasa um radiano no mesmo trecho. Descer fundo não apenas '
+        + 'abafa a variação: inverte-a, porque meia volta de fase corresponde a '
+        + '\\(x=\\pi\\delta\\).</p>'
+        + '<p>Para solo úmido, com \\(\\alpha\\approx0{,}5\\times10^{-6}\\) m²/s, o ciclo '
+        + 'anual dá \\(\\delta=2{,}24\\) m, de modo que a três metros a variação anual está '
+        + 'reduzida a um quarto da da superfície e chega com quase oitenta dias de atraso. '
+        + 'Essa é a razão de ser da adega e do porão fresco, e é também por que, numa cava a '
+        + 'sete ou oito metros, o mês mais quente do ano é o mais frio lá embaixo.</p>'
+        + '<p>Mudando para o ciclo diário, a mesma fórmula dá \\(\\delta=0{,}12\\) m, porque '
+        + '\\(\\delta\\) vai com a raiz do período e o dia é 365 vezes mais curto que o ano. '
+        + 'A meio metro de profundidade a variação diária praticamente não existe, o que é '
+        + 'bom para as raízes e explica por que medir temperatura do solo a essa profundidade '
+        + 'dá um valor estável ao longo do dia.</p>'
+        + '<p>A mesma conta se aplica a uma parede grossa exposta ao sol, trocando o solo pelo '
+        + 'material dela. É o que se chama inércia térmica: uma parede de taipa ou de adobe, '
+        + 'com meio metro de espessura, atrasa o pico de calor em várias horas e o entrega à '
+        + 'noite, quando faz frio do lado de fora. A arquitetura do sertão descobriu isso '
+        + 'sem a fórmula, e a fórmula explica por que funciona.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {
