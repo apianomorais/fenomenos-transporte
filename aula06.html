@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 6: Viscosidade e a equação de Navier-Stokes | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611082355">
-<script src="assets/js/comum.js?v=202611082355"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090009">
+<script src="assets/js/comum.js?v=202611090009"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -24,6 +24,7 @@
       <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
       <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
       <a href="aula06.html" class="num ativo" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
+      <a href="aula07.html" class="num" title="Módulo 7: Tensão superficial e capilaridade">7</a>
     </nav>
   </div>
 </header>
@@ -97,6 +98,60 @@
   dilatante, que engrossa, e o plástico de Bingham, que só começa a escoar acima de uma
   tensão mínima.</p>
 
+  <p>O modelo mais usado para os dois primeiros é a <strong>lei de potência</strong>, ou
+  modelo de Ostwald-de Waele, em que a viscosidade aparente depende da própria taxa de
+  deformação:</p>
+
+  <p>\[\mu=K\dot\gamma^{\,n-1},\qquad \mu_1<\mu<\mu_2.\]</p>
+
+  <p>A constante \(K\) é o índice de consistência e \(n\) é o expoente da lei de potência.
+  Para \(n=1\) recupera-se o fluido newtoniano; \(n<1\) descreve o pseudoplástico e \(n>1\) o
+  dilatante. Os dois cortes \(\mu_1\) e \(\mu_2\) não são enfeite: sem eles o modelo prevê
+  viscosidade infinita quando a taxa de deformação tende a zero, o que nenhum fluido real
+  faz.</p>
+
+  <p>Para os fluidos com tensão de escoamento, o modelo de <strong>Herschel-Bulkley</strong>
+  combina as duas ideias. Abaixo do limiar, com \(\dot\gamma<\tau_0/\mu_0\), o material se
+  comporta como um líquido muito viscoso de viscosidade \(\mu_0\); acima dele,</p>
+
+  <p>\[\mu=\frac{\tau_0+K_B\left[\dot\gamma^{\,n}
+  -\left(\tau_0/\mu_0\right)^n\right]}{\dot\gamma}.\]</p>
+
+  <p>Com \(n=1\) o fluido volta a ser newtoniano em taxas altas, com viscosidade \(K_B\), e o
+  modelo se reduz ao plástico de Bingham clássico.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Quando o meio também é complicado</span>
+    <p>Esses fluidos são conhecidos há muito tempo, e as aplicações que usam diretamente o
+    comportamento anômalo deles são recentes: solventes pseudoplásticos em tintas que não
+    escorrem, e fluidos dilatantes em amortecedores ativos e em coletes balísticos, onde o
+    impacto é justamente o que endurece o material.</p>
+    <p>O problema fica bem mais difícil quando esse fluido precisa atravessar um meio poroso,
+    e é o caso do sangue no rim e do petróleo na rocha. A descrição macroscópica usual é a
+    <strong>lei de Darcy</strong>, \(u_0=-\left(k/\mu\right)\Delta p/L\), que define uma
+    permeabilidade \(k\) ligando a velocidade média à queda de pressão. Ela tem duas
+    hipóteses escondidas, e as duas falham aqui: a lei vale para fluido newtoniano e no limite
+    de Reynolds muito baixo, em que o termo convectivo é desprezível.</p>
+    <p>Simulações diretas das equações de momento e continuidade num meio poroso
+    tridimensional desordenado, do tipo queijo suíço, mostraram que os dois efeitos não
+    lineares, o reológico e o inercial, podem ser tratados juntos. Para fluidos de lei de
+    potência, redefinindo a condutividade hidráulica como
+    \(k_n\equiv u_0K\left(\Delta p/L\right)^{-1/n}\) e o número de Reynolds de modo
+    correspondente, os resultados de uma faixa larga de expoentes e de Reynolds colapsam numa
+    <strong>única curva universal</strong>. Para fluidos de Herschel-Bulkley o resultado é
+    outro e mais surpreendente: a combinação entre a geometria desordenada do espaço poroso, a
+    reologia do fluido e os efeitos inerciais produz um <strong>aumento substancial</strong>
+    da condutância hidráulica macroscópica em Reynolds intermediários, isto é, o meio deixa
+    passar mais fluido do que deixaria sem a não linearidade.</p>
+    <p>A referência é
+    <a href="https://doi.org/10.1103/PhysRevLett.103.194502">A. F. Morais, H. Seybold,
+    H. J. Herrmann e J. S. Andrade Jr., <em>Non-Newtonian Fluid Flow through Three-Dimensional
+    Disordered Porous Media</em>, Phys. Rev. Lett. <strong>103</strong>, 194502 (2009)</a>, e
+    ela é um bom exemplo do tipo de problema que o módulo 9 prepara: quando a geometria é
+    desordenada e a reologia é não linear, não há solução analítica, e a simulação direta das
+    equações deste módulo é o único caminho.</p>
+  </div>
+
   <div class="bloco fisica">
     <span class="rotulo">Duas convenções de sinal</span>
     <p>Parte da literatura de fenômenos de transporte, a começar pelo Bird, escreve a lei de
@@ -107,10 +162,15 @@
     \(\vet{J}=-D\nabla c\). A vantagem didática é enorme, porque as três leis constitutivas
     do curso passam a ter exatamente a mesma cara, com momento, calor e massa fluindo do mais
     para o menos.</p>
-    <p>Esta página usa a convenção de tensão, sem o sinal, porque é a que leva diretamente ao
-    tensor de Cauchy e à equação de Navier-Stokes na forma usual. Ao comparar com outros
-    textos, o primeiro passo é verificar qual das duas está em uso, do mesmo jeito que no
-    módulo 4 foi preciso verificar a convenção do índice politrópico.</p>
+    <p>O curso usa as duas, cada uma onde rende mais. Aqui, onde o objetivo é construir o
+    tensor de Cauchy e chegar à equação de Navier-Stokes na forma usual, vale a convenção de
+    tensão, sem o sinal. Nos módulos de calor e de massa, e sempre que o ponto for a analogia
+    entre os três transportes, vale a de Bird, com \(\tau_{yx}=-\mu\,\partial u_x/\partial y\)
+    lida como fluxo de momento, porque ali é ela que torna o paralelo visível em vez de
+    apenas afirmado.</p>
+    <p>Ao comparar com outros textos, o primeiro passo é sempre verificar qual das duas está
+    em uso, do mesmo jeito que no módulo 4 foi preciso verificar a convenção do índice
+    politrópico.</p>
   </div>
 
   <!-- ================================================== -->
@@ -393,7 +453,7 @@
 
   <nav class="nav-aulas">
     <a href="aula05.html"><small>Módulo anterior</small>← 5. Irrotacional e Bernoulli</a>
-    <span class="em-breve"><small>Em preparação</small>7. Tensão superficial</span>
+    <a class="prox" href="aula07.html"><small>Próximo módulo</small>7. Tensão superficial →</a>
   </nav>
 
 </main>
@@ -405,6 +465,6 @@
   Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
 </footer>
 
-<script src="assets/js/widgets.js?v=202611082355"></script>
+<script src="assets/js/widgets.js?v=202611090009"></script>
 </body>
 </html>

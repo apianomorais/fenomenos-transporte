@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 7: Tensão superficial e capilaridade | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090009">
+<script src="assets/js/comum.js?v=202611090009"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
+      <a href="aula06.html" class="num" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
+      <a href="aula07.html" class="num ativo" title="Módulo 7: Tensão superficial e capilaridade">7</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. De onde vem a tensão superficial</a></li>
+    <li><a href="#s2">2. Força por comprimento, energia por área</a></li>
+    <li><a href="#s3">3. A curvatura de uma superfície</a></li>
+    <li><a href="#s4">4. A força sobre um elemento de superfície</a></li>
+    <li><a href="#s5">5. Young-Laplace</a></li>
+    <li><a href="#s6">6. O efeito Marangoni</a></li>
+    <li><a href="#s7">7. Molhamento e ângulo de contato</a></li>
+    <li><a href="#s8">8. Capilaridade e o xilema</a></li>
+    <li><a href="#s9">9. Exercícios resolvidos</a></li>
+    <li><a href="#s10">10. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 7 · Transporte de quantidade de movimento</p>
+  <h1>Tensão superficial e capilaridade</h1>
+  <p class="subtitulo">Até aqui a interface entre dois meios foi apenas o lugar onde se impõe
+  uma condição de contorno. Ela tem, porém, uma física própria: custa energia criá-la, ela
+  puxa o que estiver na sua borda, e quando está curva exige uma diferença de pressão para se
+  manter. Desse último fato saem a forma da gota, a bolha de sabão e a subida da seiva.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Explicar a origem molecular da tensão superficial e reconhecer as duas leituras
+      equivalentes da mesma grandeza.</li>
+      <li>Calcular a força sobre um elemento de superfície curva e separar a componente
+      normal da tangencial.</li>
+      <li>Obter a relação de Young-Laplace e aplicá-la a gotas, bolhas e meniscos.</li>
+      <li>Resolver a altura de uma coluna capilar e discutir criticamente o caso do
+      xilema.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. De onde vem a tensão superficial</h2>
+
+  <p>A tensão superficial é um fenômeno que surge das forças intermoleculares nos líquidos.
+  Na interface entre um líquido e outro meio, seja gás ou outro líquido, as moléculas da
+  superfície experimentam uma força resultante que não é completamente balanceada: elas estão
+  sujeitas às forças de coesão das moléculas vizinhas do próprio líquido e às forças de adesão
+  das moléculas do meio adjacente. Uma molécula no interior é puxada igualmente em todas as
+  direções; uma molécula na superfície tem vizinhos de um lado só.</p>
+
+  <p>Essa desigualdade faz a superfície se comportar como uma membrana elástica, tensionando-se
+  para minimizar a própria área. É esse efeito de minimização que gera a tensão superficial, e
+  ele é essencial para entender a forma e a estabilidade das gotas.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">As quatro origens</span>
+    <p><strong>Dispersão de London.</strong> Presente em todas as moléculas, vem de flutuações
+    temporárias na distribuição de elétrons, que criam dipolos instantâneos e induzem dipolos
+    nas vizinhas. É a única interação que existe em moléculas apolares, e é o que mantém o
+    hélio líquido coeso: daí a sua tensão superficial ser mil vezes menor que a da água.</p>
+    <p><strong>Dipolo-dipolo.</strong> Ocorre entre moléculas com dipolos permanentes, com a
+    parte positiva de uma atraindo a negativa de outra.</p>
+    <p><strong>Dipolo induzido.</strong> Ocorre quando uma molécula ou íon com dipolo
+    permanente induz um dipolo numa vizinha apolar.</p>
+    <p><strong>Pontes de hidrogênio.</strong> Interações específicas e relativamente fortes
+    entre um hidrogênio ligado a um átomo eletronegativo, como oxigênio, nitrogênio ou flúor,
+    e um par de elétrons não compartilhados de outro átomo eletronegativo. São elas que fazem
+    da água uma anomalia em quase toda propriedade, inclusive nesta.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. Força por comprimento, energia por área</h2>
+
+  <p>A tensão superficial \(\gamma\) é a magnitude da força que atua perpendicularmente sobre
+  uma linha imaginária na superfície de um líquido, por unidade de comprimento dessa linha:</p>
+
+  <p>\[\gamma=\der{F}{x},\qquad\text{ou}\qquad \vet{F}=\gamma\vet{L}.\]</p>
+
+  <p>Há uma segunda leitura, que é a mesma coisa vista de outro ângulo. O trabalho realizado
+  para esticar uma membrana de largura \(L\) por um deslocamento \(dx\) é \(dW=F\,dx\), e
+  substituindo \(F=\gamma L\),</p>
+
+  <p>\[dW=\gamma L\,dx=\gamma\,dA.\]</p>
+
+  <p>A tensão superficial é, portanto, também a <strong>energia necessária para aumentar a
+  área da superfície por unidade de área criada</strong>. As duas leituras têm a mesma unidade,
+  N/m e J/m², e a segunda explica de imediato por que uma gota livre é esférica: entre todas
+  as formas de mesmo volume, a esfera é a de menor área, e portanto a de menor energia de
+  superfície.</p>
+
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th>Líquido</th><th>γ (mN/m)</th><th>Observação</th></tr></thead>
+    <tbody>
+      <tr><td>Mercúrio</td><td>425,4</td><td>metal líquido, coesão metálica</td></tr>
+      <tr><td>Água</td><td>73,3</td><td>pontes de hidrogênio</td></tr>
+      <tr><td>Glicerol</td><td>57,2</td><td>três hidroxilas por molécula</td></tr>
+      <tr><td>Etilenoglicol</td><td>30,1</td><td>duas hidroxilas</td></tr>
+      <tr><td>Etanol</td><td>22,1</td><td>uma hidroxila</td></tr>
+      <tr><td>Hélio líquido</td><td>0,1</td><td>apenas dispersão de London</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>A tabela é quase uma medida direta da intensidade das forças da seção anterior, e vale
+  lembrar que \(\gamma\) cai com a temperatura, anulando-se no ponto crítico, onde líquido e
+  vapor deixam de ser distinguíveis e não há mais interface.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. A curvatura de uma superfície</h2>
+
+  <p>Cada ponto de uma superfície \(S\) pode ser descrito por um conjunto ortogonal de
+  vetores, dois tangentes, \(\vers{t}_1\) e \(\vers{t}_2\), e um normal, \(\vers{n}\). A esse
+  sistema associam-se duas curvas sobre a superfície, \(c_1\) ao longo de \(\vers{t}_1\) e
+  \(c_2\) ao longo de \(\vers{t}_2\).</p>
+
+  <p>Por definição, o vetor curvatura de uma curva é a variação do vetor tangente unitário com
+  respeito ao comprimento de arco:</p>
+
+  <p>\[\vet{k}_1\equiv\der{\vers{t}_1}{c_1}
+  =\left(\vers{t}_1\cdot\nabla\right)\vers{t}_1,
+  \qquad
+  \vet{k}_2\equiv\der{\vers{t}_2}{c_2}
+  =\left(\vers{t}_2\cdot\nabla\right)\vers{t}_2,\]</p>
+
+  <p>e a curvatura total da superfície é a soma dos módulos dos dois,</p>
+
+  <p>\[\kappa=\left|\vet{k}_1\right|+\left|\vet{k}_2\right|.\]</p>
+
+  <p>Numa esfera de raio \(R\), as duas curvas são círculos máximos e cada curvatura vale
+  \(1/R\), de modo que \(\kappa=2/R\). Num cilindro de raio \(R\), uma das curvas é um círculo
+  e a outra é uma reta, de curvatura nula, e \(\kappa=1/R\). Num plano, \(\kappa=0\).</p>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. A força sobre um elemento de superfície</h2>
+
+  <p>Considere um pedaço de superfície de área \(\delta A\) limitado por uma curva \(C\). Cada
+  elemento \(d\vet{\ell}\) dessa borda sofre uma força \(\gamma\) por unidade de comprimento,
+  dirigida ao longo da superfície e para fora do pedaço, o que se escreve
+  \(-\gamma\,\vers{n}\cruz d\vet{\ell}\). A força total é</p>
+
+  <p>\[\vet{F}_S=-\oint_C\gamma\,\vers{n}\cruz d\vet{\ell},\]</p>
+
+  <p>e o teorema da circulação transforma essa integral de linha numa de superfície:</p>
+
+  <p>\[\vet{F}_S=\iint_S\left(\vers{n}\cruz\nabla\right)\cruz
+  \left(\gamma\vers{n}\right)dA
+  \quad\xrightarrow{\ \delta A\to0\ }\quad
+  \vet{F}_S=\left(\vers{n}\cruz\nabla\right)\cruz\left(\gamma\vers{n}\right)\delta A.\]</p>
+
+  <p>Abrindo o produto pela regra de Leibniz aparecem dois termos, um com \(\gamma\) constante
+  e outro com o gradiente de \(\gamma\):</p>
+
+  <p>\[\vet{F}_S=\gamma\left[\left(\vers{n}\cruz\nabla\right)\cruz\vers{n}\right]\delta A
+  +\left[\vers{n}\cruz\left(\nabla\gamma\right)\right]\cruz\vers{n}\,\delta A.\]</p>
+
+  <p>Separando o operador nas partes ao longo da superfície e normal a ela,
+  \(\nabla=\nabla_l+\nabla_n\), o segundo pedaço morre no produto vetorial com \(\vers{n}\), de
+  modo que \(\vers{n}\cruz\nabla=\vers{n}\cruz\nabla_l\). Com as identidades</p>
+
+  <p>\[\left(\vers{n}\cruz\nabla_l\right)\cruz\vers{n}
+  =\tfrac12\nabla_l\left(\vers{n}\cdot\vers{n}\right)
+  -\vers{n}\left(\nabla_l\cdot\vers{n}\right)
+  =-\vers{n}\left(\nabla_l\cdot\vers{n}\right),\]</p>
+
+  <p>\[\left[\vers{n}\cruz\left(\nabla\gamma\right)\right]\cruz\vers{n}
+  =\nabla\gamma-\left(\vers{n}\cdot\nabla\gamma\right)\vers{n}=\nabla_l\gamma,\]</p>
+
+  <p>o resultado se reduz a duas parcelas de naturezas completamente diferentes:</p>
+
+  <p>\[\vet{F}_S=\left[-\gamma\,\vers{n}\left(\nabla_l\cdot\vers{n}\right)
+  +\nabla_l\gamma\right]\delta A.\]</p>
+
+  <p>A primeira é <strong>normal</strong> à superfície e existe sempre que ela for curva. A
+  segunda é <strong>tangencial</strong> e existe sempre que \(\gamma\) variar de ponto a
+  ponto. São dois fenômenos distintos, e as duas seções seguintes tratam de um cada.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. Young-Laplace</h2>
+
+  <p>Identificando a curvatura local como \(\kappa=-\nabla_l\cdot\vers{n}\), o balanço de
+  forças exige que a diferença de pressão na interface iguale a força normal por unidade de
+  área:</p>
+
+  <p>\[\Delta p=\gamma\kappa=-\gamma\,\nabla_l\cdot\vers{n}.\]</p>
+
+  <p>Numa gota esférica o cálculo é direto. Com o nabla em coordenadas esféricas, os vetores
+  curvatura das duas curvas sobre a esfera são</p>
+
+  <p>\[\vet{k}_\theta=\left(\vers{\theta}\cdot\nabla\right)\vers{\theta}
+  =\frac{1}{r}\pder{\vers{\theta}}{\theta}=-\frac{\vers{r}}{r},
+  \qquad
+  \vet{k}_\varphi=\left(\vers{\varphi}\cdot\nabla\right)\vers{\varphi}
+  =\frac{1}{r\sen\theta}\pder{\vers{\varphi}}{\varphi}=-\frac{\vers{r}}{r},\]</p>
+
+  <p>de modo que em \(r=R\) vale \(\kappa=2/R\) e</p>
+
+  <p>\[\Delta p=\frac{2\gamma}{R}.\]</p>
+
+  <p>A pressão dentro da gota é maior que fora, e tanto maior quanto menor a gota. Esse
+  resultado é o responsável pela estabilidade da forma esférica, e o widget mostra o que ele
+  significa em números.</p>
+
+  <div data-widget="younglaplace"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. O efeito Marangoni</h2>
+
+  <p>A componente tangencial da força de superfície, \(\nabla_l\gamma\), não tem nada a ver
+  com curvatura: ela aparece quando a tensão superficial varia de um ponto a outro da
+  interface. Como nada equilibra uma força tangencial numa superfície livre, o resultado é
+  escoamento, e esse escoamento se chama <strong>efeito Marangoni</strong>, em homenagem a
+  Carlo Marangoni, que estudou o fenômeno na sua tese de doutorado em 1865.</p>
+
+  <p>O gradiente de \(\gamma\) pode vir de variações de temperatura, já que a tensão
+  superficial cai quando o líquido esquenta, ou de variações de concentração de alguma
+  substância dissolvida. Em ambos os casos o líquido é puxado da região de menor tensão para a
+  de maior tensão, o que é contraintuitivo até se lembrar que \(\gamma\) é uma tensão, e
+  portanto puxa.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Onde se vê</span>
+    <p>A demonstração mais bonita é a das <strong>lágrimas do vinho</strong>. O vinho sobe pela
+    parede da taça por capilaridade e, no filme fino que se forma, o álcool evapora mais
+    depressa que a água. A mistura que fica tem mais água e, portanto, tensão superficial
+    maior, o que puxa mais vinho para cima. O líquido acumula no alto até que a gravidade
+    vença e ele escorra de volta em gotas, que são as lágrimas. O ciclo se repete enquanto
+    houver álcool.</p>
+    <p>Em aplicações, o efeito controla a distribuição de líquidos em filmes e revestimentos,
+    para evitar defeitos durante a secagem, e governa o movimento do metal fundido na soldagem
+    e na brasagem, influenciando a qualidade da junta. Em processos biológicos, variações de
+    tensão superficial nas membranas celulares afetam adesão, migração e morfologia celular, e
+    nas vesículas intracelulares influenciam formação, transporte e fusão, o que toca
+    endocitose, exocitose e tráfego interno.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. Molhamento e ângulo de contato</h2>
+
+  <p>Quando um líquido encontra um sólido há três interfaces em jogo, e não apenas uma:
+  líquido-gás, sólido-gás e sólido-líquido, cada uma com a sua energia por unidade de área. O
+  equilíbrio na linha onde as três se encontram fixa o <strong>ângulo de contato</strong>
+  \(\theta\) pela relação de Young,</p>
+
+  <p>\[\gamma_{sg}=\gamma_{s\ell}+\gamma_{\ell g}\cos\theta.\]</p>
+
+  <p>Quando o líquido tende a se alargar pela superfície, com \(\theta<90^\circ\), diz-se que
+  ele é <strong>hidrofílico</strong> em relação àquele sólido, e as forças de adesão com a
+  parede ganham das de coesão interna. No caso contrário, com \(\theta>90^\circ\), ele é
+  <strong>hidrofóbico</strong>: a gota se encolhe sobre a superfície em vez de se espalhar.
+  Água em vidro limpo tem \(\theta\) perto de zero; água em teflon, cerca de
+  \(110^\circ\); mercúrio em vidro, cerca de \(140^\circ\).</p>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. Capilaridade e o xilema</h2>
+
+  <p>Num tubo fino o menisco é curvo, e pela relação da seção 5 essa curvatura exige um salto
+  de pressão. Com um menisco aproximadamente esférico de raio \(R=r/\cos\theta\), onde \(r\) é
+  o raio do tubo, o salto vale \(2\gamma\cos\theta/r\), e o líquido sobe até que o peso da
+  coluna o equilibre:</p>
+
+  <p>\[\varrho gh=\frac{2\gamma\cos\theta}{r}
+  \quad\Longrightarrow\quad
+  h=\frac{2\gamma\cos\theta}{\varrho gr}.\]</p>
+
+  <div data-widget="capilar"></div>
+
+  <p>A presença de tecido do xilema é uma das características que separam as plantas
+  vasculares das não vasculares, e a estrutura das raízes, caules e folhas facilita o
+  transporte de água, nutrientes e fotossintatos por toda a planta. É tentador atribuir essa
+  subida à capilaridade, e a conta acima mostra que isso não fecha: com vasos de uns \(20\) μm
+  de diâmetro, a altura capilar fica em pouco mais de um metro e meio, enquanto uma sequoia
+  passa dos cem metros.</p>
+
+  <p>O que de fato levanta a água é a <strong>transpiração</strong> nas folhas, que retira
+  moléculas do alto da coluna e põe toda a água do xilema sob tensão, com pressão absoluta
+  negativa. A coluna não se rompe porque a coesão entre as moléculas de água, outra vez as
+  pontes de hidrogênio, é forte o bastante para sustentar essa tensão. A capilaridade entra
+  como a condição de contorno no topo: são os meniscos nos poros das paredes celulares, de
+  escala nanométrica, que ancoram a coluna e suportam a diferença de pressão. Com poros de
+  \(10\) nm, a mesma fórmula dá quase um quilômetro e meio, e aí a conta fecha com folga.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">7.1 Gota, bolha de ar e bolha de sabão</span>
+    <p>Compare o salto de pressão em três objetos de \(1\) mm de raio: uma gota de água no ar,
+    uma bolha de ar dentro da água e uma bolha de sabão
+    (\(\gamma_{\rm sabão}=25\) mN/m).</p>
+    <p>A gota e a bolha de ar na água têm uma única interface, de modo que
+    \(\Delta p=2\gamma/R=2\times0{,}0728/10^{-3}=146\) Pa nos dois casos, com a pressão maior
+    sempre do lado côncavo. A bolha de sabão tem duas interfaces, a interna e a externa do
+    filme, cada uma contribuindo com \(2\gamma/R\):</p>
+    <p>\[\Delta p=\frac{4\gamma}{R}=\frac{4\times0{,}025}{10^{-3}}=100\ \text{Pa}.\]</p>
+    <p>Apesar de a tensão do sabão ser três vezes menor que a da água, o fator 4 quase
+    compensa. É esse fator que explica por que duas bolhas de sabão de tamanhos diferentes,
+    postas em contato, resultam na menor esvaziando dentro da maior: a pequena tem pressão
+    interna maior.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">7.2 A altura da coluna num capilar</span>
+    <p>Água a \(20^\circ\)C sobe num tubo de vidro de \(0{,}50\) mm de raio, com ângulo de
+    contato de \(20^\circ\). Qual a altura da coluna?</p>
+    <p>\[h=\frac{2\gamma\cos\theta}{\varrho gr}
+    =\frac{2\times0{,}0728\times0{,}940}{998\times9{,}81\times5{,}0\times10^{-4}}
+    =28{,}0\ \text{mm}.\]</p>
+    <p>Conferindo pelo balanço de forças: a tensão puxa ao longo da linha de contato com
+    \(2\pi r\gamma\cos\theta=2{,}15\times10^{-4}\) N, e o peso da coluna é
+    \(\varrho g\pi r^2h=2{,}15\times10^{-4}\) N. Os dois coincidem, como devem.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">7.3 Por que o mercúrio desce</span>
+    <p>O mesmo tubo é mergulhado em mercúrio, com \(\theta=140^\circ\). O que acontece?</p>
+    <p>O cosseno de \(140^\circ\) vale \(-0{,}766\), e</p>
+    <p>\[h=\frac{2\times0{,}4254\times\left(-0{,}766\right)}
+    {13\,546\times9{,}81\times5{,}0\times10^{-4}}=-9{,}8\ \text{mm}.\]</p>
+    <p>O nível dentro do tubo fica quase um centímetro <em>abaixo</em> do nível de fora, e o
+    menisco é convexo em vez de côncavo. A coesão do mercúrio consigo mesmo é muito maior que
+    a adesão dele ao vidro, e o líquido prefere encolher a se espalhar. É essa depressão que
+    obriga a correção de capilaridade nos barômetros de mercúrio de tubo estreito.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">7.4 O inseto que anda sobre a água</span>
+    <p>Um inseto de \(10\) mg apoia-se na água com seis patas, cada uma deixando uma marca de
+    perímetro efetivo \(\ell=2\) mm. A tensão superficial sustenta o peso?</p>
+    <p>A força máxima que a superfície pode fazer para cima é \(\gamma\) vezes o comprimento
+    total da linha de contato:</p>
+    <p>\[F_{\max}=\gamma\left(6\ell\right)=0{,}0728\times0{,}012
+    =8{,}7\times10^{-4}\ \text{N},\]</p>
+    <p>contra um peso de \(mg=9{,}8\times10^{-5}\) N. Sobra quase um fator dez, o que explica
+    a folga com que o inseto anda. Repare na escala: a força de superfície cresce com o
+    comprimento e o peso com o cubo do tamanho, de modo que o truque funciona para insetos e
+    nunca funcionaria para um gato.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>7.5</b> Mostre, por minimização da energia de superfície a volume constante, que
+      a esfera é a forma de equilíbrio de uma gota livre. Em seguida estime o tamanho a partir
+      do qual a gravidade achata a gota, comparando a energia de superfície com a
+      gravitacional, e compare com o comprimento capilar.</li>
+
+      <li><b>7.6</b> Duas bolhas de sabão de raios \(R_1&lt;R_2\) são ligadas por um tubo com
+      válvula. Abrindo a válvula, o que acontece? Calcule o raio final supondo que o volume
+      total se conserve e comente por que a intuição costuma errar neste problema.</li>
+
+      <li><b>7.7</b> Obtenha a relação de Young para o ângulo de contato fazendo o balanço de
+      forças na linha tripla, e discuta o que significa a solução formal dar
+      \(\cos\theta>1\).</li>
+
+      <li><b>7.8</b> Um tubo capilar é mergulhado na água e a coluna sobe até \(h\). O tubo é
+      então cortado numa altura menor que \(h\). A água transborda continuamente, formando uma
+      fonte perpétua? Explique o que de fato acontece com o raio de curvatura do menisco.</li>
+
+      <li><b>7.9</b> Estime a pressão negativa necessária para levantar água até o topo de uma
+      sequoia de \(100\) m, e compare com a pressão de vapor da água a \(25^\circ\)C. O que
+      esse resultado diz sobre a metaestabilidade da coluna de seiva?</li>
+
+      <li><b>7.10</b> A lei de Jurin, \(h\propto1/r\), supõe menisco esférico. Mostre que essa
+      hipótese exige \(Bo\ll1\) e estime o erro para um tubo de \(2\) mm de raio.</li>
+
+      <li><b>7.11</b> Em meia página: a seção 4 obteve duas componentes para a força de
+      superfície, uma normal e uma tangencial. Explique por que a normal pode ser equilibrada
+      por uma diferença de pressão e a tangencial não pode, e o que isso implica sobre a
+      possibilidade de equilíbrio estático numa superfície com \(\nabla_l\gamma\neq0\).</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula06.html"><small>Módulo anterior</small>← 6. Navier-Stokes</a>
+    <span class="em-breve"><small>Em preparação</small>8. Relaxação</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611090009"></script>
+</body>
+</html>

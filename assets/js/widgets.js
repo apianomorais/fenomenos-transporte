@@ -1868,9 +1868,12 @@
         case 'espiral': return [(-A * x - est.sw * A * y) / r2,
                                 (-A * y + est.sw * A * x) / r2];
         default: {
-          /* cilindro de raio A em escoamento uniforme */
+          /* Cilindro de raio A em escoamento uniforme, de
+             phi = U x (1 + A²/r²). Derivando,
+             u_x = 1 + A²/r² − 2A²x²/r⁴ e u_y = −2A²xy/r⁴,
+             o que põe os pontos de estagnação em (±A, 0), como deve. */
           var c = A * A / (r2 * r2);
-          return [1 - A * A / r2 + 2 * c * x * x, 2 * c * x * y];
+          return [1 + A * A / r2 - 2 * c * x * x, -2 * c * x * y];
         }
       }
     }
@@ -1884,7 +1887,10 @@
         var m2 = Math.hypot(k2[0], k2[1]) || 1;
         x += passo * k2[0] / m2; y += passo * k2[1] / m2;
         if (Math.abs(x) > 4 || Math.abs(y) > 4) break;
-        if (est.tipo !== 'uniforme' && Math.hypot(x, y) < A * 0.55) break;
+        /* no cilindro a parede é a fronteira do domínio; nos campos com
+           singularidade na origem o corte é bem mais perto do centro */
+        var lim = est.tipo === 'cilindro' ? A : A * 0.55;
+        if (est.tipo !== 'uniforme' && Math.hypot(x, y) < lim) break;
         pts.push([x, y]);
       }
       return pts;
@@ -1944,7 +1950,7 @@
       traca(seeds, campo, G.COR.mestra, 1.7, true);
 
       if (est.tipo === 'cilindro' || est.tipo === 'ralo' || est.tipo === 'espiral') {
-        ct.fillStyle = est.tipo === 'cilindro' ? 'rgba(27,31,36,.14)' : 'rgba(140,47,57,.16)';
+        ct.fillStyle = est.tipo === 'cilindro' ? '#e8e8ef' : 'rgba(140,47,57,.16)';
         ct.beginPath(); ct.arc(cx, cy, A * esc, 0, 2 * Math.PI); ct.fill();
         ct.strokeStyle = est.tipo === 'cilindro' ? G.COR.tinta : G.COR.vinho;
         ct.lineWidth = 2; ct.stroke();
@@ -2520,6 +2526,368 @@
         + 'em tubo deixa de ser laminar e a fórmula para de valer: a vazão real fica bem '
         + 'abaixo da prevista, e passa a depender da rugosidade da parede. O módulo 11 trata '
         + 'desse regime.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     15. Young-Laplace
+     A pressão dentro de uma gota, de uma bolha de ar na água e de uma
+     bolha de sabão, que tem duas superfícies e por isso dobra o
+     resultado. O gráfico mostra a dependência com 1/R, que é o que
+     torna as gotas pequenas tão difíceis de espremer.
+     ================================================================= */
+  REGISTRO.younglaplace = function (raiz) {
+    var est = { R: 1.0, tipo: 'gota', gama: 0.0728, nome: 'água' };
+
+    var LIQUIDOS = [
+      { rot: 'água', g: 0.0733 },
+      { rot: 'glicerol', g: 0.0572 },
+      { rot: 'etanol', g: 0.0221 },
+      { rot: 'mercúrio', g: 0.4254 },
+      { rot: 'hélio líquido', g: 0.0001 }
+    ];
+
+    var corpo = moldura(raiz, 'A pressão dentro de uma gota');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'raio', 0.02, 10, 0.02, 1.0,
+      function (v) { est.R = v; desenhar(); },
+      function (v) { return F.fmt(v, 2) + ' mm'; });
+    opcoes(ctr, LIQUIDOS.map(function (q) { return { rot: q.rot, v: q }; }), 0,
+      function (v) { est.gama = v.g; est.nome = v.rot; desenhar(); });
+    opcoes(ctr, [{ rot: 'gota', v: 'gota' }, { rot: 'bolha de sabão', v: 'sabao' }], 0,
+      function (v) { est.tipo = v; desenhar(); });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'tensão superficial', k: 'g' },
+      { rot: 'curvatura 2/R', k: 'kap' },
+      { rot: 'salto de pressão', k: 'dp' },
+      { rot: 'em coluna de água', k: 'col' },
+      { rot: 'energia de superfície', k: 'en' },
+      { rot: 'comprimento capilar', k: 'lc' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function salto(Rmm) {
+      var f = est.tipo === 'sabao' ? 4 : 2;      // a bolha tem duas superfícies
+      return f * est.gama / (Rmm * 1e-3);
+    }
+
+    function desenhar() {
+      var R = est.R * 1e-3;
+      var dp = salto(est.R);
+      var area = est.tipo === 'sabao' ? 8 * Math.PI * R * R : 4 * Math.PI * R * R;
+
+      /* ---- a gota com as setas de tensão no equador ---- */
+      var p = G.preparar(cv1, 300);
+      var ct = p.ct;
+      var cx = p.L / 2, cy = p.A * 0.52;
+      var rr = Math.min(p.L, p.A) * 0.30;
+      if (est.tipo === 'sabao') {
+        ct.strokeStyle = G.COR.mestra; ct.lineWidth = 2;
+        ct.beginPath(); ct.arc(cx, cy, rr, 0, 2 * Math.PI); ct.stroke();
+        ct.beginPath(); ct.arc(cx, cy, rr * 0.93, 0, 2 * Math.PI); ct.stroke();
+        ct.fillStyle = 'rgba(63,67,145,.10)';
+        ct.beginPath(); ct.arc(cx, cy, rr, 0, 2 * Math.PI);
+        ct.arc(cx, cy, rr * 0.93, 0, 2 * Math.PI, true); ct.fill();
+        rotulo(ct, 'duas superfícies', cx, cy - rr - 10, G.COR.mestra, 'center', 'bottom');
+      } else {
+        ct.fillStyle = 'rgba(63,67,145,.16)';
+        ct.beginPath(); ct.arc(cx, cy, rr, 0, 2 * Math.PI); ct.fill();
+        ct.strokeStyle = G.COR.mestra; ct.lineWidth = 2.4;
+        ct.beginPath(); ct.arc(cx, cy, rr, 0, 2 * Math.PI); ct.stroke();
+      }
+
+      /* tensão puxando o equador para fora e pressão empurrando de dentro */
+      var i;
+      seta(ct, cx - rr, cy, cx - rr - 26, cy, G.COR.vinho, 2.4);
+      seta(ct, cx + rr, cy, cx + rr + 26, cy, G.COR.vinho, 2.4);
+      rotulo(ct, 'γ', cx + rr + 30, cy - 8, G.COR.vinho, 'left', 'bottom');
+      for (i = 0; i < 8; i++) {
+        var b = 2 * Math.PI * i / 8;
+        seta(ct, cx + rr * 0.35 * Math.cos(b), cy + rr * 0.35 * Math.sin(b),
+          cx + rr * 0.78 * Math.cos(b), cy + rr * 0.78 * Math.sin(b),
+          'rgba(63,67,145,.6)', 1.6);
+      }
+      rotulo(ct, 'Δp = ' + F.fmt(dp, dp > 100 ? 0 : 2) + ' Pa', cx, cy + rr + 14,
+        G.COR.tinta, 'center', 'top');
+      rotulo(ct, est.nome + ', R = ' + F.fmt(est.R, 2) + ' mm', cx, cy - rr - 24,
+        G.COR.suave, 'center', 'bottom');
+
+      /* ---- o salto contra o raio, em escala logarítmica ---- */
+      var lo = Math.floor(Math.log10(salto(10)));
+      var hi = Math.ceil(Math.log10(salto(0.02)));
+      var SUP = { '-2': '10⁻²', '-1': '10⁻¹', '0': '1', '1': '10', '2': '100',
+                  '3': '1000', '4': '10⁴', '5': '10⁵', '6': '10⁶' };
+      var gr = G.eixos(cv2, {
+        altura: 300, xmin: Math.log10(0.02), xmax: Math.log10(10),
+        ymin: lo, ymax: hi, divY: Math.min(8, hi - lo),
+        margem: { e: 60, d: 14, c: 14, b: 44 },
+        rotX: 'raio (mm)', rotY: 'salto de pressão (Pa)',
+        marcasX: [0.02, 0.1, 0.5, 2, 10].map(function (v) {
+          return { v: Math.log10(v), r: String(v).replace('.', ',') };
+        }),
+        formataY: function (v) {
+          var k = Math.round(v);
+          return SUP[String(k)] || F.fmt(Math.pow(10, v), 1);
+        }
+      });
+      G.curva(gr, function (lx) {
+        return Math.log10(salto(Math.pow(10, lx)));
+      }, G.COR.mestra, 2.8);
+      G.vertical(gr, Math.log10(est.R), G.COR.vinho, 'R');
+      rotulo(gr.ct, 'inclinação −1', gr.X(Math.log10(0.1)),
+        gr.Y(Math.log10(salto(0.45))), G.COR.suave, 'left');
+
+      mostrar({
+        g: F.fmt(est.gama * 1000, 1) + ' mN/m',
+        kap: F.fmt(2 / R, 0) + ' m⁻¹',
+        dp: F.fmt(dp, dp > 100 ? 0 : 3) + ' Pa',
+        col: F.fmt(dp / (1000 * 9.80665) * 1000, 2) + ' mm',
+        en: F.fmt(est.gama * area * 1e6, 3) + ' μJ',
+        lc: F.fmt(Math.sqrt(est.gama / (1000 * 9.80665)) * 1000, 2) + ' mm'
+      });
+
+      nota.innerHTML =
+        '<p>A tensão superficial \\(\\gamma\\) é a magnitude da força que atua '
+        + 'perpendicularmente sobre uma linha imaginária na superfície de um líquido, por '
+        + 'unidade de comprimento dessa linha, \\(\\gamma=dF/dx\\). O trabalho para esticar '
+        + 'essa linha de \\(dx\\) ao longo de uma largura \\(L\\) é '
+        + '\\(dW=F\\,dx=\\gamma L\\,dx=\\gamma\\,dA\\), de modo que a mesma grandeza também '
+        + 'é a <strong>energia por unidade de área</strong> de superfície criada. As duas '
+        + 'leituras são equivalentes, e a segunda explica por que uma gota solta no ar fica '
+        + 'esférica: entre todas as formas de mesmo volume, a esfera é a de menor área.</p>'
+        + '<p>A superfície curva precisa de uma diferença de pressão para ficar em '
+        + 'equilíbrio. O balanço entre a força de tensão ao longo da borda e a força de '
+        + 'pressão sobre a área dá a relação de <strong>Young-Laplace</strong>,</p>'
+        + '\\[\\Delta p=\\gamma\\kappa=\\gamma\\left(\\frac{1}{R_1}+\\frac{1}{R_2}\\right),\\]'
+        + '<p>com \\(R_1\\) e \\(R_2\\) os dois raios principais de curvatura. Numa esfera os '
+        + 'dois valem \\(R\\), a curvatura é \\(\\kappa=2/R\\) e</p>'
+        + '\\[\\Delta p=\\frac{2\\gamma}{R}.\\]'
+        + '<p>A bolha de sabão é o caso que mais confunde, e o botão permite compará-la. Ela '
+        + 'tem <strong>duas</strong> interfaces, a de dentro e a de fora do filme, cada uma '
+        + 'contribuindo com \\(2\\gamma/R\\), de modo que o salto total é \\(4\\gamma/R\\). '
+        + 'Uma gota de chuva não: ela tem uma superfície só.</p>'
+        + '<p>O gráfico mostra a dependência com o inverso do raio, que em escala logarítmica '
+        + 'é uma reta de inclinação \\(-1\\). Uma gota de um milímetro tem dentro de si uns '
+        + '\\(150\\) Pa a mais que o ar; uma gotícula de névoa, de um micrômetro, tem '
+        + '\\(1{,}5\\) atmosfera. É por isso que a nuvem não se desfaz sozinha e que a '
+        + 'cavitação destrói hélices: quanto menor a bolha, mais violenta a pressão '
+        + 'envolvida.</p>'
+        + '<p>O último cartão traz o <strong>comprimento capilar</strong> '
+        + '\\(\\lambda=\\sqrt{\\gamma/\\varrho g}\\), que vale cerca de \\(2{,}7\\) mm para a '
+        + 'água. Ele separa os dois mundos: abaixo dele manda a tensão superficial e as gotas '
+        + 'são esféricas; acima dele manda a gravidade e as poças se achatam.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     16. Capilaridade
+     A coluna que sobe num tubo fino, a depressão do mercúrio quando o
+     ângulo de contato passa de noventa graus, e a conta que mostra que
+     a capilaridade sozinha não levanta água até a copa de uma árvore.
+     ================================================================= */
+  REGISTRO.capilar = function (raiz) {
+    var est = { r: 0.5, th: 20, gama: 0.0728, rho: 998, nome: 'água' };
+    var G0 = 9.80665;
+
+    var LIQUIDOS = [
+      { rot: 'água', g: 0.0728, rho: 998, th: 20 },
+      { rot: 'etanol', g: 0.0221, rho: 789, th: 0 },
+      { rot: 'glicerol', g: 0.0572, rho: 1260, th: 30 },
+      { rot: 'mercúrio', g: 0.4254, rho: 13546, th: 140 }
+    ];
+
+    var corpo = moldura(raiz, 'A coluna que sobe sozinha');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    var dth;
+    deslizante(ctr, 'raio do tubo', 0.01, 3, 0.01, 0.5,
+      function (v) { est.r = v; desenhar(); },
+      function (v) { return v < 0.1 ? F.fmt(v * 1000, 0) + ' μm'
+                                    : F.fmt(v, 2) + ' mm'; });
+    dth = deslizante(ctr, 'ângulo de contato', 0, 160, 5, 20,
+      function (v) { est.th = v; desenhar(); },
+      function (v) { return F.fmt(v, 0) + '°'; });
+    opcoes(ctr, LIQUIDOS.map(function (q) { return { rot: q.rot, v: q }; }), 0,
+      function (v) {
+        est.gama = v.g; est.rho = v.rho; est.nome = v.rot; est.th = v.th;
+        dth.value = v.th;
+        dth.dispatchEvent(new Event('input'));
+      });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'altura da coluna', k: 'h' },
+      { rot: 'salto de pressão', k: 'dp' },
+      { rot: 'peso da coluna', k: 'w' },
+      { rot: 'força da tensão', k: 'f' },
+      { rot: 'número de Bond', k: 'bo' },
+      { rot: 'comprimento capilar', k: 'lc' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function altura(rmm) {
+      var r = rmm * 1e-3;
+      return 2 * est.gama * Math.cos(est.th * Math.PI / 180) / (est.rho * G0 * r);
+    }
+
+    function desenhar() {
+      var r = est.r * 1e-3, h = altura(est.r);
+      var dp = 2 * est.gama * Math.cos(est.th * Math.PI / 180) / r;
+      var peso = est.rho * G0 * Math.PI * r * r * h;
+      var forca = 2 * Math.PI * r * est.gama * Math.cos(est.th * Math.PI / 180);
+      var bo = est.rho * G0 * r * r / est.gama;
+
+      /* ---- o tubo e o menisco ---- */
+      var p = G.preparar(cv1, 320);
+      var ct = p.ct;
+      var nivel = p.A * 0.70, cx = p.L * 0.46, tw = Math.min(46, p.L * 0.11);
+      /* a escala se ajusta para que a coluna caiba sempre */
+      var esc = (p.A * 0.52) / Math.max(0.02, Math.abs(h));
+      var hp = Math.max(-p.A * 0.22, Math.min(p.A * 0.52, h * esc));
+
+      ct.fillStyle = 'rgba(63,67,145,.12)';
+      ct.fillRect(8, nivel, p.L - 16, p.A - nivel - 6);
+      ct.strokeStyle = G.COR.mestra; ct.lineWidth = 1.8;
+      ct.beginPath(); ct.moveTo(8, nivel); ct.lineTo(p.L - 8, nivel); ct.stroke();
+
+      ct.fillStyle = 'rgba(63,67,145,.22)';
+      ct.fillRect(cx - tw / 2, nivel - hp, tw, hp + (p.A - nivel - 6));
+      ct.strokeStyle = G.COR.tinta; ct.lineWidth = 2.2;
+      ct.beginPath();
+      ct.moveTo(cx - tw / 2, 14); ct.lineTo(cx - tw / 2, p.A - 6);
+      ct.moveTo(cx + tw / 2, 14); ct.lineTo(cx + tw / 2, p.A - 6);
+      ct.stroke();
+
+      /* o menisco, curvado conforme o ângulo de contato */
+      var thr = est.th * Math.PI / 180;
+      ct.strokeStyle = G.COR.mestra; ct.lineWidth = 2.4;
+      ct.beginPath();
+      var i;
+      for (i = 0; i <= 24; i++) {
+        var s = -1 + 2 * i / 24;
+        /* molhando (cos > 0) o menisco é côncavo, com o centro mais baixo
+           que a borda; com ângulo acima de 90° ele se inverte */
+        var yy = nivel - hp + Math.cos(thr) * (tw / 2) * (1 - s * s) * 0.5;
+        if (i === 0) ct.moveTo(cx + s * tw / 2, yy); else ct.lineTo(cx + s * tw / 2, yy);
+      }
+      ct.stroke();
+
+      seta(ct, cx + tw / 2 + 18, nivel, cx + tw / 2 + 18, nivel - hp, G.COR.vinho, 1.6);
+      seta(ct, cx + tw / 2 + 18, nivel - hp, cx + tw / 2 + 18, nivel, G.COR.vinho, 1.6);
+      rotulo(ct, (h >= 0 ? 'h = ' : 'depressão ') + F.fmt(Math.abs(h) * 1000, 1) + ' mm',
+        cx + tw / 2 + 24, nivel - hp / 2, G.COR.vinho, 'left');
+      rotulo(ct, est.nome + ', θ = ' + F.fmt(est.th, 0) + '°', 12, 14,
+        G.COR.suave, 'left', 'top');
+      rotulo(ct, 'r = ' + (est.r < 0.1 ? F.fmt(est.r * 1000, 0) + ' μm'
+                                       : F.fmt(est.r, 2) + ' mm'),
+        cx, p.A - 10, G.COR.suave, 'center', 'bottom');
+
+      /* ---- altura contra raio ---- */
+      var SUP = { '-4': '10⁻⁴', '-3': '10⁻³', '-2': '10⁻²', '-1': '10⁻¹',
+                  '0': '1', '1': '10', '2': '100', '3': '1000' };
+      var ha = Math.abs(altura(0.01)), hb = Math.abs(altura(3));
+      var lo = Math.floor(Math.log10(Math.min(ha, hb)));
+      /* o eixo vai sempre até a altura de uma sequoia, porque a distância
+         entre a curva e essa linha é o ponto da seção */
+      var hi = Math.max(Math.ceil(Math.log10(Math.max(ha, hb))),
+                        Math.ceil(Math.log10(50)));
+      var gr = G.eixos(cv2, {
+        altura: 320, xmin: Math.log10(0.01), xmax: Math.log10(3),
+        ymin: lo, ymax: hi, divY: Math.min(8, hi - lo),
+        margem: { e: 60, d: 14, c: 14, b: 44 },
+        rotX: 'raio do tubo (mm)', rotY: '|h| (m)',
+        marcasX: [0.01, 0.03, 0.1, 0.3, 1, 3].map(function (v) {
+          return { v: Math.log10(v), r: String(v).replace('.', ',') };
+        }),
+        formataY: function (v) {
+          var k = Math.round(v);
+          return SUP[String(k)] || F.fmt(Math.pow(10, v), 1);
+        }
+      });
+      G.curva(gr, function (lx) {
+        return Math.log10(Math.abs(altura(Math.pow(10, lx))) + 1e-12);
+      }, G.COR.mestra, 2.8);
+      G.vertical(gr, Math.log10(est.r), G.COR.vinho, 'r');
+      /* a altura de uma árvore alta, para comparação */
+      {
+        var gc = gr.ct;
+        gc.strokeStyle = G.COR.bronze; gc.lineWidth = 1.6;
+        gc.setLineDash([6, 4]);
+        gc.beginPath();
+        gc.moveTo(gr.x0, gr.Y(Math.log10(50))); gc.lineTo(gr.x1, gr.Y(Math.log10(50)));
+        gc.stroke(); gc.setLineDash([]);
+        rotulo(gc, 'copa de uma sequoia, 50 m', gr.x1 - 6, gr.Y(Math.log10(50)) - 6,
+          G.COR.bronze, 'right', 'bottom');
+      }
+
+      mostrar({
+        h: F.fmt(h * 1000, 2) + ' mm',
+        dp: F.fmt(dp, Math.abs(dp) > 100 ? 0 : 2) + ' Pa',
+        w: F.fmt(peso * 1e6, 2) + ' μN',
+        f: F.fmt(forca * 1e6, 2) + ' μN',
+        bo: F.fmt(bo, 4),
+        lc: F.fmt(Math.sqrt(est.gama / (est.rho * G0)) * 1000, 2) + ' mm'
+      });
+
+      nota.innerHTML =
+        '<p>Quando um líquido molha a parede de um tubo fino, a superfície dentro do tubo '
+        + 'deixa de ser plana e se curva. Pelo resultado da seção anterior, essa curvatura '
+        + 'exige um salto de pressão, e o líquido sobe até que o peso da coluna equilibre '
+        + 'esse salto. Com um menisco esférico de raio \\(R=r/\\cos\\theta\\), onde '
+        + '\\(\\theta\\) é o <strong>ângulo de contato</strong>,</p>'
+        + '\\[\\varrho gh=\\frac{2\\gamma\\cos\\theta}{r} '
+        + '\\quad\\Longrightarrow\\quad '
+        + 'h=\\frac{2\\gamma\\cos\\theta}{\\varrho gr}.\\]'
+        + '<p>O ângulo de contato decide o sinal. Com \\(\\theta<90^\\circ\\) o líquido é '
+        + '<strong>hidrofílico</strong> em relação àquela parede, a adesão com o vidro ganha '
+        + 'da coesão interna, e a coluna sobe. Com \\(\\theta>90^\\circ\\) acontece o '
+        + 'contrário: o mercúrio no vidro tem \\(\\theta\\approx140^\\circ\\), o cosseno é '
+        + 'negativo e o nível dentro do tubo fica <em>abaixo</em> do nível de fora. O botão '
+        + 'do mercúrio mostra essa depressão.</p>'
+        + '<p>Os dois cartões do meio conferem o balanço de outra maneira, comparando o peso '
+        + 'da coluna com a força que a tensão superficial exerce ao longo da linha de '
+        + 'contato, \\(2\\pi r\\gamma\\cos\\theta\\). Os dois números coincidem, como têm de '
+        + 'coincidir, e essa é a leitura mais direta do fenômeno: o líquido fica literalmente '
+        + 'pendurado pela borda do menisco.</p>'
+        + '<p>O <strong>número de Bond</strong>, \\(Bo=\\varrho gr^2/\\gamma\\), mede a razão '
+        + 'entre gravidade e tensão superficial. Para tubos muito mais finos que o '
+        + 'comprimento capilar ele é minúsculo e a capilaridade domina; para tubos largos ele '
+        + 'cresce e o efeito desaparece, o que se vê no gráfico pela queda de \\(h\\) com '
+        + '\\(1/r\\).</p>'
+        + '<p>É aqui que mora uma lição importante sobre o xilema. A seiva sobe por vasos de '
+        + 'uns \\(20\\) μm de diâmetro, e a conta acima dá pouco mais de um metro e meio de '
+        + 'coluna. Uma sequoia tem cem metros. A capilaridade sozinha, portanto, '
+        + '<strong>não</strong> explica a subida da água numa árvore alta, e a linha '
+        + 'tracejada no gráfico mostra o tamanho do buraco. O que explica é a transpiração '
+        + 'nas folhas, que põe a água do xilema sob tensão, com pressão absoluta '
+        + 'negativa, e a coesão entre as moléculas, que mantém a coluna inteira sem romper. '
+        + 'A capilaridade entra como a condição de contorno no alto, onde o menisco nos poros '
+        + 'da parede celular sustenta a tensão.</p>';
       tipografar(corpo);
     }
 
