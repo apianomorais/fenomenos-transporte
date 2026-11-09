@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 11: Convecção e semelhança | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090208">
+<script src="assets/js/comum.js?v=202611090208"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
+      <a href="aula06.html" class="num" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
+      <a href="aula07.html" class="num" title="Módulo 7: Tensão superficial e capilaridade">7</a>
+      <span class="grupo">Numérico</span>
+      <a href="aula08.html" class="num" title="Módulo 8: Campos no computador: relaxação e convergência">8</a>
+      <a href="aula09.html" class="num" title="Módulo 9: Advecção e difusão no computador">9</a>
+      <span class="grupo">Energia</span>
+      <a href="aula10.html" class="num" title="Módulo 10: Condução de calor">10</a>
+      <a href="aula11.html" class="num ativo" title="Módulo 11: Convecção e semelhança">11</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. O coeficiente que não é propriedade</a></li>
+    <li><a href="#s2">2. A camada-limite</a></li>
+    <li><a href="#s3">3. Blasius e o Prandtl</a></li>
+    <li><a href="#s4">4. Equações adimensionais e semelhança</a></li>
+    <li><a href="#s5">5. Convecção forçada: as correlações</a></li>
+    <li><a href="#s6">6. Convecção natural e o Rayleigh</a></li>
+    <li><a href="#s7">7. Rayleigh-Bénard</a></li>
+    <li><a href="#s8">8. A analogia de Reynolds</a></li>
+    <li><a href="#s9">9. Convecção no computador</a></li>
+    <li><a href="#s10">10. Exercícios resolvidos</a></li>
+    <li><a href="#s11">11. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 11 · Transporte de energia</p>
+  <h1>Convecção e semelhança</h1>
+  <p class="subtitulo">A condução do módulo anterior tinha uma lei limpa e um coeficiente que
+  se procura numa tabela. A convecção não tem nem uma coisa nem outra: o coeficiente depende do
+  escoamento, da geometria e da própria diferença de temperatura. Este módulo mostra como a
+  análise dimensional organiza essa bagunça em meia dúzia de números.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Entender por que o coeficiente \(h\) não é propriedade do fluido e do que ele
+      depende.</li>
+      <li>Obter a equação de Blasius por semelhança e as duas espessuras de camada-limite.</li>
+      <li>Adimensionalizar as equações do movimento e da energia e identificar Reynolds,
+      Prandtl, Nusselt, Grashof e Rayleigh.</li>
+      <li>Usar correlações de convecção forçada e natural com consciência da faixa de
+      validade.</li>
+      <li>Reconhecer a convecção natural como uma instabilidade, com limiar e comprimento de
+      onda próprios.</li>
+      <li>Relacionar transferência de calor e atrito pela analogia de Reynolds e
+      Colburn.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. O coeficiente que não é propriedade</h2>
+
+  <p>A lei de resfriamento de Newton, de 1701, afirma que o fluxo de calor entre uma superfície
+  e um fluido que a banha é proporcional à diferença de temperatura entre eles:</p>
+
+  <p>\[q=h\left(T_s-T_\infty\right).\]</p>
+
+  <p>Essa expressão apareceu no módulo 10 como uma resistência \(1/h\) em série com as camadas
+  da parede, e ali \(h\) foi tratado como dado. Agora ele é o problema. Convém dizer com todas
+  as letras o que a fórmula é: ela não é uma lei da natureza no sentido em que Fourier é, e sim
+  a <strong>definição</strong> de \(h\). Toda a física que ela esconde está em dizer quanto
+  vale esse coeficiente.</p>
+
+  <p>E ele varia por quatro ordens de grandeza. Em ar parado, \(h\) fica entre 2 e
+  \(10\) W/m²K; em ar soprado, entre 10 e 200; em água escoando, entre 100 e
+  \(15\,000\); e em ebulição ou condensação, entre \(2\,500\) e \(100\,000\). O mesmo corpo,
+  no mesmo fluido, muda de \(h\) ao mudar a velocidade, a orientação ou o tamanho. Um
+  coeficiente assim não cabe numa tabela de propriedades.</p>
+
+  <p>O que de fato acontece junto da parede é condução pura, porque ali o fluido está parado
+  pela condição de não deslizamento. Igualando a lei de Fourier no fluido, em \(y=0\), à
+  definição acima,</p>
+
+  <p>\[h=\frac{-k_f\left.\partial T/\partial y\right|_{y=0}}{T_s-T_\infty},\]</p>
+
+  <p>de modo que calcular \(h\) é calcular o gradiente de temperatura na parede, e isso exige
+  resolver o escoamento. A convecção não é um mecanismo novo: é condução na parede, com o
+  escoamento decidindo quão íngreme é o gradiente ali.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. A camada-limite</h2>
+
+  <p>A chave para resolver esse problema foi dada por Ludwig Prandtl num congresso em
+  Heidelberg, em 1904, num artigo de oito páginas que fundou a mecânica dos fluidos moderna. A
+  observação é a seguinte. Para fluidos pouco viscosos, o termo viscoso de Navier-Stokes é
+  desprezível em quase todo o domínio, e por isso o módulo 5 conseguiu tratar o escoamento como
+  irrotacional. Esse tratamento, porém, não pode valer junto da parede, porque lá o fluido
+  precisa parar, e um escoamento potencial não para.</p>
+
+  <p>A saída é reconhecer que existem duas regiões. Numa faixa fina junto da parede, a
+  <strong>camada-limite</strong>, o gradiente de velocidade é enorme e a viscosidade domina,
+  por menor que seja \(\mu\). Fora dela, o escoamento ignora a viscosidade. A espessura dessa
+  faixa sai de um argumento de escalas: o tempo que uma partícula leva para percorrer uma
+  distância \(x\) é \(x/U\), e nesse tempo a quantidade de movimento difunde lateralmente uma
+  distância \(\sqrt{\nu t}\), de modo que</p>
+
+  <p>\[\delta\sim\sqrt{\frac{\nu x}{U}}
+  =\frac{x}{\sqrt{\mathrm{Re}_x}},\qquad
+  \mathrm{Re}_x=\frac{Ux}{\nu}.\]</p>
+
+  <p>A camada cresce com a raiz da distância e encolhe com a raiz do Reynolds. Para ar a
+  \(3\) m/s, a um metro do bordo de ataque, isso dá cerca de \(12\) mm: a faixa onde mora toda
+  a resistência térmica da superfície é mais fina que um dedo.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. Blasius e o Prandtl</h2>
+
+  <p>O argumento de escalas pode ser transformado em solução exata. Dentro da camada, as
+  equações de Navier-Stokes se simplificam porque as derivadas em \(y\) são muito maiores que
+  as em \(x\), e a pressão deixa de variar transversalmente. Procurando uma solução que dependa
+  apenas da variável de semelhança \(\eta=y\sqrt{U/\nu x}\), com a função corrente escrita como
+  \(\psi=\sqrt{\nu Ux}\,f(\eta)\), tudo se reduz a uma equação ordinária, obtida por Heinrich
+  Blasius em 1908:</p>
+
+  <p>\[f'''+\tfrac12\,f\,f''=0,\qquad
+  f(0)=f'(0)=0,\qquad f'(\infty)=1,\]</p>
+
+  <p>onde \(f'(\eta)=u/U\). Ela não tem solução em funções elementares e se resolve
+  numericamente por tiro, procurando o valor de \(f''(0)\) que leva \(f'\) a 1 no infinito. O
+  resultado é \(f''(0)=0{,}332057\), e \(u\) chega a 99% da corrente livre em
+  \(\eta=4{,}91\), de onde vem a definição usual</p>
+
+  <p>\[\delta=\frac{5x}{\sqrt{\mathrm{Re}_x}},
+  \qquad
+  C_{f,x}=\frac{0{,}664}{\sqrt{\mathrm{Re}_x}}.\]</p>
+
+  <p>A temperatura segue o mesmo caminho. Com \(\theta=(T-T_s)/(T_\infty-T_s)\) e a mesma
+  variável de semelhança, a equação da energia vira</p>
+
+  <p>\[\theta''+\frac{\mathrm{Pr}}{2}\,f\,\theta'=0,\]</p>
+
+  <p>que depende do perfil de velocidade através de \(f\) e tem o número de Prandtl como único
+  parâmetro. Esse número, \(\mathrm{Pr}=\nu/\alpha\), compara a difusão de quantidade de
+  movimento com a de calor, e é ele que decide qual das duas camadas é mais grossa:</p>
+
+  <p>\[\frac{\delta}{\delta_T}\approx\mathrm{Pr}^{1/3}.\]</p>
+
+  <p>Do gradiente de temperatura na parede sai finalmente o coeficiente procurado, na forma
+  adimensional do <strong>número de Nusselt</strong>:</p>
+
+  <p>\[\mathrm{Nu}_x=\frac{h_xx}{k_f}
+  =0{,}332\,\mathrm{Re}_x^{1/2}\,\mathrm{Pr}^{1/3},
+  \qquad
+  \overline{\mathrm{Nu}}_L=0{,}664\,\mathrm{Re}_L^{1/2}\,\mathrm{Pr}^{1/3}.\]</p>
+
+  <p>O widget resolve as duas equações no navegador, de modo que os números acima são
+  calculados e não copiados.</p>
+
+  <div data-widget="camadalimite"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. Equações adimensionais e semelhança</h2>
+
+  <p>O caso da placa plana saiu por cálculo direto. A maioria dos casos não sai, e é aí que a
+  análise dimensional se torna a ferramenta principal. Escrevendo as equações do movimento e da
+  energia com variáveis adimensionais, \(\vet{u}^*=\vet{u}/U\), \(\vet{r}^*=\vet{r}/L\),
+  \(\theta=(T-T_s)/(T_\infty-T_s)\), elas ficam</p>
+
+  <p>\[\vet{u}^*\cdot\nabla^*\vet{u}^*
+  =-\nabla^*p^*+\frac{1}{\mathrm{Re}}\nabla^{*2}\vet{u}^*,
+  \qquad
+  \vet{u}^*\cdot\nabla^*\theta
+  =\frac{1}{\mathrm{Re}\,\mathrm{Pr}}\nabla^{*2}\theta.\]</p>
+
+  <p>Toda a física do problema está em dois números. A consequência é a
+  <strong>semelhança</strong>: dois escoamentos geometricamente semelhantes, com os mesmos
+  \(\mathrm{Re}\) e \(\mathrm{Pr}\), têm os mesmos campos adimensionais e, portanto, o mesmo
+  Nusselt. É por isso que faz sentido medir num modelo de laboratório e aplicar o resultado a
+  um equipamento de tamanho diferente, e é por isso que o resultado de qualquer experimento de
+  convecção se publica na forma</p>
+
+  <p>\[\mathrm{Nu}=f\left(\mathrm{Re},\mathrm{Pr}\right)
+  \quad\text{ou}\quad
+  \mathrm{Nu}=f\left(\mathrm{Ra},\mathrm{Pr}\right),\]</p>
+
+  <p>e não como uma tabela de \(h\). Uma <strong>correlação</strong> é exatamente isso: um
+  ajuste empírico dessa função, para uma geometria, numa faixa de parâmetros.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Os números deste módulo</span>
+    <p>\(\mathrm{Re}=UL/\nu\): inércia contra viscosidade. Decide se o escoamento é laminar ou
+    turbulento.</p>
+    <p>\(\mathrm{Pr}=\nu/\alpha\): difusão de quantidade de movimento contra difusão de calor.
+    É propriedade do fluido apenas, e vale \(0{,}7\) nos gases, de 2 a 10 na água e milhares
+    nos óleos.</p>
+    <p>\(\mathrm{Nu}=hL/k_f\): convecção contra condução no fluido. É a resposta do problema,
+    e não um dado dele.</p>
+    <p>\(\mathrm{Gr}=g\beta\Delta T L^3/\nu^2\): empuxo contra viscosidade, para convecção
+    natural, onde não há \(U\) imposto.</p>
+    <p>\(\mathrm{Ra}=\mathrm{Gr}\cdot\mathrm{Pr}\): empuxo contra os dois processos que o
+    combatem. É o parâmetro de controle da convecção natural.</p>
+    <p>\(\mathrm{St}=\mathrm{Nu}/(\mathrm{Re}\,\mathrm{Pr})\): o Stanton, que é o Nusselt
+    normalizado pelo calor que o escoamento é capaz de carregar.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. Convecção forçada: as correlações</h2>
+
+  <p>Com a estrutura \(\mathrm{Nu}=f(\mathrm{Re},\mathrm{Pr})\) estabelecida, o uso prático se
+  resume a escolher a correlação da geometria certa, calcular os números com as propriedades na
+  temperatura certa e verificar a faixa de validade. As mais usadas são estas.</p>
+
+  <p><strong>Placa plana, laminar</strong>, para \(\mathrm{Re}_L&lt;5\times10^5\) e
+  \(\mathrm{Pr}\gtrsim0{,}6\):</p>
+
+  <p>\[\overline{\mathrm{Nu}}_L=0{,}664\,\mathrm{Re}_L^{1/2}\mathrm{Pr}^{1/3}.\]</p>
+
+  <p><strong>Tubo, turbulento e plenamente desenvolvido</strong>, para
+  \(\mathrm{Re}_D>10^4\), correlação de Dittus-Boelter:</p>
+
+  <p>\[\mathrm{Nu}_D=0{,}023\,\mathrm{Re}_D^{4/5}\mathrm{Pr}^{n},
+  \qquad n=0{,}4\ \text{aquecendo},\quad n=0{,}3\ \text{resfriando}.\]</p>
+
+  <p><strong>Tubo, laminar e desenvolvido</strong>, com temperatura de parede constante, dá um
+  resultado que surpreende quem espera uma dependência com a velocidade:</p>
+
+  <p>\[\mathrm{Nu}_D=3{,}66.\]</p>
+
+  <p>Um número puro, sem Reynolds nenhum. A razão é que, no escoamento desenvolvido, o perfil
+  já não muda ao longo do tubo, e a forma do perfil de temperatura também não; soprar mais
+  forte aumenta a vazão, não o Nusselt. O que aumenta é a taxa total de calor, porque o fluido
+  sai menos aquecido e a diferença média de temperatura é maior.</p>
+
+  <p><strong>Cilindro em escoamento cruzado</strong>, correlação de Churchill e Bernstein, que
+  cobre praticamente toda a faixa útil e é o exemplo típico de correlação feia e confiável:</p>
+
+  <p>\[\mathrm{Nu}_D=0{,}3+\frac{0{,}62\,\mathrm{Re}_D^{1/2}\mathrm{Pr}^{1/3}}
+  {\left[1+\left(0{,}4/\mathrm{Pr}\right)^{2/3}\right]^{1/4}}
+  \left[1+\left(\frac{\mathrm{Re}_D}{282\,000}\right)^{5/8}\right]^{4/5}.\]</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Como não errar ao usar uma correlação</span>
+    <p>Verifique a faixa de \(\mathrm{Re}\) e de \(\mathrm{Pr}\) antes de aplicar. Fora dela, a
+    fórmula não avisa que está errada: ela devolve um número plausível.</p>
+    <p>Avalie as propriedades na temperatura indicada pela correlação, que costuma ser a
+    temperatura de filme \(T_f=(T_s+T_\infty)/2\) para escoamento externo e a temperatura média
+    do fluido para escoamento interno. Usar a temperatura errada em um óleo pode mudar
+    \(\mu\) por um fator dois.</p>
+    <p>Use o comprimento característico que a correlação define, e não o que parecer natural.
+    Para o cilindro é o diâmetro, para a placa é o comprimento na direção do escoamento, para
+    uma superfície horizontal é a área dividida pelo perímetro.</p>
+    <p>Lembre que uma correlação típica tem incerteza de 10% a 25%. Carregar quatro algarismos
+    significativos adiante de um número desses é teatro.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. Convecção natural e o Rayleigh</h2>
+
+  <p>Quando não há ventilador nem bomba, o próprio aquecimento põe o fluido em movimento, porque
+  o fluido quente é menos denso e sobe. Para tratar isso sem resolver um problema compressível,
+  usa-se a <strong>aproximação de Boussinesq</strong>: a densidade é tomada como constante em
+  toda parte, exceto no termo de empuxo, onde se escreve</p>
+
+  <p>\[\rho\approx\rho_0\left[1-\beta\left(T-T_0\right)\right],
+  \qquad
+  \beta=-\frac{1}{\rho}\left(\pder{\rho}{T}\right)_p,\]</p>
+
+  <p>com \(\beta=1/T\) para um gás ideal. O termo de empuxo que sobra na equação do movimento é
+  \(g\beta(T-T_0)\), e ele acopla o campo de temperatura ao de velocidade: agora as duas
+  equações têm de ser resolvidas juntas, o que não acontecia na convecção forçada.</p>
+
+  <p>Adimensionalizando, aparece o grupo que mede a intensidade do fenômeno, o número de
+  <strong>Grashof</strong>, e, multiplicado pelo Prandtl, o de <strong>Rayleigh</strong>:</p>
+
+  <p>\[\mathrm{Gr}=\frac{g\beta\Delta T\,L^3}{\nu^2},
+  \qquad
+  \mathrm{Ra}=\mathrm{Gr}\,\mathrm{Pr}=\frac{g\beta\Delta T\,L^3}{\nu\alpha}.\]</p>
+
+  <p>Para uma parede vertical, a correlação de Churchill e Chu cobre toda a faixa:</p>
+
+  <p>\[\overline{\mathrm{Nu}}_L=\left\{0{,}825+
+  \frac{0{,}387\,\mathrm{Ra}_L^{1/6}}
+  {\left[1+\left(0{,}492/\mathrm{Pr}\right)^{9/16}\right]^{8/27}}\right\}^2.\]</p>
+
+  <p>Vale fazer um número concreto, porque ele justifica o \(h_i=8\) W/m²K usado no módulo 10.
+  Para uma parede de \(2{,}5\) m com \(\Delta T=10\) K em ar, \(\mathrm{Ra}=1{,}5\times10^{10}\),
+  a fórmula dá \(\overline{\mathrm{Nu}}=287\) e portanto \(h=3{,}0\) W/m²K. O valor de norma é
+  maior porque inclui a troca por radiação, que numa parede a temperatura ambiente contribui
+  com outros \(5\) W/m²K, assunto do módulo 12.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. Rayleigh-Bénard</h2>
+
+  <p>Há um caso de convecção natural que é diferente de todos os outros e merece seção própria.
+  Na parede vertical, qualquer \(\Delta T\) produz movimento, porque o empuxo tem componente ao
+  longo da parede desde o primeiro instante. Numa camada horizontal aquecida por baixo, não: o
+  fluido quente está embaixo, o frio em cima, e essa configuração, embora instável, pode
+  persistir indefinidamente se as perturbações forem amortecidas antes de crescer.</p>
+
+  <p>Henri Bénard observou o fenômeno em 1900, e Lord Rayleigh fez a análise de estabilidade
+  linear em 1916. O resultado é que existe um <strong>limiar</strong>: abaixo de
+  \(\mathrm{Ra}_c\) toda perturbação decai e o calor atravessa só por condução; acima dele uma
+  faixa de comprimentos de onda cresce e o fluido se organiza em rolos. Para duas placas
+  rígidas,</p>
+
+  <p>\[\mathrm{Ra}_c=1707{,}76,\qquad k_c=\frac{3{,}117}{d},\]</p>
+
+  <p>de onde o comprimento de onda crítico \(\lambda=2\pi/k_c\approx2{,}02\,d\), isto é, cada
+  rolo tem aproximadamente a largura da espessura da camada. Essa previsão é geométrica e pode
+  ser verificada com uma régua.</p>
+
+  <p>Ironicamente, o experimento de Bénard não era deste fenômeno. As células hexagonais que
+  ele viu numa camada fina de esperma de baleia tinham superfície livre, e foram depois
+  explicadas por Pearson em 1958 como instabilidade de <strong>tensão superficial</strong>, o
+  efeito Marangoni do módulo 7. Os dois mecanismos competem em qualquer camada rasa com
+  superfície livre, e a distinção entre eles é o que o número de Marangoni mede.</p>
+
+  <div data-widget="rayleigh"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. A analogia de Reynolds</h2>
+
+  <p>Resta um resultado que vale por toda uma teoria e que será a base do módulo 14. Olhando as
+  duas equações adimensionais da seção 4, para \(\mathrm{Pr}=1\) elas se tornam
+  <strong>idênticas</strong>, e também as condições de contorno coincidem se as variáveis forem
+  normalizadas do mesmo modo. Logo, para \(\mathrm{Pr}=1\), os campos de velocidade e de
+  temperatura são o mesmo campo, e o que transporta quantidade de movimento transporta calor na
+  mesma proporção. Em números,</p>
+
+  <p>\[\mathrm{St}=\frac{\mathrm{Nu}}{\mathrm{Re}\,\mathrm{Pr}}=\frac{C_f}{2}.\]</p>
+
+  <p>Essa é a <strong>analogia de Reynolds</strong>, de 1874, e ela diz algo que à primeira
+  vista parece bom demais: pode-se prever a troca de calor medindo apenas a queda de pressão.
+  Como quase nenhum fluido tem \(\mathrm{Pr}=1\) exatamente, Colburn propôs a correção que a
+  torna utilizável na prática:</p>
+
+  <p>\[j_H=\mathrm{St}\,\mathrm{Pr}^{2/3}=\frac{C_f}{2},\]</p>
+
+  <p>válida para \(0{,}6&lt;\mathrm{Pr}&lt;60\). Vale conferir que ela é consistente com o que
+  já temos: pondo \(C_{f,x}=0{,}664\,\mathrm{Re}_x^{-1/2}\) da solução de Blasius,</p>
+
+  <p>\[\mathrm{Nu}_x=\frac{C_{f,x}}{2}\mathrm{Re}_x\mathrm{Pr}^{1/3}
+  =0{,}332\,\mathrm{Re}_x^{1/2}\mathrm{Pr}^{1/3},\]</p>
+
+  <p>que é exatamente a correlação da seção 3. A analogia não foi inventada para reproduzir
+  esse caso: ela o reproduz porque é verdadeira.</p>
+
+  <p>A consequência de engenharia é desanimadora e importante. Aumentar a troca de calor numa
+  superfície, por rugosidade, aletas ou turbuladores, aumenta o atrito na mesma medida. Não há
+  almoço grátis em trocador de calor, e o projeto é sempre um compromisso entre o calor
+  trocado e a potência de bombeamento.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Convecção no computador</h2>
+
+  <p>Simular convecção é resolver, juntas, a continuidade, Navier-Stokes com o termo de empuxo
+  de Boussinesq e a equação da energia. Em duas dimensões, usando a formulação de função
+  corrente e vorticidade, o sistema fica com três equações que usam tudo o que os módulos 8 e 9
+  construíram:</p>
+
+  <p>\[\nabla^2\psi=-\omega,\qquad
+  \pder{\omega}{t}+\vet{u}\cdot\nabla\omega=\nu\nabla^2\omega
+  +g\beta\pder{T}{x},\qquad
+  \pder{T}{t}+\vet{u}\cdot\nabla T=\alpha\nabla^2T.\]</p>
+
+  <p>A primeira é a equação de Laplace com fonte, resolvida por relaxação a cada passo de
+  tempo, exatamente como no módulo 8. As outras duas são equações de advecção-difusão, tratadas
+  com os esquemas do módulo 9, com a condição CFL e o cuidado com a difusão numérica. O termo
+  de empuxo acopla as duas, e é só nele que a física nova entra.</p>
+
+  <p>Um aviso vale ouro aqui. Em convecção, a difusão numérica do esquema de advecção se soma à
+  difusividade física, de modo que a simulação se comporta como se tivesse
+  \(\alpha_{\text{efetivo}}=\alpha+D_{\text{num}}\) e, portanto, um Rayleigh
+  <strong>menor</strong> que o pretendido. É perfeitamente possível rodar um caso com
+  \(\mathrm{Ra}=5000\) e não ver convecção nenhuma, simplesmente porque a malha grossa levou o
+  Rayleigh efetivo para baixo de 1708. O exercício 11.7 pede para medir esse efeito.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">11.1 Uma placa aquecida ao vento</span>
+    <p>Ar a \(20\) °C escoa a \(3\) m/s sobre uma placa plana de \(1\) m de comprimento mantida
+    a \(60\) °C. Determine o regime, a espessura das duas camadas no fim da placa, o
+    coeficiente médio e a potência trocada por metro de largura.</p>
+    <p>As propriedades se avaliam na temperatura de filme,
+    \(T_f=(60+20)/2=40\) °C, onde o ar tem \(\nu=1{,}70\times10^{-5}\) m²/s,
+    \(k=0{,}0271\) W/mK e \(\mathrm{Pr}=0{,}705\). Então</p>
+    <p>\[\mathrm{Re}_L=\frac{3\times1}{1{,}70\times10^{-5}}=1{,}76\times10^{5},\]</p>
+    <p>abaixo de \(5\times10^5\), de modo que a camada é laminar em toda a placa. A transição
+    ocorreria em \(x_t=5\times10^5\nu/U=2{,}83\) m, isto é, fora dela.</p>
+    <p>As espessuras no fim da placa:</p>
+    <p>\[\delta=\frac{5L}{\sqrt{\mathrm{Re}_L}}=\frac{5}{420}=11{,}9\ \text{mm},
+    \qquad
+    \delta_T=\frac{\delta}{\mathrm{Pr}^{1/3}}=13{,}4\ \text{mm},\]</p>
+    <p>e repare que a térmica é a mais grossa, porque \(\mathrm{Pr}&lt;1\) e no ar o calor se
+    espalha mais depressa que a quantidade de movimento.</p>
+    <p>O Nusselt médio e o coeficiente:</p>
+    <p>\[\overline{\mathrm{Nu}}_L=0{,}664\sqrt{1{,}76\times10^5}\times0{,}705^{1/3}=248,
+    \qquad
+    \overline{h}=\frac{248\times0{,}0271}{1}=6{,}7\ \text{W/m²K},\]</p>
+    <p>e a potência, por metro de largura,</p>
+    <p>\[\dot{Q}=\overline{h}\,A\left(T_s-T_\infty\right)
+    =6{,}7\times1\times40=269\ \text{W}.\]</p>
+    <p>Dois comentários fecham o exercício. O primeiro é que \(\overline{h}\) é exatamente o
+    dobro de \(h_x\) no fim da placa, o que se vê comparando os coeficientes \(0{,}664\) e
+    \(0{,}332\); isso vale sempre no caso laminar, porque a média de \(x^{-1/2}\) é o dobro do
+    valor final. O segundo é que \(6{,}7\) W/m²K, com ar a \(3\) m/s, é da mesma ordem do
+    \(h_i=8\) usado para ar interno no módulo 10, o que mostra que aquele número de norma não
+    foi tirado do nada.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">11.2 Por que a câmara de um vidro duplo tem 12 mm</span>
+    <p>Uma janela de vidro duplo tem uma câmara de ar entre as duas lâminas, com \(15\) K de
+    diferença entre elas. Determine a espessura a partir da qual o ar da câmara começa a
+    convectar, e discuta o efeito disso no isolamento.</p>
+    <p>Com ar a \(15\) °C, \(\nu=1{,}47\times10^{-5}\) m²/s,
+    \(\alpha=2{,}08\times10^{-5}\) m²/s e \(\beta=1/288\) K⁻¹. O Rayleigh da camada é</p>
+    <p>\[\mathrm{Ra}=\frac{g\beta\Delta T\,d^3}{\nu\alpha}
+    =\frac{9{,}81\times(1/288)\times15}{1{,}47\times10^{-5}\times2{,}08\times10^{-5}}\,d^3
+    =1{,}67\times10^{9}\,d^3,\]</p>
+    <p>com \(d\) em metros. Igualando a \(1708\),</p>
+    <p>\[d_c=\left(\frac{1708}{1{,}67\times10^{9}}\right)^{1/3}=10{,}1\ \text{mm}.\]</p>
+    <p>Abaixo de dez milímetros o ar fica parado e a câmara é um isolante puro, de resistência
+    \(d/k\), que cresce com a espessura. Acima disso, começa a convectar, e a partir daí
+    aumentar \(d\) deixa de ajudar: a convecção carrega o calor através da câmara e a
+    resistência satura, ou até piora. Com \(d=12\) mm, \(\mathrm{Ra}=2888\), já
+    \(1{,}7\) vezes o crítico; com \(d=20\) mm, \(\mathrm{Ra}=13\,400\), bem dentro do regime
+    convectivo.</p>
+    <p>É exatamente por isso que as esquadrias de vidro duplo usam câmaras de 12 a 16 mm e não
+    de cinco centímetros, que seriam mais caras, mais pesadas e piores. Preencher a câmara com
+    argônio, que tem \(\nu\alpha\) maior e \(k\) menor que o ar, empurra o limiar para cima e
+    permite câmaras um pouco mais largas, e é por isso que o argônio é usado.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>11.3</b> Resolva a equação de Blasius por tiro, em Python, e reproduza
+      \(f''(0)=0{,}332057\) e \(\eta_{99}=4{,}91\). Em seguida integre a equação da energia
+      para \(\mathrm{Pr}=0{,}7\), \(7\) e \(100\), obtenha \(-\theta'(0)\) em cada caso e
+      compare com \(0{,}332\,\mathrm{Pr}^{1/3}\). Explique o que acontece com a aproximação
+      para \(\mathrm{Pr}=0{,}025\), que é o do mercúrio.</li>
+
+      <li><b>11.4</b> Mostre, pela integral do coeficiente local, que
+      \(\overline{h}=2h_L\) para a placa laminar, e determine qual seria a razão se o
+      coeficiente local fosse proporcional a \(x^{-1/5}\), como no caso turbulento.</li>
+
+      <li><b>11.5</b> Uma xícara de café a \(80\) °C numa sala a \(25\) °C perde calor pela
+      superfície livre e pelas paredes. Estime o coeficiente de convecção natural de cada uma,
+      calcule a potência total e determine a constante de tempo do resfriamento. Compare com o
+      que você mede com um termômetro de cozinha e discuta as diferenças.</li>
+
+      <li><b>11.6</b> Para o escoamento de água num tubo de \(2\) cm de diâmetro, faça o
+      gráfico de \(h\) contra a velocidade, de \(0{,}01\) a \(5\) m/s, usando
+      \(\mathrm{Nu}=3{,}66\) na faixa laminar e Dittus-Boelter na turbulenta. Comente o salto
+      na transição e por que ele não é físico.</li>
+
+      <li><b>11.7</b> Implemente a convecção de Rayleigh-Bénard em duas dimensões, na
+      formulação função corrente e vorticidade. Determine numericamente o Rayleigh crítico e
+      compare com \(1708\). Em seguida refine a malha e mostre que o valor medido se aproxima
+      do teórico por cima, explicando o papel da difusão numérica.</li>
+
+      <li><b>11.8</b> Com o programa do exercício anterior, meça o comprimento de onda dos
+      rolos logo acima do limiar e compare com \(2{,}02\,d\). Suba então o Rayleigh por duas
+      ordens de grandeza e descreva o que acontece com o padrão.</li>
+
+      <li><b>11.9</b> Verifique a analogia de Colburn com dados de um tubo turbulento: tome
+      \(C_f=0{,}079\,\mathrm{Re}^{-1/4}\) de Blasius e mostre que ela reproduz a correlação de
+      Dittus-Boelter a menos de uns 15%. Discuta a origem da diferença.</li>
+
+      <li><b>11.10</b> Em meia página: a seção 5 afirma que o Nusselt de um tubo laminar
+      desenvolvido não depende do Reynolds. Explique por que isso não contradiz o fato de que
+      soprar mais forte esfria mais rápido, deixando claro qual grandeza aumenta e qual
+      não.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula10.html"><small>Módulo anterior</small>← 10. Condução</a>
+    <span class="em-breve"><small>Em preparação</small>12. Radiação</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611090208"></script>
+</body>
+</html>

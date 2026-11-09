@@ -4322,6 +4322,394 @@
     registrarRedesenho(desenhar);
   };
 
+  /* =================================================================
+     23. Camada-limite sobre a placa plana
+     Resolve Blasius por tiro e integra o perfil térmico para o Prandtl
+     escolhido, de modo que as duas espessuras e o coeficiente da
+     correlação saem do cálculo, e não de uma tabela copiada.
+     ================================================================= */
+  REGISTRO.camadalimite = function (raiz) {
+    var FLU = {
+      ar: { rot: 'ar', nu: 1.70e-5, k: 0.0271, Pr: 0.705 },
+      agua: { rot: 'água', nu: 6.58e-7, k: 0.631, Pr: 4.34 },
+      oleo: { rot: 'óleo de motor', nu: 5.5e-4, k: 0.145, Pr: 6400 },
+      mercurio: { rot: 'mercúrio', nu: 1.13e-7, k: 8.54, Pr: 0.025 }
+    };
+    var est = { f: 'ar', U: 3, L: 1 };
+
+    /* --- Blasius: f''' + f f''/2 = 0, por tiro em f''(0) --- */
+    var PASSO = 0.01, ETAMAX = 20;   /* 20 para caber a camada térmica do mercúrio */
+    var SOL = (function () {
+      function corre(fpp0) {
+        var y = [0, 0, fpp0], out = [y.slice()], i, n = Math.round(ETAMAX / PASSO);
+        function d(v) { return [v[1], v[2], -0.5 * v[0] * v[2]]; }
+        for (i = 0; i < n; i++) {
+          var k1 = d(y), k2 = d(y.map(function (v, j) { return v + PASSO / 2 * k1[j]; }));
+          var k3 = d(y.map(function (v, j) { return v + PASSO / 2 * k2[j]; }));
+          var k4 = d(y.map(function (v, j) { return v + PASSO * k3[j]; }));
+          y = y.map(function (v, j) {
+            return v + PASSO / 6 * (k1[j] + 2 * k2[j] + 2 * k3[j] + k4[j]);
+          });
+          out.push(y.slice());
+        }
+        return out;
+      }
+      var a = 0.3, b = 0.4, m, r;
+      for (var it = 0; it < 60; it++) {
+        m = (a + b) / 2; r = corre(m);
+        if (r[r.length - 1][1] > 1) b = m; else a = m;
+      }
+      return { fpp0: (a + b) / 2, y: corre((a + b) / 2) };
+    })();
+
+    /* --- perfil térmico: θ'' + (Pr/2) f θ' = 0 --- */
+    function termico(Pr) {
+      var n = SOL.y.length, F = 0, g = new Array(n), I = 0, i;
+      for (i = 0; i < n; i++) {
+        if (i > 0) F += PASSO * (SOL.y[i][0] + SOL.y[i - 1][0]) / 2;
+        g[i] = Math.exp(-Pr / 2 * F);
+      }
+      for (i = 1; i < n; i++) I += PASSO * (g[i] + g[i - 1]) / 2;
+      var acc = 0, etaT = ETAMAX, th = new Array(n);
+      th[0] = 0;
+      for (i = 1; i < n; i++) {
+        acc += PASSO * (g[i] + g[i - 1]) / 2;
+        th[i] = acc / I;
+        if (etaT === ETAMAX && th[i] >= 0.99) etaT = i * PASSO;
+      }
+      return { mth0: 1 / I, etaT: etaT, th: th };
+    }
+    var TER = {};
+    function ter(Pr) {
+      var ch = String(Pr);
+      if (!TER[ch]) TER[ch] = termico(Pr);
+      return TER[ch];
+    }
+
+    var corpo = moldura(raiz, 'A camada-limite sobre uma placa plana');
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas'), cv2 = el('canvas');
+    par.appendChild(cv1); par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    opcoes(ctr, Object.keys(FLU).map(function (k) {
+      return { rot: FLU[k].rot, v: k };
+    }), 0, function (v) { est.f = v; desenhar(); });
+    deslizante(ctr, 'velocidade da corrente', 0.2, 12, 0.1, 3,
+      function (v) { est.U = v; desenhar(); },
+      function (v) { return F.fmt(v, 1) + ' m/s'; });
+    deslizante(ctr, 'comprimento da placa', 0.1, 3, 0.05, 1,
+      function (v) { est.L = v; desenhar(); },
+      function (v) { return F.fmt(v, 2) + ' m'; });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'Reynolds no fim da placa', k: 'Re' },
+      { rot: 'onde a camada transiciona', k: 'xt' },
+      { rot: 'espessura δ no fim', k: 'd' },
+      { rot: 'espessura térmica δT', k: 'dt' },
+      { rot: 'coeficiente h médio', k: 'h' },
+      { rot: '−θ′(0) exato e 0,332 Pr^(1/3)', k: 'co' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var fl = FLU[est.f], Pr = fl.Pr, T = ter(Pr);
+      var ReL = est.U * est.L / fl.nu;
+      var xt = 5e5 * fl.nu / est.U;
+      function delta(x) { return x > 0 ? 4.91 * x / Math.sqrt(est.U * x / fl.nu) : 0; }
+      /* a espessura térmica é a altura física onde θ chega a 99%, de modo
+         que ela cresce com η_T e não com o seu inverso */
+      function deltaT(x) { return delta(x) * T.etaT / 4.91; }
+
+      /* ---- painel 1: as duas camadas crescendo ---- */
+      var ymax = Math.max(delta(est.L), deltaT(est.L)) * 1.35 * 1000;
+      var g1 = G.eixos(cv1, {
+        altura: 300, xmin: 0, xmax: est.L, ymin: 0, ymax: ymax, divY: 5,
+        margem: { e: 60, d: 14, c: 16, b: 44 },
+        rotX: 'x (m)', rotY: 'distância da placa (mm)',
+        marcasX: G.marcasLineares(0, est.L, 5, 2),
+        formataY: function (v) { return F.fmt(v, ymax > 20 ? 0 : 1); }
+      });
+      G.area(g1, function (x) { return deltaT(x) * 1000; }, 0, est.L,
+        'rgba(140,47,57,.12)');
+      G.area(g1, function (x) { return delta(x) * 1000; }, 0, est.L,
+        'rgba(63,67,145,.16)');
+      G.curva(g1, function (x) { return deltaT(x) * 1000; }, G.COR.vinho, 2.2);
+      G.curva(g1, function (x) { return delta(x) * 1000; }, G.COR.mestra, 2.2);
+      if (xt < est.L) G.vertical(g1, xt, G.COR.bronze, 'transição');
+      G.legenda(g1, [{ cor: G.COR.mestra, texto: 'δ, de velocidade' },
+                     { cor: G.COR.vinho, texto: 'δT, térmica' }]);
+      /* a corrente livre, com setas de comprimento igual */
+      var gc = g1.ct, i;
+      for (i = 1; i <= 4; i++) {
+        var yy = g1.y0 + (g1.y1 - g1.y0) * i / 5.5;
+        seta(gc, g1.x0 + 12, yy, g1.x0 + 52, yy, 'rgba(91,103,115,.55)', 1.6);
+      }
+      rotulo(gc, 'U = ' + F.fmt(est.U, 1) + ' m/s', g1.x0 + 62,
+        g1.y0 + (g1.y1 - g1.y0) * 0.09, G.COR.suave, 'left');
+
+      /* ---- painel 2: os perfis contra a variável de semelhança ---- */
+      var g2 = G.eixos(cv2, {
+        altura: 300, xmin: 0, xmax: 1.05, ymin: 0, ymax: 6, divY: 6,
+        margem: { e: 60, d: 14, c: 16, b: 44 },
+        rotX: 'perfil normalizado', rotY: 'η = y√(U/νx)',
+        marcasX: G.marcasLineares(0, 1, 5, 1),
+        formataY: function (v) { return F.fmt(v, 0); }
+      });
+      var c2 = g2.ct;
+      function tracar(vals, cor) {
+        c2.strokeStyle = cor; c2.lineWidth = 2.4; c2.beginPath();
+        for (i = 0; i < vals.length; i++) {
+          var eta = i * PASSO;
+          if (eta > 6) break;
+          var X = g2.X(Math.min(1.05, vals[i])), Y = g2.Y(eta);
+          if (i === 0) c2.moveTo(X, Y); else c2.lineTo(X, Y);
+        }
+        c2.stroke();
+      }
+      tracar(SOL.y.map(function (v) { return v[1]; }), G.COR.mestra);
+      tracar(T.th, G.COR.vinho);
+      G.legenda(g2, [{ cor: G.COR.mestra, texto: 'u/U = f′(η)' },
+                     { cor: G.COR.vinho, texto: '(T−Ts)/(T∞−Ts)' }]);
+      rotulo(c2, 'η₉₉ = 4,91', g2.X(0.99) - 6, g2.Y(4.91) - 10, G.COR.mestra, 'right');
+      rotulo(c2, 'ηT = ' + F.fmt(T.etaT, 2), g2.X(0.99) - 6, g2.Y(T.etaT) + 12,
+        G.COR.vinho, 'right');
+
+      var NuL = 2 * T.mth0 * Math.sqrt(ReL);
+      var h = NuL * fl.k / est.L;
+      mostrar({
+        Re: F.fmt(ReL, 0),
+        xt: xt < est.L ? F.fmt(xt, 3) + ' m' : 'depois de ' + F.fmt(est.L, 2) + ' m',
+        d: F.fmt(delta(est.L) * 1000, 2) + ' mm',
+        dt: F.fmt(deltaT(est.L) * 1000, 2) + ' mm',
+        h: F.fmt(h, 2) + ' W/m²K',
+        co: F.fmt(T.mth0, 4) + ' e ' + F.fmt(0.332 * Math.pow(Pr, 1 / 3), 4)
+      });
+
+      nota.innerHTML =
+        '<p>Ludwig Prandtl observou em 1904 que, por menor que seja a viscosidade, o fluido '
+        + 'tem de parar junto da parede, de modo que existe sempre uma faixa fina onde a '
+        + 'velocidade sobe de zero até o valor da corrente livre. Dentro dessa faixa, a '
+        + '<strong>camada-limite</strong>, a viscosidade manda; fora dela o escoamento é '
+        + 'praticamente o do módulo 5.</p>'
+        + '<p>Procurando uma solução que dependa apenas da combinação '
+        + '\\(\\eta=y\\sqrt{U/\\nu x}\\), as equações de Navier-Stokes se reduzem a uma '
+        + 'equação ordinária, a de Blasius,</p>'
+        + '\\[f\'\'\'+\\tfrac12 f f\'\'=0,\\qquad f(0)=f\'(0)=0,\\qquad f\'(\\infty)=1,\\]'
+        + '<p>que o widget resolve por tiro a cada carregamento. O valor encontrado para '
+        + '\\(f\'\'(0)\\) é \\(0{,}332057\\), que é o número tabelado em todo livro de '
+        + 'camada-limite, e \\(f\'\\) chega a 99% da corrente em \\(\\eta=4{,}91\\), de onde '
+        + 'sai a fórmula usual \\(\\delta\\approx5x/\\sqrt{\\mathrm{Re}_x}\\).</p>'
+        + '<p>A temperatura obedece a uma equação parecida, \\(\\theta\'\'+\\frac{\\mathrm{Pr}}'
+        + '{2}f\\theta\'=0\\), cuja solução o widget integra junto. O Prandtl é quem decide a '
+        + 'razão entre as duas espessuras: ele compara a difusão de quantidade de movimento '
+        + 'com a de calor, de modo que</p>'
+        + '\\[\\frac{\\delta}{\\delta_T}\\approx\\mathrm{Pr}^{1/3}.\\]'
+        + '<p>Trocando de fluido nos botões, o desenho muda de caráter. No ar, com '
+        + '\\(\\mathrm{Pr}=0{,}7\\), as duas camadas quase coincidem. Na água e no óleo o '
+        + 'calor se espalha muito menos que a quantidade de movimento, e a camada térmica fica '
+        + 'encolhida dentro da outra, o que é por que trocadores de calor com óleo têm '
+        + 'resistência térmica concentrada numa película finíssima. No mercúrio ocorre o '
+        + 'contrário: com \\(\\mathrm{Pr}=0{,}025\\) o calor corre muito à frente, e a camada '
+        + 'térmica engole a de velocidade.</p>'
+        + '<p>O último cartão é uma aferição. A correlação de livro, '
+        + '\\(\\mathrm{Nu}_x=0{,}332\\,\\mathrm{Re}_x^{1/2}\\mathrm{Pr}^{1/3}\\), vem de '
+        + 'ajustar \\(-\\theta\'(0)\\) por uma potência de \\(\\mathrm{Pr}\\). Comparando o '
+        + 'valor exato com a aproximação, a concordância é de 1% ou 2% para ar, água e óleo, '
+        + 'e vai a quase 50% de erro no mercúrio. É o motivo de toda correlação desse tipo vir '
+        + 'com a ressalva \\(\\mathrm{Pr}\\gtrsim0{,}6\\), e de metais líquidos terem '
+        + 'correlações próprias.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     24. Rayleigh-Bénard
+     A camada aquecida por baixo, o limiar de 1708 e o tamanho das
+     células. É o retrato da convecção natural como instabilidade, e
+     fecha o que o módulo 7 começou ao falar de Marangoni.
+     ================================================================= */
+  REGISTRO.rayleigh = function (raiz) {
+    var FLU = {
+      ar: { rot: 'ar', nu: 1.57e-5, al: 2.22e-5, k: 0.0263, beta: 1 / 300, Pr: 0.707 },
+      agua: { rot: 'água', nu: 8.57e-7, al: 1.47e-7, k: 0.613, beta: 2.76e-4, Pr: 5.83 },
+      silicone: { rot: 'óleo de silicone', nu: 1.0e-5, al: 9.3e-8, k: 0.13,
+                  beta: 1.05e-3, Pr: 108 },
+      glicerina: { rot: 'glicerina', nu: 6.34e-4, al: 9.35e-8, k: 0.286,
+                   beta: 4.8e-4, Pr: 6780 }
+    };
+    var RAC = 1707.76, KC = 3.117;
+    var est = { f: 'ar', d: 0.02, dT: 5 };
+
+    function Ra() {
+      var f = FLU[est.f];
+      return 9.81 * f.beta * est.dT * Math.pow(est.d, 3) / (f.nu * f.al);
+    }
+    /* correlação de Hollands para camada horizontal aquecida por baixo:
+       vale Nu = 1 abaixo do limiar e cresce continuamente acima dele */
+    function Nu() {
+      var R = Ra();
+      var a = Math.max(0, 1 - RAC / R);
+      var b = Math.max(0, Math.pow(R / 5830, 1 / 3) - 1);
+      return 1 + 1.44 * a + b;
+    }
+
+    var corpo = moldura(raiz, 'A camada aquecida por baixo');
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    opcoes(ctr, Object.keys(FLU).map(function (k) {
+      return { rot: FLU[k].rot, v: k };
+    }), 0, function (v) { est.f = v; desenhar(); });
+    deslizante(ctr, 'espessura da camada', 0.002, 0.06, 0.001, 0.02,
+      function (v) { est.d = v; desenhar(); },
+      function (v) { return F.fmt(v * 1000, 0) + ' mm'; });
+    deslizante(ctr, 'diferença de temperatura', 0.5, 40, 0.5, 5,
+      function (v) { est.dT = v; desenhar(); },
+      function (v) { return F.fmt(v, 1) + ' K'; });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'número de Rayleigh', k: 'Ra' },
+      { rot: 'Ra / Ra crítico', k: 'r' },
+      { rot: 'regime', k: 'reg' },
+      { rot: 'largura de uma célula', k: 'lam' },
+      { rot: 'Nusselt', k: 'Nu' },
+      { rot: 'fluxo de calor', k: 'q' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var p = G.preparar(cv, 290);
+      var ct = p.ct, L = p.L, A = p.A;
+      var R = Ra(), nu = Nu(), convecta = R > RAC;
+      var LARG = 0.24;                       /* largura física da janela, m */
+      var x0 = 26, larg = L - 96;
+      var escala = larg / LARG;
+      /* o desenho fica em escala verdadeira, de modo que a previsão de que
+         cada rolo tem cerca de uma espessura de largura possa ser conferida
+         no próprio desenho. Camadas finíssimas ganham um mínimo legível. */
+      var alt = Math.max(24, Math.min(A - 84, est.d * escala));
+      var y0 = (A - alt) / 2 - 4;
+
+      /* cor de fundo segundo o perfil médio de temperatura: linear quando
+         só há condução, quase isotérmico no miolo quando há convecção,
+         com a queda concentrada em duas películas junto das placas */
+      var j;
+      for (j = 0; j < alt; j++) {
+        var f = j / alt;                 /* 0 no topo frio, 1 no fundo quente */
+        var e = 0.14, tt;
+        if (convecta) {
+          tt = f < e ? 0.5 * f / e
+            : (f > 1 - e ? 0.5 + 0.5 * (f - (1 - e)) / e : 0.5);
+        } else {
+          tt = f;
+        }
+        ct.fillStyle = 'rgb(' + Math.round(255 - 95 * tt) + ','
+          + Math.round(255 - 165 * tt) + ',' + Math.round(255 - 150 * tt) + ')';
+        ct.fillRect(x0, y0 + j, larg, 1.2);
+      }
+
+      /* placas */
+      ct.fillStyle = G.COR.vinho; ct.fillRect(x0, y0 + alt, larg, 6);
+      ct.fillStyle = G.COR.azul; ct.fillRect(x0, y0 - 6, larg, 6);
+      rotulo(ct, 'placa fria, T', x0 + 8, y0 - 13, G.COR.azul, 'left');
+      rotulo(ct, 'placa quente, T + ' + F.fmt(est.dT, 1) + ' K',
+        x0 + 8, y0 + alt + 15, G.COR.vinho, 'left');
+      /* cota da espessura */
+      seta(ct, x0 + larg + 14, y0, x0 + larg + 14, y0 + alt, G.COR.suave, 1.4);
+      seta(ct, x0 + larg + 14, y0 + alt, x0 + larg + 14, y0, G.COR.suave, 1.4);
+      rotulo(ct, F.fmt(est.d * 1000, 0) + ' mm', x0 + larg + 20, y0 + alt / 2,
+        G.COR.suave, 'left');
+
+      if (convecta) {
+        /* rolos de largura λ/2 = π d / k_c, alternando o sentido */
+        var meia = Math.PI * est.d / KC * escala;
+        var n = Math.max(1, Math.round(larg / meia));
+        meia = larg / n;
+        for (j = 0; j < n; j++) {
+          var cx = x0 + (j + 0.5) * meia, rx = meia * 0.36, ry = alt * 0.33;
+          ct.strokeStyle = 'rgba(39,42,94,.55)'; ct.lineWidth = 1.5;
+          [0.55, 1].forEach(function (s) {
+            ct.beginPath();
+            ct.ellipse(cx, y0 + alt / 2, rx * s, ry * s, 0, 0, 2 * Math.PI);
+            ct.stroke();
+          });
+          var hor = (j % 2 === 0) ? 1 : -1;
+          seta(ct, cx - rx * hor, y0 + alt / 2 - ry * 0.1,
+            cx - rx * hor, y0 + alt / 2 + ry * 0.1, G.COR.mestra, 2);
+          seta(ct, cx + rx * 0.2 * hor, y0 + alt / 2 - ry,
+            cx - rx * 0.2 * hor, y0 + alt / 2 - ry, G.COR.mestra, 2);
+        }
+        rotulo(ct, n + (n === 1 ? ' rolo' : ' rolos') + ' nos 24 cm da janela, '
+          + 'cada um com cerca de uma espessura de largura',
+          x0 + larg / 2, y0 + alt + 34, G.COR.suave);
+      } else {
+        /* condução pura: setas verticais uniformes */
+        for (j = 0; j < 7; j++) {
+          var xx = x0 + larg * (j + 0.5) / 7;
+          seta(ct, xx, y0 + alt - 4, xx, y0 + 4, 'rgba(91,103,115,.5)', 1.5);
+        }
+        rotulo(ct, 'fluido parado: o calor sobe só por condução',
+          x0 + larg / 2, y0 + alt + 34, G.COR.suave);
+      }
+
+      var f = FLU[est.f];
+      mostrar({
+        Ra: F.fmt(R, 0),
+        r: F.fmt(R / RAC, 2),
+        reg: convecta ? (R > 1e6 ? 'turbulento' : 'células') : 'condução',
+        lam: F.fmt(2 * Math.PI / KC * est.d * 1000, 1) + ' mm',
+        Nu: F.fmt(nu, 3),
+        q: F.fmt(nu * f.k * est.dT / est.d, 1) + ' W/m²'
+      });
+
+      nota.innerHTML =
+        '<p>Aquecer um fluido por baixo põe o mais leve embaixo, o que é instável. A '
+        + 'instabilidade, porém, não é automática: para o fluido se mover ele precisa vencer a '
+        + 'viscosidade, que freia o movimento, e a condução, que apaga a diferença de '
+        + 'temperatura antes que ela produza empuxo. A disputa entre o empuxo e esses dois '
+        + 'processos é medida pelo <strong>número de Rayleigh</strong>,</p>'
+        + '\\[\\mathrm{Ra}=\\frac{g\\beta\\,\\Delta T\\,d^3}{\\nu\\alpha}'
+        + '=\\mathrm{Gr}\\cdot\\mathrm{Pr},\\]'
+        + '<p>com \\(\\beta\\) o coeficiente de expansão térmica, que para um gás ideal vale '
+        + '\\(1/T\\). Abaixo de um valor crítico nada acontece e o calor atravessa a camada '
+        + 'só por condução; acima dele o fluido se organiza em rolos. Lord Rayleigh calculou '
+        + 'esse limiar em 1916, e para duas placas rígidas ele vale</p>'
+        + '\\[\\mathrm{Ra}_c=1707{,}76.\\]'
+        + '<p>O cálculo dá também o tamanho das células, pelo número de onda crítico '
+        + '\\(k_c=3{,}117/d\\), de modo que o comprimento de onda é '
+        + '\\(\\lambda=2\\pi d/3{,}117\\approx2{,}02\\,d\\) e cada rolo tem cerca de uma '
+        + 'espessura de largura. Essa é a previsão mais bonita da teoria, porque é geométrica '
+        + 'e pode ser conferida com uma régua numa panela de óleo no fogo.</p>'
+        + '<p>Repare na terceira potência de \\(d\\). Dobrar a espessura da camada multiplica '
+        + '\\(\\mathrm{Ra}\\) por oito, o que torna o resultado muito sensível à geometria e '
+        + 'explica um detalhe de engenharia cotidiana. Numa janela de vidro duplo a câmara de '
+        + 'ar existe para isolar, e isolar bem exige que o ar fique <strong>parado</strong>. '
+        + 'Com \\(\\Delta T=15\\) K, a camada de ar atinge \\(\\mathrm{Ra}_c\\) em cerca de '
+        + '\\(10\\) mm: abaixo disso a câmara conduz apenas, e acima disso ela convecta e a '
+        + 'resistência para de crescer. Por isso as esquadrias usam de 12 a 16 mm e não 5 cm, '
+        + 'que seria pior e mais caro.</p>'
+        + '<p>O Nusselt é a razão entre o calor que de fato atravessa e o que atravessaria por '
+        + 'condução pura, de modo que \\(\\mathrm{Nu}=1\\) é o regime parado. O widget usa a '
+        + 'correlação de Hollands, que vale desde o limiar, e o cartão do fluxo multiplica '
+        + 'esse Nusselt pela condução da camada. A convecção de Rayleigh-Bénard é o '
+        + 'laboratório padrão da física não linear: é nela que se estudam transição ao caos, '
+        + 'seleção de padrão e turbulência térmica, e é ela que, em escala muito maior, move o '
+        + 'manto terrestre e a zona convectiva do Sol.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {
