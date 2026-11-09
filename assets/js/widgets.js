@@ -2374,16 +2374,22 @@
      o escoamento virou turbulento.
      ================================================================= */
   REGISTRO.poiseuille = function (raiz) {
-    var est = { R: 5, dp: 20, mu: 1.00e-3, rho: 998, nome: 'água' };
-
+    /* Fluidos de lei de potência, mu = K gamma^(n-1). Os valores de K e n
+       são típicos, de ordem de grandeza, e variam muito com temperatura,
+       concentração e método de medida: servem para comparar comportamentos,
+       não para projetar tubulação. */
     var FLUIDOS = [
-      { rot: 'água', mu: 1.00e-3, rho: 998 },
-      { rot: 'sangue', mu: 3.5e-3, rho: 1060 },
-      { rot: 'óleo SAE 30', mu: 0.29, rho: 890 },
-      { rot: 'glicerina', mu: 1.41, rho: 1260 }
+      { rot: 'água', K: 1.00e-3, n: 1.00, rho: 998 },
+      { rot: 'sangue', K: 0.015, n: 0.78, rho: 1060 },
+      { rot: 'xampu', K: 8.0, n: 0.45, rho: 1030 },
+      { rot: 'ketchup', K: 18.0, n: 0.27, rho: 1100 },
+      { rot: 'amido em água', K: 0.90, n: 1.60, rho: 1200 },
+      { rot: 'glicerina', K: 1.41, n: 1.00, rho: 1260 }
     ];
 
-    var corpo = moldura(raiz, 'O perfil parabólico e a quarta potência');
+    var est = { R: 5, dp: 20, K: 1.00e-3, n: 1.00, rho: 998, nome: 'água' };
+
+    var corpo = moldura(raiz, 'O perfil e a potência do raio');
 
     var par = el('div', { class: 'paineis' });
     var cv1 = el('canvas');
@@ -2397,38 +2403,68 @@
     deslizante(ctr, 'raio do tubo', 0.5, 20, 0.5, 5,
       function (v) { est.R = v; desenhar(); },
       function (v) { return F.fmt(v, 1) + ' mm'; });
-    deslizante(ctr, 'queda de pressão por metro', 5, 2000, 5, 20,
-      function (v) { est.dp = v; desenhar(); },
-      function (v) { return F.fmt(v, 0) + ' Pa/m'; });
+    /* A faixa de pressões úteis muda por ordens de grandeza de um fluido
+       para o outro: o que move água a dez centímetros por segundo não tira
+       ketchup do lugar. O deslizante é logarítmico, e trocar de fluido
+       reposiciona a pressão no valor que dá a mesma velocidade de eixo,
+       para que o desenho continue dizendo alguma coisa. */
+    var dpd = deslizante(ctr, 'queda de pressão por metro', 0, 6, 0.05,
+      Math.log10(20),
+      function (v) { est.dp = Math.pow(10, v); desenhar(); },
+      function (v) {
+        var x = Math.pow(10, v);
+        return x < 1000 ? F.fmt(x, 0) + ' Pa/m' : F.fmt(x / 1000, 1) + ' kPa/m';
+      });
     opcoes(ctr, FLUIDOS.map(function (f) { return { rot: f.rot, v: f }; }), 0,
-      function (v) { est.mu = v.mu; est.rho = v.rho; est.nome = v.rot; desenhar(); });
+      function (v) {
+        est.K = v.K; est.n = v.n; est.rho = v.rho; est.nome = v.rot;
+        dpd.value = Math.max(0, Math.min(6, Math.log10(pressaoPara(0.10))));
+        dpd.dispatchEvent(new Event('input'));
+      });
+
+    /* pressão que produz a velocidade de eixo pedida, invertendo o perfil */
+    function pressaoPara(umax) {
+      var R = est.R * 1e-3, e = (est.n + 1) / est.n;
+      return 2 * est.K * Math.pow(umax * (est.n + 1)
+        / (est.n * Math.pow(R, e)), est.n);
+    }
 
     var mostrar = cartoes(corpo, [
+      { rot: 'expoente n', k: 'n' },
       { rot: 'velocidade no eixo', k: 'umax' },
-      { rot: 'velocidade média', k: 'ubar' },
+      { rot: 'razão u máx / u média', k: 'raz' },
       { rot: 'vazão volumétrica', k: 'q' },
       { rot: 'tensão na parede', k: 'tw' },
-      { rot: 'número de Reynolds', k: 're' },
-      { rot: 'regime', k: 'reg' }
+      { rot: 'Reynolds generalizado', k: 're' }
     ]);
     var nota = el('div', { class: 'saida' });
     corpo.appendChild(nota);
 
+    /* u(r) = n/(n+1) (dp/2KL)^(1/n) [R^((n+1)/n) - r^((n+1)/n)] */
+    function perfil(r, R) {
+      var a = Math.pow(est.dp / (2 * est.K), 1 / est.n);
+      var e = (est.n + 1) / est.n;
+      return est.n / (est.n + 1) * a * (Math.pow(R, e) - Math.pow(r, e));
+    }
     function vazao(Rmm) {
       var R = Rmm * 1e-3;
-      return Math.PI * Math.pow(R, 4) * est.dp / (8 * est.mu);
+      return Math.PI * est.n / (3 * est.n + 1)
+        * Math.pow(est.dp / (2 * est.K), 1 / est.n)
+        * Math.pow(R, (3 * est.n + 1) / est.n);
     }
 
     function desenhar() {
-      var R = est.R * 1e-3;
-      var umax = est.dp * R * R / (4 * est.mu);
-      var ubar = umax / 2;
+      var R = est.R * 1e-3, n = est.n;
+      var umax = perfil(0, R);
       var Q = vazao(est.R);
+      var ubar = Q / (Math.PI * R * R);
       var tw = est.dp * R / 2;
-      var Re = est.rho * ubar * 2 * R / est.mu;
+      /* Reynolds generalizado de Metzner e Reed, que recai no usual em n = 1 */
+      var Re = est.rho * Math.pow(ubar, 2 - n) * Math.pow(2 * R, n)
+        / (est.K * Math.pow((3 * n + 1) / (4 * n), n) * Math.pow(8, n - 1));
 
       /* ---- o tubo visto de lado, com o perfil ---- */
-      var p = G.preparar(cv1, 280);
+      var p = G.preparar(cv1, 290);
       var ct = p.ct;
       var xa = p.L * 0.10, xb = p.L * 0.92, cy = p.A / 2;
       var hr = p.A * 0.30;
@@ -2439,37 +2475,42 @@
       ct.fillRect(xa, cy + hr, xb - xa, 8);
 
       var esc = (xb - xa) * 0.42;
-      var i, n = 11;
-      for (i = 0; i <= n; i++) {
-        var yr = -1 + 2 * i / n;
-        var u = 1 - yr * yr;
+      var i, n2 = 11;
+      for (i = 0; i <= n2; i++) {
+        var yr = -1 + 2 * i / n2;
+        var u = 1 - Math.pow(Math.abs(yr), (n + 1) / n);
         seta(ct, xa + 16, cy + yr * hr, xa + 16 + u * esc, cy + yr * hr,
           G.COR.mestra, 1.8);
       }
-      ct.strokeStyle = G.COR.vinho; ct.lineWidth = 2.4;
-      ct.beginPath();
-      for (i = 0; i <= 60; i++) {
-        var y2 = -1 + 2 * i / 60, u2 = 1 - y2 * y2;
-        var px = xa + 16 + u2 * esc, py = cy + y2 * hr;
-        if (i === 0) ct.moveTo(px, py); else ct.lineTo(px, py);
+      /* o perfil do fluido escolhido e, tracejado, o parabólico */
+      [[1, G.COR.suave, 1.8, [6, 4]], [n, G.COR.vinho, 2.6, null]]
+        .forEach(function (q) {
+          ct.strokeStyle = q[1]; ct.lineWidth = q[2];
+          if (q[3]) ct.setLineDash(q[3]);
+          ct.beginPath();
+          for (i = 0; i <= 80; i++) {
+            var y2 = -1 + 2 * i / 80;
+            var u2 = 1 - Math.pow(Math.abs(y2), (q[0] + 1) / q[0]);
+            var px = xa + 16 + u2 * esc, py = cy + y2 * hr;
+            if (i === 0) ct.moveTo(px, py); else ct.lineTo(px, py);
+          }
+          ct.stroke(); ct.setLineDash([]);
+        });
+      rotulo(ct, est.nome + ', n = ' + F.fmt(n, 2), xa + 16 + esc * 0.5, cy - hr + 12,
+        G.COR.vinho, 'center', 'top');
+      if (Math.abs(n - 1) > 0.01) {
+        rotulo(ct, 'parábola, n = 1', xb - 8, cy + hr - 8, G.COR.suave, 'right', 'bottom');
       }
-      ct.stroke();
-      rotulo(ct, 'u(r) = Δp (R² − r²) / 4μL', xa + 16 + esc * 0.55, cy - 10,
-        G.COR.vinho, 'center', 'bottom');
-      rotulo(ct, 'parede: u = 0', xa + 20, cy + hr - 6, G.COR.suave, 'left', 'bottom');
-      rotulo(ct, est.nome + ', R = ' + F.fmt(est.R, 1) + ' mm', xb - 8, cy - hr + 10,
-        G.COR.suave, 'right', 'top');
+      rotulo(ct, 'parede: u = 0', xa + 20, cy + hr - 8, G.COR.suave, 'left', 'bottom');
 
       /* ---- vazão contra raio, em escala logarítmica ---- */
-      /* os dois eixos são logarítmicos, de modo que os limites são postos
-         em décadas inteiras e os rótulos saem como potências de dez */
-      var SUP = { '-5': '10⁻⁵', '-4': '10⁻⁴', '-3': '10⁻³', '-2': '10⁻²',
-                  '-1': '10⁻¹', '0': '1', '1': '10', '2': '100', '3': '1000',
-                  '4': '10⁴', '5': '10⁵' };
+      var SUP = { '-6': '10⁻⁶', '-5': '10⁻⁵', '-4': '10⁻⁴', '-3': '10⁻³',
+                  '-2': '10⁻²', '-1': '10⁻¹', '0': '1', '1': '10', '2': '100',
+                  '3': '1000', '4': '10⁴', '5': '10⁵', '6': '10⁶' };
       var lo = Math.floor(Math.log10(vazao(0.5) * 1e6));
       var hi = Math.ceil(Math.log10(vazao(20) * 1e6));
       var gr = G.eixos(cv2, {
-        altura: 280, xmin: Math.log10(0.5), xmax: Math.log10(20),
+        altura: 290, xmin: Math.log10(0.5), xmax: Math.log10(20),
         ymin: lo, ymax: hi, divY: Math.min(8, hi - lo),
         margem: { e: 64, d: 14, c: 14, b: 44 },
         rotX: 'raio (mm)', rotY: 'vazão (mL/s)',
@@ -2485,47 +2526,69 @@
         return Math.log10(vazao(Math.pow(10, lx)) * 1e6);
       }, G.COR.mestra, 2.8);
       G.vertical(gr, Math.log10(est.R), G.COR.vinho, 'R');
-      rotulo(gr.ct, 'inclinação 4 nesta escala', gr.X(Math.log10(1.4)),
-        gr.Y(Math.log10(vazao(6) * 1e6)), G.COR.suave, 'left');
+      rotulo(gr.ct, 'inclinação ' + F.fmt((3 * n + 1) / n, 2) + ' nesta escala',
+        gr.X(Math.log10(0.6)), gr.y0 + 16, G.COR.suave, 'left', 'top');
 
       mostrar({
+        n: F.fmt(n, 2) + (n < 0.99 ? ' pseudoplástico'
+                                   : (n > 1.01 ? ' dilatante' : ' newtoniano')),
         umax: F.fmt(umax, 4) + ' m/s',
-        ubar: F.fmt(ubar, 4) + ' m/s',
+        raz: F.fmt((3 * n + 1) / (n + 1), 3),
         q: F.fmt(Q * 1e6, 3) + ' mL/s',
         tw: F.fmt(tw, 3) + ' Pa',
-        re: F.fmt(Re, 0),
-        reg: Re < 2300 ? 'laminar' : (Re < 4000 ? 'transição' : 'turbulento')
+        re: F.fmt(Re, Re < 10 ? 2 : 0) + (Re < 2100 ? ' laminar' : ' não laminar')
       });
 
       nota.innerHTML =
         '<p>Num escoamento estacionário e lento, em que o termo convectivo é desprezível, a '
         + 'equação de Navier-Stokes perde o lado esquerdo inteiro e sobra um balanço entre '
-        + 'pressão e viscosidade:</p>'
-        + '\\[\\nabla p=\\mu\\nabla^2\\vet{u}.\\]'
-        + '<p>Num tubo cilíndrico de raio \\(R\\) e comprimento \\(L\\), com simetria '
-        + 'azimutal e velocidade só na direção do eixo, isso vira</p>'
-        + '\\[\\pder{p}{z}=\\frac{\\mu}{r}\\der{}{r}\\left(r\\der{u_z}{r}\\right).\\]'
-        + '<p>O lado esquerdo não depende de \\(r\\) e o direito não depende de \\(z\\), de '
-        + 'modo que ambos são constantes. Integrando duas vezes sai '
-        + '\\(u_z=\\frac{r^2}{4\\mu}\\der{p}{z}+C\\ln r+D\\). A velocidade tem de ser finita '
-        + 'no eixo, o que mata o logaritmo, e tem de ser nula na parede pelo não '
-        + 'deslizamento, o que fixa \\(D\\). Com \\(dp/dz=-\\Delta p/L\\),</p>'
-        + '\\[u_z=\\frac{\\Delta p}{4\\mu L}\\left(R^2-r^2\\right),\\]'
-        + '<p>o <strong>perfil parabólico</strong> de Hagen-Poiseuille. A vazão sai '
-        + 'integrando sobre a seção, em anéis de área \\(2\\pi r\\,dr\\):</p>'
-        + '\\[Q=\\frac{\\pi R^4\\Delta p}{8\\mu L}.\\]'
-        + '<p>A quarta potência do raio é o resultado mais importante do módulo, e o gráfico '
-        + 'da direita a mostra como uma reta de inclinação 4 em escala logarítmica. Ela '
-        + 'significa que dobrar o raio multiplica a vazão por dezesseis, e que estreitar uma '
-        + 'artéria em vinte por cento reduz o fluxo a quarenta por cento do original com a '
-        + 'mesma pressão. É por isso que a placa de ateroma é perigosa muito antes de fechar '
-        + 'o vaso.</p>'
-        + '<p>O último cartão vigia a hipótese. A dedução supôs o termo convectivo '
-        + 'desprezível, e o <strong>número de Reynolds</strong> \\(Re=\\rho\\bar uD/\\mu\\) '
-        + 'mede exatamente a razão entre ele e o viscoso. Acima de cerca de 2300 o escoamento '
-        + 'em tubo deixa de ser laminar e a fórmula para de valer: a vazão real fica bem '
-        + 'abaixo da prevista, e passa a depender da rugosidade da parede. O módulo 11 trata '
-        + 'desse regime.</p>';
+        + 'pressão e viscosidade. O caminho mais curto até o perfil não passa pela equação '
+        + 'vetorial: basta o equilíbrio de forças num cilindro de raio \\(r\\) dentro do '
+        + 'tubo, que dá a tensão de cisalhamento sem nenhuma hipótese sobre o fluido,</p>'
+        + '\\[\\tau(r)=\\frac{\\Delta p}{2L}\\,r.\\]'
+        + '<p>Essa é a razão de o cartão da tensão na parede não mudar quando se troca o '
+        + 'fluido: ela vale \\(\\Delta p\\,R/2L\\) seja o fluido qual for. O que muda é a '
+        + 'velocidade que essa tensão produz, e aí entra a reologia.</p>'
+        + '<p>Para um <strong>fluido newtoniano</strong>, \\(\\tau=\\mu\\,|du/dr|\\), a '
+        + 'integração dá a parábola de Hagen-Poiseuille,</p>'
+        + '\\[u=\\frac{\\Delta p}{4\\mu L}\\left(R^2-r^2\\right),'
+        + '\\qquad Q=\\frac{\\pi R^4\\Delta p}{8\\mu L}.\\]'
+        + '<p>Para um <strong>fluido de lei de potência</strong>, '
+        + '\\(\\tau=K\\,|du/dr|^{\\,n}\\), a mesma integração dá</p>'
+        + '\\[u(r)=\\frac{n}{n+1}'
+        + '\\left(\\frac{\\Delta p}{2KL}\\right)^{1/n}'
+        + '\\left[R^{\\frac{n+1}{n}}-r^{\\frac{n+1}{n}}\\right],'
+        + '\\qquad Q=\\frac{\\pi n}{3n+1}'
+        + '\\left(\\frac{\\Delta p}{2KL}\\right)^{1/n}R^{\\frac{3n+1}{n}}.\\]'
+        + '<p>Com \\(n=1\\) e \\(K=\\mu\\) tudo recai no caso anterior. O botão troca o '
+        + 'fluido e o desenho mostra a consequência, com a parábola tracejada ao fundo para '
+        + 'comparação. Num <strong>pseudoplástico</strong>, com \\(n&lt;1\\), o fluido afina '
+        + 'justamente onde a taxa de deformação é maior, isto é, junto à parede, e o perfil '
+        + 'fica achatado no centro, quase um bloco que desliza sobre uma camada fina. Num '
+        + '<strong>dilatante</strong>, com \\(n>1\\), acontece o contrário e o perfil fica '
+        + 'mais pontudo que a parábola.</p>'
+        + '<p>O cartão da razão \\(u_{\\max}/\\bar u\\) põe isso em número, porque ela vale '
+        + '\\(\\left(3n+1\\right)/\\left(n+1\\right)\\): dá 2 para o newtoniano, cai para '
+        + '1,4 no ketchup e sobe para 2,2 na suspensão de amido. No limite \\(n\\to0\\) ela '
+        + 'tende a 1, que é o escoamento em bloco.</p>'
+        + '<p>A dependência com o raio também muda. A vazão vai com '
+        + '\\(R^{\\left(3n+1\\right)/n}\\), de modo que a célebre quarta potência é apenas o '
+        + 'caso \\(n=1\\): um pseudoplástico com \\(n=0{,}5\\) dá expoente 5, e um dilatante '
+        + 'com \\(n=1{,}6\\) dá 3,6. O gráfico da direita mostra a inclinação medida nesta '
+        + 'escala logarítmica, e ela acompanha o fluido escolhido.</p>'
+        + '<p>Os valores de \\(K\\) e \\(n\\) do menu são típicos e de ordem de grandeza. Eles '
+        + 'dependem muito da temperatura, da concentração e da faixa de taxas em que a medida '
+        + 'foi feita, e servem para comparar comportamentos, não para dimensionar '
+        + 'tubulação. O sangue é pseudoplástico porque as hemácias se alinham e se deformam '
+        + 'sob cisalhamento alto, o que o torna mais fino nas artérias e mais espesso nos '
+        + 'capilares; o xampu e o ketchup são pseudoplásticos por projeto, para ficarem '
+        + 'parados no vidro e escorrerem quando agitados; a suspensão de amido em água é o '
+        + 'dilatante de demonstração, que endurece sob impacto.</p>'
+        + '<p>O último cartão traz o <strong>número de Reynolds generalizado</strong> de '
+        + 'Metzner e Reed, que recai no usual quando \\(n=1\\) e vigia a hipótese de '
+        + 'escoamento lento também para os demais:</p>'
+        + '\\[Re=\\frac{\\varrho\\,\\bar u^{\\,2-n}D^{\\,n}}'
+        + '{K\\left(\\frac{3n+1}{4n}\\right)^{n}8^{\\,n-1}}.\\]';
       tipografar(corpo);
     }
 
@@ -2888,6 +2951,194 @@
         + 'negativa, e a coesão entre as moléculas, que mantém a coluna inteira sem romper. '
         + 'A capilaridade entra como a condição de contorno no alto, onde o menisco nos poros '
         + 'da parede celular sustenta a tensão.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     17. A curvatura de uma superfície
+     O desenho da definição: um pedaço de superfície, as duas curvas
+     principais que passam pelo ponto, os vetores tangentes, a normal e
+     os dois círculos osculadores cujos raios entram em Young-Laplace.
+     Com os dois raios livres dá para passar da esfera ao cilindro, ao
+     plano e à sela, que é onde a curvatura média se anula.
+     ================================================================= */
+  REGISTRO.curvatura = function (raiz) {
+    var est = { k1: 1.0, k2: 1.0, gama: 0.0728 };
+
+    var corpo = moldura(raiz, 'As duas curvas e os dois raios');
+
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    var d1 = deslizante(ctr, 'curvatura 1/R₁', -1.4, 1.4, 0.05, 1.0,
+      function (v) { est.k1 = v; desenhar(); },
+      function (v) { return F.fmt(v, 2) + ' mm⁻¹'; });
+    var d2 = deslizante(ctr, 'curvatura 1/R₂', -1.4, 1.4, 0.05, 1.0,
+      function (v) { est.k2 = v; desenhar(); },
+      function (v) { return F.fmt(v, 2) + ' mm⁻¹'; });
+    opcoes(ctr, [{ rot: 'esfera', v: [1, 1] }, { rot: 'cilindro', v: [1, 0] },
+                 { rot: 'plano', v: [0, 0] }, { rot: 'sela', v: [1, -1] }], 0,
+      function (v) {
+        est.k1 = v[0]; est.k2 = v[1];
+        d1.value = v[0]; d2.value = v[1];
+        d1.dispatchEvent(new Event('input'));
+        d2.dispatchEvent(new Event('input'));
+      });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'raio R₁', k: 'r1' },
+      { rot: 'raio R₂', k: 'r2' },
+      { rot: 'curvatura κ = 1/R₁ + 1/R₂', k: 'kap' },
+      { rot: 'tipo de ponto', k: 'tipo' },
+      { rot: 'salto de pressão γκ', k: 'dp' },
+      { rot: 'curvatura gaussiana', k: 'gauss' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    /* A superfície é o parabolóide osculador z = (k1 x² + k2 y²)/2, que é
+       a melhor aproximação de segunda ordem de qualquer superfície lisa
+       perto do ponto de contato. */
+    function sup(x, y) { return (est.k1 * x * x + est.k2 * y * y) / 2; }
+
+    function desenhar() {
+      var p = G.preparar(cv, 380);
+      var ct = p.ct;
+      var cx = p.L / 2, cy = p.A * 0.58;
+      var esc = Math.min(p.L * 0.42, p.A * 0.34);
+
+      function proj(v) {
+        var w = M3.apl(VISTA, v);
+        return [cx + w[0] * esc, cy - w[2] * esc - w[1] * esc * 0.22];
+      }
+      function linha(pts, cor, esp, tracejado) {
+        ct.save();
+        ct.strokeStyle = cor; ct.lineWidth = esp;
+        if (tracejado) ct.setLineDash(tracejado);
+        ct.beginPath();
+        pts.forEach(function (q, i) {
+          var s = proj(q);
+          if (i === 0) ct.moveTo(s[0], s[1]); else ct.lineTo(s[0], s[1]);
+        });
+        ct.stroke();
+        ct.restore();
+      }
+
+      var L = 1.25, i, j, pts;
+
+      /* malha da superfície */
+      for (i = -4; i <= 4; i++) {
+        pts = [];
+        for (j = -20; j <= 20; j++) {
+          var x = L * i / 4, y = L * j / 20;
+          pts.push([x, y, sup(x, y)]);
+        }
+        linha(pts, 'rgba(63,67,145,.22)', 1);
+        pts = [];
+        for (j = -20; j <= 20; j++) {
+          var x2 = L * j / 20, y2 = L * i / 4;
+          pts.push([x2, y2, sup(x2, y2)]);
+        }
+        linha(pts, 'rgba(63,67,145,.22)', 1);
+      }
+
+      /* as duas curvas principais pelo ponto de contato */
+      pts = [];
+      for (j = -24; j <= 24; j++) { var a = L * j / 24; pts.push([a, 0, sup(a, 0)]); }
+      linha(pts, G.COR.mestra, 3);
+      pts = [];
+      for (j = -24; j <= 24; j++) { var b = L * j / 24; pts.push([0, b, sup(0, b)]); }
+      linha(pts, G.COR.vinho, 3);
+
+      /* círculos osculadores, no plano de cada curva */
+      [[est.k1, G.COR.mestra, true], [est.k2, G.COR.vinho, false]].forEach(function (q) {
+        if (Math.abs(q[0]) < 0.06) return;
+        /* o círculo osculador inteiro, para que o raio fique visível */
+        var R = 1 / q[0], cc = [0, 0, R], arc = [];
+        for (j = 0; j <= 90; j++) {
+          var th = 2 * Math.PI * j / 90;
+          var u = R * Math.sin(th), w = R - R * Math.cos(th);
+          arc.push(q[2] ? [u, 0, w] : [0, u, w]);
+        }
+        linha(arc, q[1], 1.3, [5, 4]);
+        var s = proj(cc);
+        ct.fillStyle = q[1];
+        ct.beginPath(); ct.arc(s[0], s[1], 3, 0, 2 * Math.PI); ct.fill();
+        var s0 = proj([0, 0, 0]);
+        ct.save();
+        ct.strokeStyle = q[1]; ct.lineWidth = 1.2; ct.setLineDash([3, 3]);
+        ct.beginPath(); ct.moveTo(s0[0], s0[1]); ct.lineTo(s[0], s[1]); ct.stroke();
+        ct.restore();
+        rotulo(ct, q[2] ? 'R₁' : 'R₂', (s0[0] + s[0]) / 2 + (q[2] ? -14 : 14),
+          (s0[1] + s[1]) / 2 + (q[2] ? -4 : 10), q[1]);
+      });
+
+      /* os três vetores de base no ponto de contato */
+      var o = proj([0, 0, 0]);
+      /* no ponto de contato o plano tangente é o plano z = 0 */
+      var t1 = proj([0.62, 0, 0]);
+      var t2 = proj([0, 0.62, 0]);
+      var nn = proj([0, 0, 0.78]);
+      seta(ct, o[0], o[1], t1[0], t1[1], G.COR.mestra, 2.6);
+      seta(ct, o[0], o[1], t2[0], t2[1], G.COR.vinho, 2.6);
+      seta(ct, o[0], o[1], nn[0], nn[1], G.COR.tinta, 2.6);
+      rotulo(ct, 't̂₁', t1[0] + 10, t1[1] + 6, G.COR.mestra);
+      rotulo(ct, 't̂₂', t2[0] - 12, t2[1] + 8, G.COR.vinho);
+      rotulo(ct, 'n̂', nn[0] + 2, nn[1] - 10, G.COR.tinta);
+      rotulo(ct, 'c₁', proj([L, 0, sup(L, 0)])[0] + 12,
+        proj([L, 0, sup(L, 0)])[1], G.COR.mestra, 'left');
+      rotulo(ct, 'c₂', proj([0, L, sup(0, L)])[0] - 12,
+        proj([0, L, sup(0, L)])[1], G.COR.vinho, 'right');
+      ct.fillStyle = G.COR.tinta;
+      ct.beginPath(); ct.arc(o[0], o[1], 4, 0, 2 * Math.PI); ct.fill();
+
+      var kap = est.k1 + est.k2, gauss = est.k1 * est.k2;
+      var tipo = Math.abs(gauss) < 0.01
+        ? (Math.abs(kap) < 0.01 ? 'plano' : 'parabólico, um raio infinito')
+        : (gauss > 0 ? 'elíptico, curva para o mesmo lado'
+                     : 'hiperbólico, sela');
+      mostrar({
+        r1: Math.abs(est.k1) < 0.06 ? 'infinito' : F.fmt(1 / est.k1, 2) + ' mm',
+        r2: Math.abs(est.k2) < 0.06 ? 'infinito' : F.fmt(1 / est.k2, 2) + ' mm',
+        kap: F.fmt(kap, 2) + ' mm⁻¹',
+        tipo: tipo,
+        dp: F.fmt(est.gama * kap * 1000, 1) + ' Pa',
+        gauss: F.fmt(gauss, 3) + ' mm⁻²'
+      });
+
+      nota.innerHTML =
+        '<p>Perto de um ponto, qualquer superfície lisa é bem descrita pelo parabolóide '
+        + '\\(z=\\left(\\kappa_1x^2+\\kappa_2y^2\\right)/2\\), que é o que está desenhado. As '
+        + 'duas curvas em destaque são \\(c_1\\), ao longo de \\(\\vers{t}_1\\), e \\(c_2\\), '
+        + 'ao longo de \\(\\vers{t}_2\\), e os círculos tracejados são os '
+        + '<strong>círculos osculadores</strong> de cada uma: o círculo que melhor se ajusta '
+        + 'à curva naquele ponto, com centro sobre a normal e raio \\(R_1\\) ou '
+        + '\\(R_2\\).</p>'
+        + '<p>O vetor curvatura de cada curva é a variação do tangente unitário com o '
+        + 'comprimento de arco,</p>'
+        + '\\[\\vet{k}_1=\\der{\\vers{t}_1}{c_1}'
+        + '=\\left(\\vers{t}_1\\cdot\\nabla\\right)\\vers{t}_1,\\]'
+        + '<p>e o seu módulo vale \\(1/R_1\\). A curvatura da superfície é a soma dos dois '
+        + 'módulos, \\(\\kappa=1/R_1+1/R_2\\), e é ela que aparece em Young-Laplace.</p>'
+        + '<p>Os botões percorrem os quatro casos que importam. Na '
+        + '<strong>esfera</strong> os dois raios são iguais e \\(\\kappa=2/R\\). No '
+        + '<strong>cilindro</strong> uma das curvas é uma reta, o seu raio é infinito e '
+        + '\\(\\kappa=1/R\\): é por isso que a pressão dentro de um jato cilíndrico é metade '
+        + 'da de uma gota de mesmo raio. No <strong>plano</strong> ambos são infinitos e não '
+        + 'há salto de pressão nenhum.</p>'
+        + '<p>A <strong>sela</strong> é o caso que merece atenção. Ali as duas curvas se '
+        + 'encurvam para lados opostos, um raio é positivo e o outro negativo, e a soma pode '
+        + 'dar zero com as duas curvaturas bem diferentes de zero. Uma superfície assim tem '
+        + 'salto de pressão nulo em toda parte, e é exatamente a condição que define uma '
+        + '<strong>superfície mínima</strong>, como a película de sabão esticada entre dois '
+        + 'anéis. O último cartão mostra a curvatura gaussiana \\(\\kappa_1\\kappa_2\\), que '
+        + 'distingue os pontos elípticos dos hiperbólicos e, ao contrário da soma, não muda '
+        + 'quando se dobra a superfície sem esticá-la.</p>';
       tipografar(corpo);
     }
 

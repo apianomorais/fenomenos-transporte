@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 6: Viscosidade e a equação de Navier-Stokes | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611090009">
-<script src="assets/js/comum.js?v=202611090009"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090017">
+<script src="assets/js/comum.js?v=202611090017"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -155,22 +155,27 @@
   <div class="bloco fisica">
     <span class="rotulo">Duas convenções de sinal</span>
     <p>Parte da literatura de fenômenos de transporte, a começar pelo Bird, escreve a lei de
-    Newton como \(\tau_{yx}=-\mu\,\partial u_x/\partial y\), com um sinal negativo. Não é um
-    erro nem uma física diferente: naquela convenção \(\tau\) não é interpretada como tensão,
-    e sim como <em>fluxo de quantidade de movimento</em>, e o sinal negativo a coloca na mesma
-    forma da lei de Fourier, \(\vet{J}_q=-\kappa\nabla T\), e da lei de Fick,
-    \(\vet{J}=-D\nabla c\). A vantagem didática é enorme, porque as três leis constitutivas
-    do curso passam a ter exatamente a mesma cara, com momento, calor e massa fluindo do mais
-    para o menos.</p>
-    <p>O curso usa as duas, cada uma onde rende mais. Aqui, onde o objetivo é construir o
-    tensor de Cauchy e chegar à equação de Navier-Stokes na forma usual, vale a convenção de
-    tensão, sem o sinal. Nos módulos de calor e de massa, e sempre que o ponto for a analogia
-    entre os três transportes, vale a de Bird, com \(\tau_{yx}=-\mu\,\partial u_x/\partial y\)
-    lida como fluxo de momento, porque ali é ela que torna o paralelo visível em vez de
-    apenas afirmado.</p>
-    <p>Ao comparar com outros textos, o primeiro passo é sempre verificar qual das duas está
-    em uso, do mesmo jeito que no módulo 4 foi preciso verificar a convenção do índice
-    politrópico.</p>
+    Newton com um sinal negativo,</p>
+    <p style="text-align:center">\(\tau_{yx}=-\mu\,\pder{u_x}{y}\).</p>
+    <p>Não é um erro nem uma física diferente. Naquela convenção \(\tau_{yx}\) não é lida como
+    tensão, e sim como <em>fluxo de quantidade de movimento</em>: a quantidade de movimento na
+    direção \(x\) que atravessa, por segundo e por unidade de área, uma superfície de normal
+    \(y\). Nessa leitura, o momento se comporta como uma grandeza que escoa das regiões onde há
+    mais para as regiões onde há menos, e o sinal negativo é o que registra esse sentido, do
+    mesmo modo que o sinal negativo numa descida registra que se vai do alto para o
+    baixo.</p>
+    <p>Essa escolha tem uma razão que só vai aparecer inteira mais adiante. Nos módulos 10 e
+    13 vão surgir duas outras leis constitutivas, uma para o calor e outra para a massa, e as
+    duas terão exatamente a mesma estrutura: um fluxo igual a um coeficiente vezes um
+    gradiente, com sinal negativo. Escrevendo a viscosidade desta maneira desde já, as três
+    ficam com a mesma cara, e a analogia entre os três transportes, que é o fio do curso
+    inteiro, passa a ser visível em vez de apenas afirmada.</p>
+    <p>O curso usa as duas convenções, cada uma onde rende mais. Aqui, onde o objetivo é
+    construir o tensor de Cauchy e chegar à equação de Navier-Stokes na forma usual, vale a
+    de tensão, sem o sinal. Nos módulos de calor e de massa, e sempre que o paralelo entre os
+    três transportes for o ponto, vale a de Bird. Ao comparar com outros textos, o primeiro
+    passo é sempre verificar qual das duas está em uso, do mesmo jeito que no módulo 4 foi
+    preciso verificar a convenção do índice politrópico.</p>
   </div>
 
   <!-- ================================================== -->
@@ -347,6 +352,36 @@
   <p>\[Q=\int_0^{2\pi}\!\!\int_0^R u_z\,r\,dr\,d\theta
   =\frac{\pi R^4\Delta p}{8\mu L}.\]</p>
 
+  <h3>O mesmo tubo com um fluido de lei de potência</h3>
+
+  <p>Vale refazer o problema por um caminho mais curto, que separa o que é geometria do que é
+  reologia. Fazendo o equilíbrio de forças num cilindro de raio \(r\) e comprimento \(L\)
+  dentro do tubo, a pressão empurra a seção \(\pi r^2\) e a tensão resiste na lateral
+  \(2\pi rL\), de modo que</p>
+
+  <p>\[\tau(r)=\frac{\Delta p}{2L}\,r.\]</p>
+
+  <p>Nenhuma hipótese sobre o fluido foi usada, e o resultado vale para qualquer um deles: a
+  tensão cresce linearmente do eixo até a parede, onde atinge \(\Delta p\,R/2L\). Trocar o
+  fluido não muda isso. O que muda é quanta velocidade essa tensão produz.</p>
+
+  <p>Com a lei de potência da seção 2, escrita como \(\tau=K\left|du/dr\right|^n\), a
+  integração de \(r\) até \(R\) com a condição de não deslizamento dá</p>
+
+  <p>\[u(r)=\frac{n}{n+1}\left(\frac{\Delta p}{2KL}\right)^{1/n}
+  \left[R^{\frac{n+1}{n}}-r^{\frac{n+1}{n}}\right],
+  \qquad
+  Q=\frac{\pi n}{3n+1}\left(\frac{\Delta p}{2KL}\right)^{1/n}
+  R^{\frac{3n+1}{n}}.\]</p>
+
+  <p>Com \(n=1\) e \(K=\mu\) tudo recai na parábola e na quarta potência. Fora disso, dois
+  resultados merecem atenção. O primeiro é a forma do perfil: a razão entre a velocidade do
+  eixo e a média vale \(\left(3n+1\right)/\left(n+1\right)\), que é 2 no newtoniano e cai
+  para perto de 1 nos pseudoplásticos fortes, cujo perfil fica achatado como um bloco
+  deslizando sobre uma camada fina junto à parede. O segundo é que a <strong>quarta potência
+  não é universal</strong>: a vazão vai com \(R^{\left(3n+1\right)/n}\), expoente que chega a
+  5 num fluido com \(n=0{,}5\) e cai a 3,6 num dilatante com \(n=1{,}6\).</p>
+
   <div data-widget="poiseuille"></div>
 
   <!-- ================================================== -->
@@ -465,6 +500,6 @@
   Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
 </footer>
 
-<script src="assets/js/widgets.js?v=202611090009"></script>
+<script src="assets/js/widgets.js?v=202611090017"></script>
 </body>
 </html>

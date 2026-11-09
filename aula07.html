@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 7: Tensão superficial e capilaridade | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611090009">
-<script src="assets/js/comum.js?v=202611090009"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090017">
+<script src="assets/js/comum.js?v=202611090017"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -162,6 +162,8 @@
   \(1/R\), de modo que \(\kappa=2/R\). Num cilindro de raio \(R\), uma das curvas é um círculo
   e a outra é uma reta, de curvatura nula, e \(\kappa=1/R\). Num plano, \(\kappa=0\).</p>
 
+  <div data-widget="curvatura"></div>
+
   <!-- ================================================== -->
   <h2 id="s4">4. A força sobre um elemento de superfície</h2>
 
@@ -233,6 +235,43 @@
   significa em números.</p>
 
   <div data-widget="younglaplace"></div>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Por que respirar é possível</span>
+    <p>O pulmão humano tem algo como trezentos milhões de alvéolos, cada um com uns \(100\) μm
+    de raio no fim de uma expiração tranquila, e a parede interna de todos eles é coberta por
+    um filme de líquido. Cada alvéolo é, portanto, uma bolha com uma única interface entre
+    líquido e ar, e a relação desta seção se aplica diretamente a ele.</p>
+    <p>Se esse líquido fosse água pura, com \(\gamma=73\) mN/m, o salto de pressão
+    necessário para manter o alvéolo aberto seria</p>
+    <p style="text-align:center">\(\Delta p=\dfrac{2\gamma}{R}
+    =\dfrac{2\times0{,}073}{10^{-4}}\approx1{,}5\) kPa,</p>
+    <p>ou cerca de \(15\) cmH₂O, contra os \(5\) cmH₂O que o diafragma produz numa respiração
+    normal. Inspirar seria um esforço violento, e ao fim de cada expiração os alvéolos
+    simplesmente colapsariam.</p>
+    <p>Há um segundo problema, pior que o primeiro, e ele é o exercício 7.6 vestido de
+    anatomia. Alvéolos vizinhos se comunicam pelos ductos, e por \(\Delta p=2\gamma/R\) o
+    menor deles tem a maior pressão interna. Com \(\gamma\) fixo, o pequeno esvaziaria dentro
+    do grande, e o pulmão inteiro se reduziria a poucas bolhas enormes e inúteis para a troca
+    gasosa, que precisa de área.</p>
+    <p>A saída da evolução foi química. Os pneumócitos do tipo II secretam o
+    <strong>surfactante pulmonar</strong>, uma mistura cujo componente principal é a
+    dipalmitoilfosfatidilcolina, que se concentra na interface e derruba \(\gamma\) para a
+    faixa de \(1\) a \(10\) mN/m, reduzindo o esforço inspiratório por um fator de quase
+    dez.</p>
+    <p>O essencial, porém, não é o valor baixo e sim o fato de ele <strong>não ser
+    constante</strong>. Quando o alvéolo encolhe, a área da interface diminui, as moléculas de
+    surfactante ficam mais apertadas e \(\gamma\) cai ainda mais; quando ele infla, elas se
+    espalham e \(\gamma\) sobe. Com \(\gamma\) caindo junto com \(R\), a razão
+    \(2\gamma/R\) deixa de crescer sem limite na compressão, e o alvéolo pequeno para de
+    esvaziar no grande. A estabilidade do pulmão vem dessa dependência de \(\gamma\) com a
+    área, e não do valor de \(\gamma\) em si.</p>
+    <p>A consequência clínica é direta. O surfactante só passa a ser produzido em quantidade
+    por volta da trigésima semana de gestação, e o recém-nascido prematuro que não o tem
+    desenvolve a síndrome do desconforto respiratório, antes chamada de doença da membrana
+    hialina. O tratamento é instilar surfactante exógeno na traqueia, e ele funciona
+    exatamente pelo mecanismo descrito acima.</p>
+  </div>
 
   <!-- ================================================== -->
   <h2 id="s6">6. O efeito Marangoni</h2>
@@ -401,6 +440,13 @@
       superfície, uma normal e uma tangencial. Explique por que a normal pode ser equilibrada
       por uma diferença de pressão e a tangencial não pode, e o que isso implica sobre a
       possibilidade de equilíbrio estático numa superfície com \(\nabla_l\gamma\neq0\).</li>
+
+      <li><b>7.12</b> Modele o alvéolo com um surfactante cuja tensão superficial dependa do
+      raio na forma \(\gamma=\gamma_0\left(R/R_0\right)^m\), com \(m>0\). Obtenha
+      \(\Delta p(R)\) e determine para que valores de \(m\) o alvéolo pequeno deixa de
+      esvaziar no grande. Em seguida estime o trabalho de uma inspiração, integrando
+      \(\Delta p\,dV\) de \(R_0\) a \(1{,}3R_0\), com e sem surfactante, e compare os dois
+      números.</li>
     </ol>
   </div>
 
@@ -418,6 +464,6 @@
   Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
 </footer>
 
-<script src="assets/js/widgets.js?v=202611090009"></script>
+<script src="assets/js/widgets.js?v=202611090017"></script>
 </body>
 </html>
