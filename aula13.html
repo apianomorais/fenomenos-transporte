@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 13: Difusão de massa e a lei de Fick | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611090917">
+<script src="assets/js/comum.js?v=202611090917"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
+      <a href="aula06.html" class="num" title="Módulo 6: Viscosidade e a equação de Navier-Stokes">6</a>
+      <a href="aula07.html" class="num" title="Módulo 7: Tensão superficial e capilaridade">7</a>
+      <span class="grupo">Numérico</span>
+      <a href="aula08.html" class="num" title="Módulo 8: Campos no computador: relaxação e convergência">8</a>
+      <a href="aula09.html" class="num" title="Módulo 9: Advecção e difusão no computador">9</a>
+      <span class="grupo">Energia</span>
+      <a href="aula10.html" class="num" title="Módulo 10: Condução de calor">10</a>
+      <a href="aula11.html" class="num" title="Módulo 11: Convecção e semelhança">11</a>
+      <a href="aula12.html" class="num" title="Módulo 12: Radiação térmica">12</a>
+      <span class="grupo">Massa</span>
+      <a href="aula13.html" class="num ativo" title="Módulo 13: Difusão de massa e a lei de Fick">13</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. Concentrações e velocidades numa mistura</a></li>
+    <li><a href="#s2">2. A primeira lei de Fick</a></li>
+    <li><a href="#s3">3. A segunda lei e a equação da difusão</a></li>
+    <li><a href="#s4">4. O passeio aleatório</a></li>
+    <li><a href="#s5">5. Quanto vale D</a></li>
+    <li><a href="#s6">6. Quanto tempo a difusão leva</a></li>
+    <li><a href="#s7">7. Difusão estacionária e a coluna de Stefan</a></li>
+    <li><a href="#s8">8. Difusão transiente</a></li>
+    <li><a href="#s9">9. Difusão com reação e o módulo de Thiele</a></li>
+    <li><a href="#s10">10. Exercícios resolvidos</a></li>
+    <li><a href="#s11">11. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 13 · Transporte de massa</p>
+  <h1>Difusão de massa e a lei de Fick</h1>
+  <p class="subtitulo">Esta é a terceira e última das três leis constitutivas prometidas no
+  módulo 10, e a mais nova das três: Adolf Fick a escreveu em 1855, copiando deliberadamente a
+  forma da lei de Fourier. O que o módulo acrescenta ao paralelo é a origem microscópica, que
+  aqui pode ser vista acontecer, e a complicação que o transporte de massa tem e os outros dois
+  não.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Distinguir as medidas de concentração e as velocidades médias de uma mistura, e saber
+      em relação a que o fluxo difusivo é definido.</li>
+      <li>Enunciar a primeira lei de Fick e obter dela a equação da difusão pelo balanço de
+      espécie.</li>
+      <li>Relacionar \(D\) ao passeio aleatório pela relação de Einstein.</li>
+      <li>Estimar \(D\) em gases, líquidos e sólidos, e usar \(t=L^2/2D\) para decidir quando a
+      difusão é suficiente.</li>
+      <li>Resolver difusão estacionária com e sem arraste, e transiente no semi-espaço.</li>
+      <li>Combinar difusão com reação e interpretar o módulo de Thiele.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. Concentrações e velocidades numa mistura</h2>
+
+  <p>O transporte de massa começa com uma dificuldade que os outros dois não têm. Energia não
+  se move sozinha em relação à matéria: quando um elemento de fluido escoa, ele leva a sua
+  energia junto. Uma espécie química, não. Numa mistura, o açúcar pode estar indo para um lado
+  enquanto a água vai para o outro, de modo que a pergunta "qual é a velocidade do fluido" deixa
+  de ter uma resposta só.</p>
+
+  <p>Por isso convém fixar a notação antes de qualquer fórmula. Para uma espécie \(A\) numa
+  mistura:</p>
+
+  <p>\[\rho_A\ \text{(kg/m³)},\qquad
+  c_A=\frac{\rho_A}{M_A}\ \text{(mol/m³)},\qquad
+  \omega_A=\frac{\rho_A}{\rho},\qquad
+  x_A=\frac{c_A}{c},\]</p>
+
+  <p>que são a concentração mássica, a molar, a fração mássica e a fração molar. Cada espécie
+  tem a sua velocidade média \(\vet{v}_A\), e a mistura tem duas velocidades médias, conforme o
+  peso usado:</p>
+
+  <p>\[\vet{v}=\sum_A\omega_A\vet{v}_A\ \text{(mássica)},
+  \qquad
+  \vet{v}^*=\sum_Ax_A\vet{v}_A\ \text{(molar)}.\]</p>
+
+  <p>A primeira é a que aparece em Navier-Stokes, porque é ela que carrega a quantidade de
+  movimento. Com isso, o fluxo total de \(A\) através de uma superfície fixa se separa em duas
+  parcelas:</p>
+
+  <p>\[\underbrace{\rho_A\vet{v}_A}_{\text{fluxo total}}
+  =\underbrace{\rho_A\vet{v}}_{\text{arraste pela mistura}}
+  +\underbrace{\vet{j}_A}_{\text{difusão}},
+  \qquad
+  \vet{j}_A=\rho_A\left(\vet{v}_A-\vet{v}\right).\]</p>
+
+  <p>Essa separação é a chave do módulo. O que a lei de Fick descreve é apenas
+  \(\vet{j}_A\), o movimento da espécie <strong>em relação à mistura</strong>, e não o fluxo
+  total. Quando a mistura está parada como um todo, \(\vet{v}=0\) e os dois coincidem, que é o
+  caso de quase todo problema de livro. Quando não está, confundir os dois produz erro, e a
+  seção 7 mostra um caso em que o erro é de 1,6% e outro, no exercício 13.3, em que chega a
+  20%.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. A primeira lei de Fick</h2>
+
+  <p>Com o fluxo difusivo bem definido, a lei é a esperada:</p>
+
+  <p>\[\vet{j}_A=-\rho\,D_{AB}\,\nabla\omega_A,
+  \qquad\text{ou, em base molar,}\qquad
+  \vet{J}^*_A=-c\,D_{AB}\,\nabla x_A.\]</p>
+
+  <p>Para uma mistura diluída de densidade praticamente uniforme, as duas formas se reduzem à
+  que aparece em quase todo texto,</p>
+
+  <p>\[\vet{j}_A=-D_{AB}\,\nabla c_A,\]</p>
+
+  <p>que é a forma que o nosso livro-texto usa, escrita com a densidade de partículas
+  \(\rho_N\). Convém saber que ela é a versão diluída e com a mistura em repouso, e não a lei
+  geral, porque a seção 7 precisará da forma completa.</p>
+
+  <p>O coeficiente \(D_{AB}\) é a <strong>difusividade</strong>, em m²/s, as mesmas unidades de
+  \(\nu\) e de \(\alpha\). O índice duplo não é decoração: a difusividade é uma propriedade do
+  par de substâncias, e não de uma delas, e numa mistura de três ou mais espécies nem sequer
+  basta uma matriz de pares, assunto que leva às equações de Maxwell-Stefan.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">As três leis, completas</span>
+    <p>\[\tau_{yx}=-\mu\der{u_x}{y},\qquad
+    q_y=-k\der{T}{y},\qquad
+    j_{A,y}=-D_{AB}\der{c_A}{y}\]</p>
+    <p>\[\nu=\frac{\mu}{\rho},\qquad
+    \alpha=\frac{k}{\rho c_p},\qquad D_{AB},\]</p>
+    <p>\[\mathrm{Pr}=\frac{\nu}{\alpha},\qquad
+    \mathrm{Sc}=\frac{\nu}{D_{AB}},\qquad
+    \mathrm{Le}=\frac{\alpha}{D_{AB}}.\]</p>
+    <p>A promessa feita na caixa do módulo 6 está cumprida: as três leis têm a mesma forma, as
+    três difusividades têm as mesmas unidades, e as razões entre elas são os três números que o
+    módulo 14 usará para transferir uma correlação medida para calor diretamente para
+    massa.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. A segunda lei e a equação da difusão</h2>
+
+  <p>O balanço de espécie num volume de controle fixo é o mesmo do módulo 2, com um termo a
+  mais para reação química:</p>
+
+  <p>\[\pder{c_A}{t}+\nabla\cdot\left(c_A\vet{v}^*+\vet{J}^*_A\right)=\dot{r}_A.\]</p>
+
+  <p>Com a mistura em repouso, sem reação, e substituindo a lei de Fick,</p>
+
+  <p>\[\pder{c_A}{t}=\nabla\cdot\left(D_{AB}\nabla c_A\right)
+  =\left(\nabla D_{AB}\right)\cdot\nabla c_A+D_{AB}\nabla^2c_A,\]</p>
+
+  <p>e, se a difusividade for uniforme, resta a <strong>segunda lei de Fick</strong>:</p>
+
+  <p>\[\pder{c_A}{t}=D_{AB}\nabla^2c_A.\]</p>
+
+  <p>É a equação do calor do módulo 10 com outro nome, e tudo o que foi resolvido lá vale aqui
+  trocando \(T\) por \(c_A\) e \(\alpha\) por \(D_{AB}\). O termo \((\nabla D)\cdot\nabla c\)
+  importa quando a difusividade varia com a concentração, o que é comum em polímeros e em
+  sólidos.</p>
+
+  <p>Resolvendo por separação de variáveis, com \(c_A=f(t)g(\vet{r})\),</p>
+
+  <p>\[\frac{1}{Df}\der{f}{t}=\frac{1}{g}\nabla^2g=-k^2,\]</p>
+
+  <p>e as duas equações que sobram são conhecidas:</p>
+
+  <p>\[f(t)=Ae^{-k^2Dt},\qquad \nabla^2g=-k^2g.\]</p>
+
+  <p>A segunda é a equação de Helmholtz, cujas soluções em coordenadas cartesianas são senos e
+  cossenos, como no oscilador harmônico. A primeira diz o essencial sobre a física: cada modo
+  espacial de número de onda \(k\) decai com constante de tempo \(1/k^2D\), de modo que os
+  detalhes finos, de \(k\) grande, somem primeiro, e o perfil vai ficando cada vez mais suave.
+  Difusão apaga estrutura, e apaga a estrutura pequena muito mais depressa que a grande.</p>
+
+  <p>Com a mistura em movimento, o termo de arraste permanece e a equação vira exatamente a de
+  advecção-difusão do módulo 9:</p>
+
+  <p>\[\pder{c_A}{t}+\vet{v}\cdot\nabla c_A=D_{AB}\nabla^2c_A+\dot{r}_A.\]</p>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. O passeio aleatório</h2>
+
+  <p>A lei de Fick, como Fourier e Newton, é empírica na origem: Fick a propôs por analogia,
+  sem derivá-la. A derivação microscópica veio cinquenta anos depois, com Einstein em 1905, no
+  mesmo ano dos outros três artigos famosos, e é notavelmente simples.</p>
+
+  <div data-widget="caminhante"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. Quanto vale D</h2>
+
+  <p>A relação \(D=a^2/2\Delta t\) do widget transforma a pergunta sobre a difusividade numa
+  pergunta sobre o passo e a frequência dos passos, e a resposta é diferente em cada estado da
+  matéria.</p>
+
+  <p>Nos <strong>gases</strong>, o passo é o livre caminho médio \(\lambda\) e a frequência é
+  \(\bar{c}/\lambda\), de modo que a teoria cinética dá</p>
+
+  <p>\[D\approx\frac13\bar{c}\lambda.\]</p>
+
+  <p>Com \(\bar{c}=460\) m/s e \(\lambda=68\) nm para o ar em condições normais, isso dá
+  \(1{,}0\times10^{-5}\) m²/s, contra \(2{,}0\times10^{-5}\) medido para o oxigênio no ar: a
+  estimativa acerta a ordem de grandeza com uma linha de conta. Como \(\lambda\propto1/p\) e
+  \(\bar{c}\propto\sqrt{T}\), segue \(D\propto T^{3/2}/p\), o que é confirmado
+  experimentalmente.</p>
+
+  <p>Nos <strong>líquidos</strong>, a molécula não voa livre, e sim é empurrada pelas vizinhas
+  enquanto sofre arraste viscoso. Einstein combinou a agitação térmica com a lei de Stokes do
+  módulo 6 e obteve</p>
+
+  <p>\[D=\frac{k_BT}{6\pi\mu a},\]</p>
+
+  <p>a relação de <strong>Stokes-Einstein</strong>, com \(a\) o raio da molécula. Para o
+  oxigênio na água, com \(a\approx0{,}15\) nm e \(\mu=0{,}89\) mPa·s, ela dá
+  \(1{,}6\times10^{-9}\) m²/s contra \(2{,}1\times10^{-9}\) medido, o que é um acerto notável
+  para uma fórmula que trata uma molécula como uma esfera macroscópica. O resultado é o elo
+  entre esta unidade e a de quantidade de movimento: a mesma viscosidade que freia uma esfera
+  no módulo 6 fixa a difusividade aqui.</p>
+
+  <p>Nos <strong>sólidos</strong>, o átomo precisa de energia para pular de um sítio da rede
+  para outro, de modo que a frequência dos pulos tem fator de Boltzmann e</p>
+
+  <p>\[D=D_0\,e^{-E_a/RT}.\]</p>
+
+  <p>A dependência exponencial com a temperatura é brutal: no ferro, a difusividade do carbono
+  cresce por um fator da ordem de mil entre \(500\) e \(1000\) °C, e é por isso que o
+  tratamento térmico de aços é feito em faixas estreitas e bem controladas de
+  temperatura.</p>
+
+  <p>Em ordens de grandeza, para guardar: \(10^{-5}\) m²/s em gases, \(10^{-9}\) em líquidos,
+  \(10^{-11}\) para macromoléculas em água e de \(10^{-12}\) a \(10^{-30}\) em sólidos. São
+  vinte e cinco ordens de grandeza, a maior variação de qualquer propriedade de transporte
+  desta disciplina.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. Quanto tempo a difusão leva</h2>
+
+  <div data-widget="penetracao"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. Difusão estacionária e a coluna de Stefan</h2>
+
+  <p>Em regime permanente, sem reação e com \(D\) uniforme, a equação se reduz a
+  \(\nabla^2c_A=0\), e tudo o que o módulo 10 fez para a condução vale aqui. Numa membrana
+  plana de espessura \(L\),</p>
+
+  <p>\[N_A=\frac{D_{AB}}{L}\left(c_{A1}-c_{A2}\right)
+  =\frac{c_{A1}-c_{A2}}{L/D_{AB}},\]</p>
+
+  <p>com \(L/D\) no papel de resistência à transferência de massa, e as resistências de camadas
+  sucessivas somando-se em série como no circuito térmico.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Uma armadilha que a condução não tem</span>
+    <p>Na condução, a temperatura é contínua através de uma interface entre dois materiais. Na
+    difusão, a concentração <strong>não</strong> é: ela salta, porque o que se iguala no
+    equilíbrio é o potencial químico, e não a concentração. A razão entre os dois valores é o
+    coeficiente de partição ou, para um gás sobre um líquido, a constante da lei de Henry.</p>
+    <p>É por isso que o oxigênio dissolvido na água a \(25\) °C fica em \(8\) mg/L enquanto no
+    ar logo acima há \(280\) mg/L: não há gradiente nenhum empurrando oxigênio, os dois estão
+    em equilíbrio. Montar um circuito de resistências em série sem converter as concentrações
+    pelo coeficiente de partição em cada interface é o erro mais comum do assunto.</p>
+  </div>
+
+  <p>O caso em que o arraste da seção 1 deixa de ser ignorável é o da <strong>coluna de
+  Stefan</strong>: um tubo com líquido no fundo, ar parado acima e a boca aberta, que é o
+  experimento clássico para medir \(D\). A espécie \(A\) evapora e sobe; o ar \(B\) não é
+  absorvido pelo líquido, de modo que \(N_B=0\) em regime permanente. Mas se \(A\) sobe e
+  \(B\) não desce, a mistura como um todo tem velocidade para cima, e esse movimento arrasta
+  \(A\) adicionalmente.</p>
+
+  <p>Impondo \(N_B=0\) na definição de fluxo total e resolvendo, encontra-se</p>
+
+  <p>\[N_A=\frac{c\,D_{AB}}{L}\,\ln\!\left(\frac{1-x_{A2}}{1-x_{A1}}\right),\]</p>
+
+  <p>em vez do resultado ingênuo \(N_A=cD(x_{A1}-x_{A2})/L\). O logaritmo é a assinatura do
+  arraste, e o fator \(1/(1-x_A)\) que dele resulta mostra quando a correção importa: para
+  espécies diluídas, \(x_A\ll1\) e o logaritmo se reduz à diferença, mas para
+  \(x_A\) próximo de 1 a correção é enorme. O exercício resolvido 13.1 faz as duas contas para
+  a evaporação de água a \(25\) °C e encontra apenas \(1{,}6\%\) de diferença; o exercício
+  13.3 refaz tudo com acetona, onde ela chega a 20%.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. Difusão transiente</h2>
+
+  <p>Todos os resultados do módulo 10 se traduzem diretamente. Para um meio semi-infinito,
+  inicialmente com concentração \(c_0\), cuja superfície é posta em \(c_s\) em \(t=0\),</p>
+
+  <p>\[\frac{c_A(x,t)-c_s}{c_0-c_s}
+  =\operatorname{erf}\left(\frac{x}{2\sqrt{D_{AB}t}}\right),\]</p>
+
+  <p>e o fluxo na superfície é \(N_A=\left(c_s-c_0\right)\sqrt{D_{AB}/\pi t}\).</p>
+
+  <p>Esse é o problema da <strong>cementação</strong> de um aço, em que uma peça é posta numa
+  atmosfera rica em carbono e se quer uma camada superficial endurecida de profundidade
+  controlada; é também o da dopagem de semicondutores, o da salga de um queijo e o da
+  absorção de \(\text{CO}_2\) num filme de líquido. Em todos, a profundidade afetada é da
+  ordem de \(4\sqrt{Dt}\) e cresce com a raiz do tempo.</p>
+
+  <p>A analogia com o módulo 10 é completa e vale a pena ter em tabela:</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Dicionário entre os módulos 10 e 13</span>
+    <p>\(T\leftrightarrow c_A\); \(\alpha\leftrightarrow D_{AB}\);
+    \(k\leftrightarrow D_{AB}\) (ou \(\rho D\), conforme a base);
+    \(q=-k\nabla T\leftrightarrow N_A=-D\nabla c_A\);
+    \(h\leftrightarrow k_c\), o coeficiente de transferência de massa;
+    \(\mathrm{Nu}=hL/k\leftrightarrow\mathrm{Sh}=k_cL/D\), o número de Sherwood;
+    \(\mathrm{Bi}=hL/k_s\leftrightarrow\mathrm{Bi}_m=k_cL/D_s\);
+    \(\mathrm{Pr}\leftrightarrow\mathrm{Sc}\).</p>
+    <p>A única grandeza sem correspondente é a radiação: não existe transferência de massa
+    entre corpos que não se tocam. Em compensação, a massa tem a reação química, que o calor
+    só tem como geração interna.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. Difusão com reação e o módulo de Thiele</h2>
+
+  <p>Quando a espécie é consumida enquanto difunde, os dois processos competem, e qual deles
+  limita a taxa é a pergunta central da catálise, da respiração de um tecido e da corrosão.
+  Para uma reação de primeira ordem, \(\dot{r}_A=-k_1c_A\), em regime permanente numa placa de
+  espessura \(L\) com a superfície em \(c_s\) e o fundo impermeável,</p>
+
+  <p>\[D\dder{c_A}{x}=k_1c_A
+  \quad\Longrightarrow\quad
+  c_A(x)=c_s\frac{\cosh\left(\phi\,x/L\right)}{\cosh\phi},
+  \qquad
+  \phi=L\sqrt{\frac{k_1}{D}},\]</p>
+
+  <p>com \(\phi\) o <strong>módulo de Thiele</strong>, que é a razão entre o tempo de difusão
+  \(L^2/D\) e o de reação \(1/k_1\). Definindo a eficácia \(\eta\) como a razão entre o que de
+  fato reage e o que reagiria se toda a placa estivesse em \(c_s\),</p>
+
+  <p>\[\eta=\frac{\tgh\phi}{\phi}.\]</p>
+
+  <p>Os dois limites valem mais que a fórmula. Com \(\phi\ll1\), a difusão é rápida, a
+  concentração é praticamente uniforme e \(\eta\to1\): o processo é <strong>limitado pela
+  reação</strong>, e melhorar o catalisador aumenta a produção. Com \(\phi\gg1\),
+  \(\eta\approx1/\phi\): a espécie reage antes de penetrar, só uma casca fina trabalha, e o
+  processo é <strong>limitado pela difusão</strong>. Nesse regime, melhorar o catalisador não
+  adianta nada, e o que adianta é moer as partículas, porque \(\eta\propto1/L\).</p>
+
+  <p>O mesmo raciocínio explica por que um tumor sólido desenvolve necrose no centro a partir
+  de poucos milímetros, e por que os eletrodos de uma bateria são feitos de pó e não de
+  blocos.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">13.1 Evaporação num tubo de Stefan</span>
+    <p>Um tubo vertical de \(2\) cm de diâmetro tem água no fundo, a \(25\) °C, e o nível está
+    \(10\) cm abaixo da boca, onde sopra ar seco. Com
+    \(D=2{,}6\times10^{-5}\) m²/s, calcule a taxa de evaporação e compare com o resultado sem o
+    termo de arraste.</p>
+    <p>A pressão de vapor da água a \(25\) °C é \(3169\) Pa, de modo que na superfície do
+    líquido</p>
+    <p>\[x_{A1}=\frac{3169}{101\,325}=0{,}0313,\qquad x_{A2}=0,\]</p>
+    <p>e a concentração molar total do gás é</p>
+    <p>\[c=\frac{P}{RT}=\frac{101\,325}{8{,}314\times298}=40{,}9\ \text{mol/m³}.\]</p>
+    <p>Pela fórmula com arraste,</p>
+    <p>\[N_A=\frac{40{,}9\times2{,}6\times10^{-5}}{0{,}10}
+    \ln\!\left(\frac{1-0}{1-0{,}0313}\right)
+    =1{,}063\times10^{-2}\times0{,}03180
+    =3{,}38\times10^{-4}\ \text{mol/m²s}.\]</p>
+    <p>Em massa, multiplicando por \(18\) g/mol e pela área de \(3{,}14\) cm², dá
+    \(1{,}9\times10^{-9}\) kg/s, ou \(165\) mg por dia. Em nível de líquido isso é meio
+    milímetro por dia, o que mostra de passagem como a difusão pura é lenta: a mesma água, num
+    prato aberto ao vento, evapora mil vezes mais depressa, porque ali o transporte é
+    convectivo.</p>
+    <p>Sem o termo de arraste, isto é, usando \(N_A=cD\,x_{A1}/L\), viria
+    \(3{,}32\times10^{-4}\) mol/m²s, apenas \(1{,}6\%\) abaixo. A razão é que a água a
+    \(25\) °C é uma espécie diluída no ar, com \(x_A=3\%\), e o logaritmo quase coincide com o
+    seu argumento. O exercício 13.3 refaz a conta com acetona, cuja pressão de vapor é dez
+    vezes maior, e lá a correção sobe para cerca de 20%.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">13.2 Por que o pulmão tem a forma que tem</span>
+    <p>Estime o tempo de difusão do oxigênio através da membrana alvéolo-capilar, de
+    \(0{,}6\) μm, e compare com o tempo que uma hemácia passa no capilar, \(0{,}75\) s. Em
+    seguida estime o tamanho máximo de um organismo que vivesse só de difusão.</p>
+    <p>Com \(D=2{,}1\times10^{-9}\) m²/s na água,</p>
+    <p>\[t=\frac{L^2}{2D}=\frac{\left(0{,}6\times10^{-6}\right)^2}
+    {2\times2{,}1\times10^{-9}}=8{,}6\times10^{-5}\ \text{s},\]</p>
+    <p>isto é, \(86\) μs contra \(0{,}75\) s disponíveis: sobra um fator de quase dez mil. A
+    troca gasosa é tão folgada que continua completa mesmo em exercício intenso, quando o
+    tempo de trânsito cai para um terço.</p>
+    <p>Para o organismo, a conta é outra. Tomando como critério que o oxigênio precise chegar
+    ao centro em um tempo da ordem do consumo, com algo como \(100\) s de folga,</p>
+    <p>\[L=\sqrt{2Dt}=\sqrt{2\times2{,}1\times10^{-9}\times100}
+    \approx6{,}5\times10^{-4}\ \text{m},\]</p>
+    <p>menos de um milímetro. Esse número é notavelmente respeitado pela biologia: animais sem
+    sistema circulatório, como platelmintos e cnidários, são finos ou achatados justamente
+    para manter toda célula a menos de um milímetro da água. Tudo o que é maior que isso
+    precisou inventar bombeamento, isto é, trocar difusão por advecção, que é o tema do módulo
+    14.</p>
+    <p>O pulmão humano resolve o mesmo problema pelo outro lado: em vez de encurtar a
+    distância ao mundo, ele traz o mundo para dentro, com trezentos milhões de alvéolos, uma
+    área de troca de cerca de \(100\) m² e uma barreira de \(0{,}6\) μm. É a mesma estratégia
+    das aletas do módulo 10, com área grande e espessura pequena, e pela mesma razão.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>13.3</b> Refaça o exercício 13.1 com acetona a \(25\) °C, cuja pressão de vapor é
+      \(30{,}8\) kPa, usando \(D=1{,}1\times10^{-5}\) m²/s. Compare o resultado com e sem o
+      termo de arraste e explique por que agora a diferença chega a 20%. Em seguida
+      determine a fração molar na superfície a partir da qual o arraste responde por metade do
+      fluxo, resolvendo \(\ln[1/(1-x_A)]=1{,}5\,x_A\).</li>
+
+      <li><b>13.4</b> Implemente o passeio aleatório em Python, com \(10^4\) caminhantes, e
+      verifique que \(\med{x^2}=n a^2\) e que o histograma converge para a gaussiana. Em
+      seguida torne o passo enviesado, com probabilidade \(0{,}55\) para a direita, e mostre
+      que aparece um termo de advecção, identificando a velocidade resultante.</li>
+
+      <li><b>13.5</b> Resolva numericamente a segunda lei de Fick em uma dimensão, com o
+      esquema do módulo 9, para um pulso inicial, e verifique contra a solução gaussiana
+      analítica. Meça a ordem de convergência.</li>
+
+      <li><b>13.6</b> Use a relação de Stokes-Einstein para estimar \(D\) da hemoglobina na
+      água, tomando a massa molar de \(64\) kDa e densidade de \(1{,}35\) g/cm³ para obter o
+      raio. Compare com o valor medido, \(6{,}9\times10^{-11}\) m²/s, e discuta por que a
+      concordância é melhor para proteínas globulares que para moléculas pequenas.</li>
+
+      <li><b>13.7</b> Uma peça de aço com \(0{,}2\%\) de carbono é cementada a \(950\) °C numa
+      atmosfera que mantém \(1{,}0\%\) na superfície, com
+      \(D=1{,}3\times10^{-11}\) m²/s. Determine o tempo necessário para que a concentração a
+      \(0{,}5\) mm de profundidade atinja \(0{,}6\%\), e faça o gráfico do perfil em 1, 4 e
+      16 horas.</li>
+
+      <li><b>13.8</b> Deduza a fórmula da coluna de Stefan a partir de \(N_B=0\), mostrando
+      onde entra o arraste, e verifique que ela se reduz ao resultado sem arraste quando
+      \(x_A\to0\).</li>
+
+      <li><b>13.9</b> Obtenha \(\eta=\tgh\phi/\phi\) a partir do perfil de concentração da
+      seção 9, e faça o gráfico de \(\eta\) contra \(\phi\) em escala logarítmica. Determine a
+      partir de que valor de \(\phi\) a eficácia cai abaixo de \(0{,}5\), e o que isso
+      significa para o tamanho de partícula de um catalisador.</li>
+
+      <li><b>13.10</b> Em meia página: a caixa da seção 7 afirma que a concentração salta numa
+      interface enquanto a temperatura não. Explique a diferença em termos de qual grandeza se
+      iguala no equilíbrio em cada caso, e descreva o que aconteceria se alguém montasse um
+      circuito de resistências de massa ignorando o coeficiente de partição.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula12.html"><small>Módulo anterior</small>← 12. Radiação</a>
+    <span class="em-breve"><small>Em preparação</small>14. Convecção mássica</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611090917"></script>
+</body>
+</html>

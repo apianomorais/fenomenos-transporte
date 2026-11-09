@@ -5017,6 +5017,312 @@
     registrarRedesenho(desenhar);
   };
 
+  /* =================================================================
+     27. O passeio aleatório
+     De onde vem a lei de Fick. Mil caminhantes dando passos para a
+     direita ou para a esquerda produzem, sem combinar nada entre si, a
+     gaussiana que a equação da difusão prevê, e com a variância certa.
+     ================================================================= */
+  REGISTRO.caminhante = function (raiz) {
+    var M = 1200;                 /* caminhantes */
+    var PASSO = 1;                /* comprimento do passo, em unidades a */
+    var est = { rodando: true, n: 0 };
+    var x = new Float64Array(M);
+    var TRACO = 24, trilhas = [], historia = [];
+
+    function reiniciar() {
+      x.fill(0); est.n = 0; historia = [];
+      trilhas = [];
+      for (var i = 0; i < TRACO; i++) trilhas.push([0]);
+    }
+
+    function passo() {
+      var i;
+      for (i = 0; i < M; i++) x[i] += (Math.random() < 0.5 ? -PASSO : PASSO);
+      for (i = 0; i < TRACO; i++) trilhas[i].push(x[i]);
+      est.n++;
+      var s = 0;
+      for (i = 0; i < M; i++) s += x[i] * x[i];
+      historia.push(s / M);
+    }
+
+    var corpo = moldura(raiz, 'De onde vem a lei de Fick');
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas'), cv2 = el('canvas');
+    par.appendChild(cv1); par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    opcoes(ctr, [{ rot: 'pausar', v: 0 }, { rot: 'recomeçar', v: 1 }], -1,
+      function (v) {
+        if (v === 0) est.rodando = !est.rodando;
+        else { reiniciar(); est.rodando = true; }
+      });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'passos dados', k: 'n' },
+      { rot: 'deslocamento médio', k: 'med' },
+      { rot: 'desvio quadrático medido', k: 'm2' },
+      { rot: 'previsto, 2Dt = n a²', k: 'p2' },
+      { rot: 'largura √(2Dt)', k: 'sig' },
+      { rot: 'caminhante mais distante', k: 'max' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var n = Math.max(1, est.n), sig = Math.sqrt(n), i;
+      var lim = Math.max(6, 4.2 * sig);
+
+      /* ---- painel 1: algumas trajetórias ---- */
+      var g1 = G.eixos(cv1, {
+        altura: 300, xmin: -lim, xmax: lim, ymin: 0,
+        ymax: Math.max(50, Math.ceil(est.n / 50) * 50), divY: 5,
+        margem: { e: 54, d: 14, c: 16, b: 44 },
+        rotX: 'posição, em passos', rotY: 'tempo, em passos',
+        marcasX: G.marcasLineares(-lim, lim, 5, 0),
+        formataY: function (v) { return F.fmt(v, 0); }
+      });
+      var c1 = g1.ct;
+      c1.strokeStyle = 'rgba(63,67,145,.35)'; c1.lineWidth = 1.2;
+      trilhas.forEach(function (t) {
+        c1.beginPath();
+        for (i = 0; i < t.length; i++) {
+          if (i === 0) c1.moveTo(g1.X(t[i]), g1.Y(i)); else c1.lineTo(g1.X(t[i]), g1.Y(i));
+        }
+        c1.stroke();
+      });
+      /* a envoltória ±√(2Dt), que é a largura típica da nuvem */
+      c1.strokeStyle = G.COR.vinho; c1.lineWidth = 2; c1.setLineDash([6, 4]);
+      [1, -1].forEach(function (s) {
+        c1.beginPath();
+        for (i = 0; i <= 60; i++) {
+          var tt = est.n * i / 60, xx = s * Math.sqrt(tt);
+          if (i === 0) c1.moveTo(g1.X(0), g1.Y(0)); else c1.lineTo(g1.X(xx), g1.Y(tt));
+        }
+        c1.stroke();
+      });
+      c1.setLineDash([]);
+      rotulo(c1, '±√(2Dt)', g1.X(Math.sqrt(est.n)) + 8, g1.Y(est.n) + 14,
+        G.COR.vinho, 'left');
+
+      /* ---- painel 2: histograma e a gaussiana prevista ---- */
+      var NB = 41, larg = 2 * lim / NB, h = new Array(NB).fill(0);
+      for (i = 0; i < M; i++) {
+        var b = Math.floor((x[i] + lim) / larg);
+        if (b >= 0 && b < NB) h[b]++;
+      }
+      var pmax = Math.max(0.12, Math.max.apply(null, h) / M / larg * 1.25);
+      var g2 = G.eixos(cv2, {
+        altura: 300, xmin: -lim, xmax: lim, ymin: 0, ymax: pmax, divY: 5,
+        margem: { e: 62, d: 14, c: 16, b: 44 },
+        rotX: 'posição, em passos', rotY: 'fração por unidade de posição',
+        marcasX: G.marcasLineares(-lim, lim, 5, 0),
+        formataY: function (v) { return F.fmt(v, 2); }
+      });
+      G.barras(g2, h.map(function (v, k) {
+        return { x: -lim + (k + 0.5) * larg, y: v / M / larg };
+      }), G.COR.clara, larg * 0.9);
+      /* a solução da equação da difusão com a mesma variância */
+      G.curva(g2, function (xx) {
+        return Math.exp(-xx * xx / (2 * n)) / Math.sqrt(2 * Math.PI * n);
+      }, G.COR.vinho, 2.4);
+      G.legenda(g2, [{ cor: G.COR.clara, texto: 'os 1200 caminhantes' },
+                     { cor: G.COR.vinho, texto: 'solução da equação da difusão' }]);
+
+      var med = 0, m2 = 0, mx = 0;
+      for (i = 0; i < M; i++) {
+        med += x[i]; m2 += x[i] * x[i]; mx = Math.max(mx, Math.abs(x[i]));
+      }
+      mostrar({
+        n: String(est.n),
+        med: F.fmt(med / M, 3),
+        m2: F.fmt(m2 / M, 2),
+        p2: F.fmt(est.n, 2),
+        sig: F.fmt(Math.sqrt(est.n), 2),
+        max: F.fmt(mx, 0)
+      });
+    }
+
+    nota.innerHTML =
+      '<p>Cada caminhante dá, a cada instante, um passo de comprimento \\(a\\) para a direita '
+      + 'ou para a esquerda, com a mesma probabilidade, e nenhum deles sabe onde estão os '
+      + 'outros. Não há força, não há gradiente e não há nada puxando ninguém para o lado '
+      + 'menos povoado.</p>'
+      + '<p>Depois de \\(n\\) passos, a posição de um caminhante é a soma de \\(n\\) parcelas '
+      + 'independentes de média zero. A média continua zero, de modo que o deslocamento médio '
+      + 'é nulo, como o cartão mostra. O que cresce é o <strong>quadrado</strong> do '
+      + 'deslocamento, porque os termos cruzados é que se cancelam na média e os quadrados '
+      + 'não:</p>'
+      + '\\[\\med{x^2}=n\\,a^2=\\frac{a^2}{\\Delta t}\\,t\\equiv2Dt,'
+      + '\\qquad D=\\frac{a^2}{2\\,\\Delta t}.\\]'
+      + '<p>Essa é a relação de Einstein, de 1905, e nela está a origem microscópica da lei de '
+      + 'Fick. A largura típica da nuvem cresce com \\(\\sqrt{t}\\), e não com \\(t\\): é o '
+      + 'contorno tracejado do painel da esquerda, e é a razão de a difusão ser desesperadora '
+      + 'em distâncias grandes, assunto da seção seguinte.</p>'
+      + '<p>O painel da direita mostra o outro resultado. Pelo teorema central do limite, a '
+      + 'soma de muitos passos independentes tende a uma gaussiana, e a gaussiana de variância '
+      + '\\(2Dt\\) é exatamente a solução da equação da difusão para uma fonte pontual. O '
+      + 'histograma dos caminhantes e a curva da equação diferencial coincidem sem que nada '
+      + 'tenha sido ajustado entre os dois.</p>'
+      + '<p>Convém guardar o que isso significa conceitualmente. A lei de Fick não é uma lei '
+      + 'de força: o gradiente de concentração não empurra molécula nenhuma. O fluxo aparece '
+      + 'porque, onde há mais partículas, mais delas atravessam uma dada superfície por acaso, '
+      + 'e a diferença entre as duas travessias é proporcional à diferença de população, isto '
+      + 'é, ao gradiente. Difusão é estatística, não dinâmica.</p>';
+
+    reiniciar();
+    tipografar(corpo);
+    registrarRedesenho(desenhar);
+
+    (function animar() {
+      if (est.rodando && est.n < 400) { passo(); desenhar(); }
+      requestAnimationFrame(animar);
+    })();
+  };
+
+  /* =================================================================
+     28. Quanto tempo a difusão leva
+     A consequência prática de x ~ √(Dt), em todas as escalas que
+     importam, da membrana alveolar ao tarugo de aço.
+     ================================================================= */
+  REGISTRO.penetracao = function (raiz) {
+    var MEIO = [
+      { rot: 'gás (O₂ no ar)', D: 2.0e-5, cor: 'vinho' },
+      { rot: 'líquido (O₂ na água)', D: 2.1e-9, cor: 'mestra' },
+      { rot: 'macromolécula na água', D: 5.0e-11, cor: 'bronze' },
+      { rot: 'sólido (C no aço a 1000 °C)', D: 3.0e-11, cor: 'roxo' }
+    ];
+    var MARCOS = [
+      { rot: 'membrana alveolar', L: 0.6e-6 },
+      { rot: 'uma célula', L: 1e-5 },
+      { rot: 'folha de papel', L: 1e-4 },
+      { rot: 'um milímetro', L: 1e-3 },
+      { rot: 'um centímetro', L: 1e-2 },
+      { rot: 'um metro', L: 1 }
+    ];
+    var est = { D: 2.1e-9 };
+
+    function tempo(L, D) { return L * L / (2 * D); }
+    function legivel(s) {
+      if (s < 1e-6) return F.fmt(s * 1e9, 1) + ' ns';
+      if (s < 1e-3) return F.fmt(s * 1e6, 1) + ' μs';
+      if (s < 1) return F.fmt(s * 1e3, 1) + ' ms';
+      if (s < 120) return F.fmt(s, 1) + ' s';
+      if (s < 7200) return F.fmt(s / 60, 1) + ' min';
+      if (s < 2 * 86400) return F.fmt(s / 3600, 1) + ' h';
+      if (s < 3 * 365 * 86400) return F.fmt(s / 86400, 1) + ' dias';
+      return F.fmt(s / (365 * 86400), 1) + ' anos';
+    }
+
+    var corpo = moldura(raiz, 'Quanto tempo a difusão leva, em cada escala');
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    opcoes(ctr, MEIO.map(function (m) { return { rot: m.rot, v: m.D }; }), 1,
+      function (v) { est.D = v; desenhar(); });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'difusividade', k: 'D' },
+      { rot: 'atravessar a membrana alveolar', k: 'alv' },
+      { rot: 'atravessar uma célula', k: 'cel' },
+      { rot: 'atravessar 1 mm', k: 'mm' },
+      { rot: 'atravessar 1 cm', k: 'cm' },
+      { rot: 'distância percorrida em 1 s', k: 'd1' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var gr = G.eixos(cv, {
+        altura: 330, xmin: -7, xmax: 0.5, ymin: -9, ymax: 11, divY: 10,
+        margem: { e: 72, d: 16, c: 16, b: 46 },
+        rotX: 'distância (m)', rotY: 'tempo (s)',
+        marcasX: [-7, -6, -5, -4, -3, -2, -1, 0].map(function (e) {
+          return { v: e, r: '10' + String(e).replace('-', '⁻')
+            .replace(/[0-9]/g, function (d) { return '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]; }) };
+        }),
+        formataY: function (v) {
+          var e = Math.round(v);
+          return Math.abs(v - e) < 0.02 ? ('10' + String(e).replace('-', '⁻')
+            .replace(/[0-9]/g, function (d) { return '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]; })) : '';
+        }
+      });
+      var ct = gr.ct;
+      /* faixas de tempo com significado humano */
+      [[0, 'um segundo'], [Math.log10(3600), 'uma hora'],
+       [Math.log10(86400), 'um dia'], [Math.log10(365 * 86400), 'um ano']]
+        .forEach(function (r) {
+          ct.strokeStyle = 'rgba(91,103,115,.25)'; ct.lineWidth = 1;
+          ct.setLineDash([4, 4]);
+          ct.beginPath(); ct.moveTo(gr.x0, gr.Y(r[0])); ct.lineTo(gr.x1, gr.Y(r[0]));
+          ct.stroke(); ct.setLineDash([]);
+          rotulo(ct, r[1], gr.x0 + 6, gr.Y(r[0]) - 8, G.COR.suave, 'left');
+        });
+      MEIO.forEach(function (m) {
+        G.curva(gr, function (lx) {
+          return Math.log10(tempo(Math.pow(10, lx), m.D));
+        }, G.COR[m.cor], Math.abs(m.D - est.D) < 1e-30 ? 2.8 : 1.3);
+      });
+      MARCOS.forEach(function (k) {
+        var lx = Math.log10(k.L), ly = Math.log10(tempo(k.L, est.D));
+        if (ly < -9 || ly > 11) return;
+        ct.fillStyle = G.COR.tinta;
+        ct.beginPath(); ct.arc(gr.X(lx), gr.Y(ly), 3.6, 0, 2 * Math.PI); ct.fill();
+        /* os marcos da direita levam o rótulo à esquerda, para não
+           esbarrarem na legenda */
+        var dir = lx < -1.5;
+        rotulo(ct, k.rot, gr.X(lx) + (dir ? 8 : -8), gr.Y(ly) + (dir ? -9 : 12),
+          G.COR.tinta, dir ? 'left' : 'right');
+      });
+      G.legenda(gr, MEIO.map(function (m) {
+        return { cor: G.COR[m.cor], texto: m.rot };
+      }));
+
+      mostrar({
+        D: F.fmt(est.D, 3) + ' m²/s',
+        alv: legivel(tempo(0.6e-6, est.D)),
+        cel: legivel(tempo(1e-5, est.D)),
+        mm: legivel(tempo(1e-3, est.D)),
+        cm: legivel(tempo(1e-2, est.D)),
+        d1: F.fmt(Math.sqrt(2 * est.D) * 1e3, 4) + ' mm'
+      });
+
+      nota.innerHTML =
+        '<p>A relação \\(\\med{x^2}=2Dt\\) do widget anterior, lida ao contrário, dá o tempo '
+        + 'que a difusão leva para vencer uma distância:</p>'
+        + '\\[t=\\frac{L^2}{2D}.\\]'
+        + '<p>O quadrado é tudo. Como o gráfico é logarítmico, essa lei aparece como retas de '
+        + 'inclinação 2, e multiplicar a distância por dez multiplica o tempo por cem. Difusão '
+        + 'é extraordinariamente eficiente no pequeno e inútil no grande, e não existe meio '
+        + 'de contornar isso aumentando concentração ou esperando mais.</p>'
+        + '<p>Os pontos marcados no gráfico contam a história da fisiologia. Na água, o '
+        + 'oxigênio atravessa a membrana alveolar, de \\(0{,}6\\) μm, em cerca de '
+        + '\\(90\\) μs, enquanto o sangue passa pelo capilar em \\(0{,}75\\) s: sobra fator '
+        + 'dez mil, e é por isso que a troca gasosa é completa mesmo em exercício intenso. '
+        + 'Atravessar uma célula de \\(10\\) μm leva dezenas de milissegundos, o que ainda é '
+        + 'rápido. Mas atravessar um centímetro de tecido levaria <strong>sete horas</strong>, '
+        + 'e é por isso que nenhum animal maior que um milímetro vive sem sistema '
+        + 'circulatório, e por que o pulmão não é um saco e sim trezentos milhões de alvéolos '
+        + 'com \\(100\\) m² de área e paredes finíssimas.</p>'
+        + '<p>A mesma conta governa a engenharia. Cementar um aço, isto é, fazer carbono '
+        + 'difundir \\(1\\) mm para dentro a \\(1000\\) °C, leva horas, e é exatamente por isso '
+        + 'que o tratamento é caro e que se endurece apenas a superfície. Secar um grão, '
+        + 'curar um concreto, dopar um semicondutor e salgar um queijo são todos o mesmo '
+        + 'problema com valores diferentes de \\(D\\).</p>'
+        + '<p>Trocando para o gás, tudo encolhe por quatro ordens de grandeza no tempo, porque '
+        + '\\(D\\) é quatro ordens maior. Ainda assim, um centímetro de ar parado leva '
+        + 'segundos para ser atravessado, o que explica por que se assopra a sopa: o que se '
+        + 'quer não é difundir o vapor, é advectá-lo, que é o assunto do módulo 14.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {
