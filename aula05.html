@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Módulo 5: Escoamento irrotacional e Bernoulli | Fenômenos de Transporte</title>
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611082347">
+<script src="assets/js/comum.js?v=202611082347"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-interno">
+    <a class="marca" href="index.html">Fenômenos de Transporte <span>· LFCA/URCA</span></a>
+    <nav class="menu">
+      <a href="index.html">Início</a>
+      <span class="grupo">Contínuo</span>
+      <a href="aula01.html" class="num" title="Módulo 1: O contínuo, densidade e fluxo">1</a>
+      <a href="aula02.html" class="num" title="Módulo 2: A equação da continuidade">2</a>
+      <span class="grupo">Movimento</span>
+      <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
+      <a href="aula04.html" class="num" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num ativo" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
+    </nav>
+  </div>
+</header>
+
+<div class="envoltorio">
+
+<aside class="lateral">
+  <h4>Neste módulo</h4>
+  <ol>
+    <li><a href="#s1">1. Vorticidade</a></li>
+    <li><a href="#s2">2. A vorticidade não nasce sozinha</a></li>
+    <li><a href="#s3">3. A função de corrente</a></li>
+    <li><a href="#s4">4. O potencial de velocidade</a></li>
+    <li><a href="#s5">5. As duas famílias são ortogonais</a></li>
+    <li><a href="#s6">6. O teorema de Bernoulli</a></li>
+    <li><a href="#s7">7. O ralo, por separação de variáveis</a></li>
+    <li><a href="#s8">8. O ralo com rotação</a></li>
+    <li><a href="#s9">9. A lata furada</a></li>
+    <li><a href="#s10">10. Exercícios resolvidos</a></li>
+    <li><a href="#s11">11. Exercícios propostos</a></li>
+  </ol>
+</aside>
+
+<main class="conteudo">
+
+  <p class="chapeu">Módulo 5 · Transporte de quantidade de movimento</p>
+  <h1>Escoamento irrotacional e Bernoulli</h1>
+  <p class="subtitulo">A equação de Euler é não linear e vetorial, e resolvê-la de frente é
+  difícil. Há uma classe de escoamentos, porém, em que ela se deixa integrar uma vez e produz
+  uma relação algébrica entre pressão e velocidade. A condição que define essa classe é não
+  ter vorticidade, e o primeiro trabalho é entender o que isso significa.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Objetivos</span>
+    <ul>
+      <li>Definir vorticidade e obter a equação que a governa, mostrando que ela não pode
+      nascer num fluido ideal.</li>
+      <li>Resolver a continuidade de uma vez por todas em duas dimensões com a função de
+      corrente, e reconhecer a equação de Poisson que ela satisfaz.</li>
+      <li>Integrar a equação de Euler ao longo do escoamento e obter o teorema de
+      Bernoulli, sabendo em que condições cada versão vale.</li>
+      <li>Resolver a equação de Laplace em coordenadas polares por separação de variáveis e
+      montar o escoamento no ralo.</li>
+    </ul>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s1">1. Vorticidade</h2>
+
+  <p>Define-se a <strong>vorticidade</strong> de um escoamento como o rotacional da
+  velocidade,</p>
+
+  <p>\[\vet{\omega}=\nabla\cruz\vet{u}.\]</p>
+
+  <p>Ela mede a rotação local do fluido, e convém separá-la desde já da ideia de trajetória
+  curva. Um fluido pode girar em círculos e ter vorticidade nula, e pode escoar em linha reta
+  e ter vorticidade enorme. O que a vorticidade mede é se um elemento de fluido gira em torno
+  do próprio eixo, não se o caminho dele é curvo.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s2">2. A vorticidade não nasce sozinha</h2>
+
+  <p>Tomando o rotacional da equação de Euler, e escrevendo o lado direito como gradiente de
+  um campo único, \(\rho\vet{g}-\nabla p=\nabla\left(\rho\Psi-p\right)\) para densidade
+  constante, o lado direito morre:</p>
+
+  <p>\[\pder{}{t}\left(\nabla\cruz\vet{u}\right)
+  +\nabla\cruz\left[\left(\vet{u}\cdot\nabla\right)\vet{u}\right]=\vet{0}.\]</p>
+
+  <p>O termo convectivo se reescreve com a identidade</p>
+
+  <p>\[\left(\vet{u}\cdot\nabla\right)\vet{u}
+  =\nabla\left(\tfrac12u^2\right)-\vet{u}\cruz\vet{\omega},\]</p>
+
+  <p>cujo primeiro pedaço é um gradiente e portanto some sob o rotacional. Restam</p>
+
+  <p>\[\pder{\vet{\omega}}{t}+\nabla\cruz\left(\vet{\omega}\cruz\vet{u}\right)=\vet{0},\]</p>
+
+  <p>e abrindo o rotacional do produto vetorial, com
+  \(\nabla\cdot\vet{u}=0\) pela incompressibilidade e
+  \(\nabla\cdot\vet{\omega}=0\) por ser divergente de um rotacional,</p>
+
+  <p>\[\pder{\vet{\omega}}{t}+\left(\vet{u}\cdot\nabla\right)\vet{\omega}
+  =\left(\vet{\omega}\cdot\nabla\right)\vet{u},
+  \qquad\text{isto é}\qquad
+  \frac{D\vet{\omega}}{Dt}=\left(\vet{\omega}\cdot\nabla\right)\vet{u}.\]</p>
+
+  <p>O lado direito é proporcional à própria vorticidade. Se \(\vet{\omega}=\vet{0}\) no
+  início do escoamento, a derivada material dela é nula e a vorticidade permanece nula para
+  sempre. Num fluido ideal a vorticidade não pode ser criada: ela só pode ser transportada,
+  esticada e dobrada.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Onde a vorticidade de verdade nasce</span>
+    <p>O resultado acima é um teorema sobre fluidos ideais, e a vida real está cheia de
+    vorticidade: basta olhar a esteira atrás de um barco. A contradição é aparente, e a chave
+    está na hipótese. Num fluido viscoso a equação ganha um termo \(\nu\nabla^2\vet{\omega}\)
+    do lado direito, que difunde vorticidade a partir das paredes, e é ali, na camada limite,
+    que toda a vorticidade do escoamento é gerada.</p>
+    <p>Essa é a razão de o escoamento irrotacional ser uma aproximação tão boa longe das
+    superfícies e tão ruim perto delas. O módulo 6 trata do termo que falta e o módulo 11 da
+    camada em que ele domina.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s3">3. A função de corrente</h2>
+
+  <p>Em duas dimensões a vorticidade tem uma componente só, perpendicular ao plano:</p>
+
+  <p>\[\vet{\omega}=\nabla\cruz\vet{u}
+  =\left(\pder{u_y}{x}-\pder{u_x}{y}\right)\vers{z},\]</p>
+
+  <p>de modo que ela vira um escalar. Nessa mesma redução de dimensão aparece uma segunda
+  simplificação. Defina a <strong>função de corrente</strong> \(\psi\) por</p>
+
+  <p>\[u_x=\pder{\psi}{y},\qquad u_y=-\pder{\psi}{x}.\]</p>
+
+  <p>A equação da continuidade incompressível fica satisfeita de graça, porque</p>
+
+  <p>\[\nabla\cdot\vet{u}=\pder{u_x}{x}+\pder{u_y}{y}
+  =\frac{\partial^2\psi}{\partial x\,\partial y}
+  -\frac{\partial^2\psi}{\partial y\,\partial x}=0.\]</p>
+
+  <p>Trocar duas funções, \(u_x\) e \(u_y\), por uma só, \(\psi\), já seria lucro. O ganho
+  maior é que a vorticidade também se escreve em termos dela:</p>
+
+  <p>\[\omega=\pder{u_y}{x}-\pder{u_x}{y}
+  =-\frac{\partial^2\psi}{\partial x^2}-\frac{\partial^2\psi}{\partial y^2}
+  =-\nabla^2\psi.\]</p>
+
+  <p>Chegou-se a uma <strong>equação de Poisson</strong>, \(\nabla^2\psi=-\omega\), a mesma
+  estrutura da equação da gravitação do módulo anterior, com a vorticidade no papel da
+  densidade. Dada a vorticidade, a função de corrente sai resolvendo Poisson, e com ela o
+  campo de velocidades inteiro. É esse o caminho que o módulo 8 vai percorrer
+  numericamente.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s4">4. O potencial de velocidade</h2>
+
+  <p>Suponha agora que o escoamento seja irrotacional. Um campo de rotacional nulo é o
+  gradiente de alguma função, de modo que existe um <strong>potencial de velocidade</strong>
+  \(\phi\) com</p>
+
+  <p>\[\vet{u}=\nabla\phi,\qquad
+  u_x=\pder{\phi}{x},\qquad u_y=\pder{\phi}{y}.\]</p>
+
+  <p>Para escoamento incompressível, \(\nabla\cdot\vet{u}=0\) dá imediatamente</p>
+
+  <p>\[\nabla^2\phi=0,\]</p>
+
+  <p>e, sendo o escoamento também irrotacional, \(\omega=0\) dá</p>
+
+  <p>\[\nabla^2\psi=0.\]</p>
+
+  <p>As duas funções satisfazem a equação de Laplace, e o problema de mecânica dos fluidos
+  virou um problema de teoria do potencial, com todo o arsenal que vem junto: separação de
+  variáveis, funções harmônicas, princípio do máximo e, em duas dimensões, variáveis
+  complexas.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s5">5. As duas famílias são ortogonais</h2>
+
+  <p>Compare as variações das duas funções ao longo de um deslocamento qualquer:</p>
+
+  <p>\[d\phi=u_x\,dx+u_y\,dy,
+  \qquad
+  d\psi=-u_y\,dx+u_x\,dy.\]</p>
+
+  <p>Sobre uma curva de \(\phi\) constante vale \(d\phi=0\) e portanto
+  \(\left(dy/dx\right)_\phi=-u_x/u_y\). Sobre uma de \(\psi\) constante,
+  \(\left(dy/dx\right)_\psi=u_y/u_x\). O produto das duas inclinações é</p>
+
+  <p>\[\left(\der{y}{x}\right)_\phi\left(\der{y}{x}\right)_\psi
+  =-\frac{u_x}{u_y}\cdot\frac{u_y}{u_x}=-1,\]</p>
+
+  <p>o que significa que as curvas se cruzam em ângulo reto em todo ponto onde
+  \(\vet{u}\neq\vet{0}\). As linhas de corrente são tangentes ao escoamento; as
+  equipotenciais, perpendiculares a ele.</p>
+
+  <div data-widget="linhas"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s6">6. O teorema de Bernoulli</h2>
+
+  <p>Volte à equação de Euler com densidade constante, escrita com o lado direito como
+  gradiente:</p>
+
+  <p>\[\pder{\vet{u}}{t}+\left(\vet{u}\cdot\nabla\right)\vet{u}
+  =\nabla\left(\Psi-\frac{p}{\rho}\right).\]</p>
+
+  <p>Usando outra vez a identidade do termo convectivo e supondo o escoamento irrotacional,
+  de modo que \(\vet{u}\cruz\vet{\omega}=\vet{0}\) e \(\vet{u}=\nabla\phi\), tudo vira
+  gradiente de alguma coisa:</p>
+
+  <p>\[\nabla\left(\pder{\phi}{t}+\frac{u^2}{2}-\Psi+\frac{p}{\rho}\right)=\vet{0}.\]</p>
+
+  <p>Um campo de gradiente nulo é uniforme no espaço, e pode no máximo depender do tempo:</p>
+
+  <p>\[\pder{\phi}{t}+\frac{u^2}{2}-\Psi+\frac{p}{\rho}=f(t).\]</p>
+
+  <p>Para um escoamento estacionário \(\phi\) não depende do tempo e \(f\) passa a ser uma
+  constante, o que dá a forma conhecida</p>
+
+  <p>\[p+\frac{\rho u^2}{2}-\rho\Psi=\text{constante},\]</p>
+
+  <p>ou, no campo gravitacional uniforme com \(\Psi=-gz\),
+  \(p+\rho u^2/2+\rho gz=\) constante.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Três versões, três validades</span>
+    <p>Vale distinguir com cuidado, porque o mesmo nome cobre afirmações diferentes. Se o
+    escoamento for apenas estacionário, sem ser irrotacional, a dedução ainda funciona ao
+    longo de <em>cada linha de corrente</em>, mas a constante muda de uma linha para a outra.
+    Se for também irrotacional, a constante é a mesma em todo o escoamento, e aí se pode
+    comparar pontos de linhas diferentes, que é o que se faz em quase todo problema prático.
+    Se for ainda não estacionário, sobra o termo \(\partial\phi/\partial t\), e é dele que
+    saem as ondas de superfície e a oscilação num tubo em U.</p>
+    <p>Em todas as versões a hipótese de fluido ideal permanece. Num escoamento com atrito
+    real a soma não é constante: ela diminui no sentido do escoamento, e essa perda é o que a
+    engenharia hidráulica chama de perda de carga.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. O ralo, por separação de variáveis</h2>
+
+  <p>Considere um ralo de raio \(a\) no plano, com velocidade radial conhecida na borda,
+  \(u_r(r=a)=-U_r\). Em coordenadas polares a equação de Laplace para o potencial é</p>
+
+  <p>\[\frac{1}{r}\pder{}{r}\left(r\pder{\phi}{r}\right)
+  +\frac{1}{r^2}\frac{\partial^2\phi}{\partial\theta^2}=0,\]</p>
+
+  <p>e o método de separação de variáveis consiste em procurar soluções da forma
+  \(\phi(r,\theta)=R(r)\Theta(\theta)\). Substituindo e dividindo por \(R\Theta\), as duas
+  variáveis se separam:</p>
+
+  <p>\[\frac{r}{R}\der{}{r}\left(r\der{R}{r}\right)
+  =-\frac{1}{\Theta}\frac{d^2\Theta}{d\theta^2}.\]</p>
+
+  <p>O lado esquerdo depende só de \(r\) e o direito só de \(\theta\), de modo que ambos
+  valem a mesma constante, que se escreve \(\lambda^2\). A parte angular fica
+  \(\Theta''=-\lambda^2\Theta\), com solução
+  \(\Theta=A\sen\lambda\theta+B\cos\lambda\theta\), e a exigência de que \(\Theta\) seja
+  periódica, \(\Theta(\theta)=\Theta(\theta+2\pi)\), obriga \(\lambda\) a ser inteiro.</p>
+
+  <p>A parte radial, para \(\lambda>0\), é uma equação de Euler-Cauchy,</p>
+
+  <p>\[r^2\frac{d^2R}{dr^2}+r\der{R}{r}-\lambda^2R=0,\]</p>
+
+  <p>e a tentativa \(R=r^n\) dá \(n^2=\lambda^2\), isto é \(n=\pm\lambda\), de modo que
+  \(R=Cr^\lambda+Dr^{-\lambda}\). O caso \(\lambda=0\) é à parte: ali
+  \(r\,dR/dr=\) constante e a integração dá \(R_0=C\ln r+D\).</p>
+
+  <p>A solução geral da equação de Laplace em coordenadas polares é, portanto,</p>
+
+  <p>\[\phi=C_0\ln r+D_0
+  +\sum_{\lambda=1}^{\infty}\left(A_\lambda\sen\lambda\theta
+  +B_\lambda\cos\lambda\theta\right)
+  \left(C_\lambda r^\lambda+D_\lambda r^{-\lambda}\right).\]</p>
+
+  <p>No problema do ralo o fluido ocupa a região externa, \(r>a\), e isso elimina de uma vez
+  todos os termos \(r^\lambda\) com \(\lambda\ge1\): eles crescem sem limite e a velocidade
+  teria de ser infinita no infinito. Com velocidade radial uniforme na borda e sem rotação,
+  os coeficientes restantes se anulam e sobra o termo logarítmico. A condição de contorno
+  fixa \(C_0\):</p>
+
+  <p>\[u_r(a)=\left.\pder{\phi}{r}\right|_{r=a}=\frac{C_0}{a}=-U_r
+  \quad\Longrightarrow\quad
+  \phi=D_0-U_ra\ln r,\]</p>
+
+  <p>de onde o campo de velocidades</p>
+
+  <p>\[u_r=-U_r\frac{a}{r},\qquad u_\theta=0.\]</p>
+
+  <p>O resultado tem a forma esperada: a vazão que atravessa qualquer circunferência de raio
+  \(r\) vale \(2\pi r\left|u_r\right|=2\pi aU_r\), a mesma para todo \(r\), porque não há
+  fonte nem sumidouro fora da origem. A velocidade cresce como \(1/r\) ao se aproximar do
+  ralo, e a pressão, por Bernoulli, cai como \(1/r^2\).</p>
+
+  <!-- ================================================== -->
+  <h2 id="s8">8. O ralo com rotação</h2>
+
+  <p>Falta a parte interessante, que é o ralo de pia de verdade: a água não desce em linha
+  reta, ela gira. Para incluir uma velocidade tangencial é preciso voltar ao caso
+  \(\lambda=0\) da parte angular, descartado acima por não ser periódico. Ali a equação é
+  \(\Theta''=0\), com solução \(\Theta_0=A\theta+B\), e o termo \(A\theta\) de fato não é
+  periódico.</p>
+
+  <p>Acontece que a exigência de periodicidade se aplica às grandezas <em>físicas</em>, e o
+  potencial não é uma delas. O que precisa ser univalorado é a velocidade, e</p>
+
+  <p>\[\phi=\frac{\Gamma}{2\pi}\theta
+  \quad\Longrightarrow\quad
+  u_\theta=\frac{1}{r}\pder{\phi}{\theta}=\frac{\Gamma}{2\pi r},
+  \qquad u_r=0,\]</p>
+
+  <p>é perfeitamente univalorada e irrotacional em toda parte, exceto na origem. A constante
+  \(\Gamma\) é a <strong>circulação</strong>, igual à integral de \(\vet{u}\cdot d\vet{\ell}\)
+  em qualquer circuito que envolva o centro, e esse escoamento se chama
+  <strong>vórtice livre</strong>.</p>
+
+  <p>Somando os dois potenciais,</p>
+
+  <p>\[\phi=-U_ra\ln r+\frac{\Gamma}{2\pi}\theta,
+  \qquad
+  u_r=-\frac{U_ra}{r},\qquad u_\theta=\frac{\Gamma}{2\pi r},\]</p>
+
+  <p>as linhas de corrente deixam de ser raios e viram espirais logarítmicas, com o ângulo
+  entre a velocidade e a direção radial constante em todo o escoamento. É o desenho que o
+  widget da seção 5 mostra na opção de ralo com rotação, e é o que se vê na pia.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Por que o vórtice é irrotacional</span>
+    <p>Parece contraditório chamar de irrotacional um escoamento em que tudo gira, e a
+    confusão é tão comum que vale a pena desfazê-la. Com \(u_\theta\propto1/r\), uma
+    pazinha colocada no fluido é empurrada mais depressa do lado de dentro que do lado de
+    fora, e esses dois efeitos se cancelam exatamente: a pazinha dá a volta sem girar em
+    torno do próprio eixo. O cartão da vorticidade medida no widget dá zero, e o da
+    circulação num circuito que não envolve o centro também.</p>
+    <p>Num circuito que envolve o centro a circulação vale \(\Gamma\), diferente de zero,
+    apesar de a vorticidade ser nula em todo ponto do caminho. Isso é possível porque a
+    região não é simplesmente conexa: toda a vorticidade está concentrada na singularidade
+    da origem. Num vórtice real essa singularidade é substituída por um núcleo que gira como
+    corpo rígido, com \(u_\theta\propto r\), e é lá que mora a vorticidade.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s9">9. A lata furada</h2>
+
+  <p>Seja uma lata furada e aberta na parte superior, com um fluido incompressível sujeito à
+  pressão ambiente e ao próprio peso. Desprezando a viscosidade, qual a altura \(h\) do fluido
+  em relação ao buraco ao longo do tempo?</p>
+
+  <p>A continuidade informa que a vazão é a mesma nas duas seções, \(u_1S_1=u_2S_2\), com
+  \(u_1=-\dot{h}\). Bernoulli entre a superfície livre e o furo, com a mesma pressão
+  atmosférica nos dois,</p>
+
+  <p>\[p_0+\frac{\rho u_1^2}{2}+\rho gh=p_0+\frac{\rho u_2^2}{2},\]</p>
+
+  <p>e substituindo \(u_2=u_1S_1/S_2\),</p>
+
+  <p>\[\left[\left(\frac{S_1}{S_2}\right)^2-1\right]u_1^2=2gh
+  \quad\Longrightarrow\quad
+  \der{h}{t}=-\sqrt{\frac{2gh}{\left(S_1/S_2\right)^2-1}}.\]</p>
+
+  <p>A equação é separável. Escrevendo \(dh/\sqrt{h}\) de um lado e integrando de \(h_0\) a
+  \(h\),</p>
+
+  <p>\[2\sqrt{h}-2\sqrt{h_0}
+  =-\sqrt{2g}\,\frac{S_2}{\sqrt{S_1^2-S_2^2}}\;t,\]</p>
+
+  <p>ou seja</p>
+
+  <p>\[h(t)=\left(\sqrt{h_0}
+  -\sqrt{\frac{g}{2}}\,\frac{S_2}{\sqrt{S_1^2-S_2^2}}\;t\right)^2,\]</p>
+
+  <p>válida até o instante em que o parêntese se anula, que é quando a lata esvazia.</p>
+
+  <div data-widget="lata"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">5.1 O tubo de Pitot</span>
+    <p>Um avião voa a \(250\) km/h onde o ar tem \(\rho=1{,}0\) kg/m³. Qual a diferença entre
+    a pressão de estagnação, medida na ponta do tubo de Pitot, e a pressão estática?</p>
+    <p>Na ponta do tubo o escoamento para, de modo que \(u=0\) ali. Bernoulli entre um ponto
+    da corrente livre e o ponto de estagnação, ambos à mesma altura,</p>
+    <p>\[p_{\rm est}=p_\infty+\frac{\rho u_\infty^2}{2}
+    =p_\infty+\frac{1{,}0\times\left(69{,}4\right)^2}{2}
+    =p_\infty+2{,}41\ \text{kPa}.\]</p>
+    <p>É assim que se mede velocidade em voo: a diferença entre as duas tomadas dá
+    \(u=\sqrt{2\Delta p/\rho}\) diretamente. Repare que a medida depende de \(\rho\), que cai
+    com a altitude, e é por isso que o instrumento indica velocidade equivalente e não
+    velocidade verdadeira.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">5.2 A pressão em volta do ralo</span>
+    <p>No ralo sem rotação da seção 7, com \(a=2{,}0\) cm e \(U_r=0{,}50\) m/s, qual a queda
+    de pressão entre um ponto distante e a borda do ralo?</p>
+    <p>A velocidade na borda vale \(U_r\) e longe tende a zero. Por Bernoulli, com a mesma
+    altura,</p>
+    <p>\[\Delta p=-\frac{\rho U_r^2}{2}=-\frac{1000\times0{,}25}{2}=-125\ \text{Pa},\]</p>
+    <p>uma queda de \(125\) Pa, equivalente a \(1{,}3\) cm de coluna de água. É essa depressão
+    que faz a superfície da água afundar em volta do ralo, formando o funil que todo mundo já
+    viu. Com rotação a queda é maior, porque \(u^2=u_r^2+u_\theta^2\), e o funil fica bem
+    mais fundo.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">5.3 Verificando a ortogonalidade no escoamento uniforme</span>
+    <p>Obtenha \(\phi\) e \(\psi\) para um escoamento uniforme \(\vet{u}=(U_x,U_y)\) e mostre
+    que as duas famílias são perpendiculares.</p>
+    <p>De \(u_x=\partial\phi/\partial x=U_x\) e \(u_y=\partial\phi/\partial y=U_y\) sai
+    \(\phi=xU_x+yU_y+C\). Das definições da função de corrente,
+    \(\partial\psi/\partial y=U_x\) e \(\partial\psi/\partial x=-U_y\), sai
+    \(\psi=yU_x-xU_y\).</p>
+    <p>As curvas \(\phi=\) constante são retas de inclinação \(-U_x/U_y\) e as de \(\psi=\)
+    constante têm inclinação \(U_y/U_x\). O produto vale \(-1\), como deve. No caso
+    particular \(U_y=0\) as linhas de corrente são horizontais e as equipotenciais
+    verticais.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">5.4 Quanto tempo leva para esvaziar</span>
+    <p>Uma lata de raio \(R_1=50\) mm, com um furo de raio \(R_2=0{,}5\) mm no fundo e
+    \(h_0=10\) cm de água, leva quanto tempo para esvaziar?</p>
+    <p>Do resultado da seção 9, o instante em que \(h=0\) é</p>
+    <p>\[t_f=\sqrt{\frac{2h_0}{g}}\,\frac{\sqrt{S_1^2-S_2^2}}{S_2}
+    \approx\sqrt{\frac{2h_0}{g}}\left(\frac{R_1}{R_2}\right)^2
+    =0{,}1428\times10^{4}=1{,}43\times10^{3}\ \text{s},\]</p>
+    <p>pouco menos de vinte e quatro minutos. A aproximação usada no último passo vale porque
+    \(S_1\) é dez mil vezes \(S_2\), e o widget calcula a expressão exata. Vale conferir a
+    ordem de grandeza por outro caminho: a velocidade inicial de saída é
+    \(\sqrt{2gh_0}=1{,}4\) m/s, a vazão inicial é \(1{,}1\) mL/s, e o volume de \(785\) mL
+    levaria \(714\) s a essa vazão; como a vazão cai pela metade em média, o dobro disso é o
+    resultado encontrado.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios propostos</h2>
+
+  <div class="bloco ex">
+    <ol>
+      <li><b>5.5</b> Mostre que o campo \(\vet{u}=\left(-\Omega y,\Omega x,0\right)\),
+      rotação rígida, tem vorticidade \(2\Omega\vers{z}\), e que o vórtice livre
+      \(u_\theta=\Gamma/2\pi r\) tem vorticidade nula em todo ponto com \(r\neq0\). Calcule a
+      circulação dos dois campos num círculo de raio \(R\) centrado na origem.</li>
+
+      <li><b>5.6</b> Obtenha \(\psi\) para o ralo com rotação da seção 8 e mostre que as
+      linhas de corrente são espirais logarítmicas \(r=r_0e^{-2\pi aU_r\theta/\Gamma}\).
+      Calcule o ângulo entre a velocidade e a direção radial e verifique que ele não depende
+      de \(r\).</li>
+
+      <li><b>5.7</b> O escoamento em volta de um cilindro de raio \(a\) tem
+      \(\phi=U\left(r+a^2/r\right)\cos\theta\). Obtenha as componentes da velocidade, localize
+      os pontos de estagnação e calcule a pressão sobre a superfície do cilindro. Integre a
+      pressão em volta e mostre que a força resultante é nula, que é o
+      <strong>paradoxo de d'Alembert</strong>.</li>
+
+      <li><b>5.8</b> Acrescente ao escoamento do exercício anterior um vórtice de circulação
+      \(\Gamma\) e mostre que aparece uma força perpendicular à corrente, de módulo
+      \(\rho U\Gamma\) por unidade de comprimento. Esse é o <strong>teorema de
+      Kutta-Joukowski</strong>, e é a explicação da sustentação de uma asa e do efeito de uma
+      bola com rotação.</li>
+
+      <li><b>5.9</b> Um sifão retira água de um reservatório passando por um ponto a uma
+      altura \(H\) acima da superfície livre. Use Bernoulli para obter a vazão e mostre que o
+      sifão para de funcionar quando \(H\) excede a altura correspondente à pressão
+      atmosférica. Compare com o resultado do exercício 4.1.</li>
+
+      <li><b>5.10</b> Refaça a lata furada da seção 9 sem desprezar nada, mas agora com a lata
+      <em>fechada</em> em cima e com ar comprimido a pressão \(p_1>p_0\) acima do líquido.
+      Obtenha \(h(t)\) supondo o ar em expansão isotérmica e diga em que condição o resultado
+      recai no caso aberto.</li>
+
+      <li><b>5.11</b> Em meia página: a seção 2 mostra que a vorticidade não pode nascer num
+      fluido ideal, e a seção 8 constrói um vórtice. Não há contradição. Explique onde está a
+      saída, usando as palavras singularidade, circulação e região simplesmente conexa.</li>
+    </ol>
+  </div>
+
+  <nav class="nav-aulas">
+    <a href="aula04.html"><small>Módulo anterior</small>← 4. Hidrostática</a>
+    <span class="em-breve"><small>Em preparação</small>6. Navier-Stokes</span>
+  </nav>
+
+</main>
+</div>
+
+<footer class="rodape">
+  <img class="logo-rodape" src="assets/img/logo-lfca.png" alt="LFCA | URCA">
+  <p><strong>Prof. Apiano Morais</strong> · <a href="mailto:apiano.morais@urca.br">apiano.morais@urca.br</a><br>
+  Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
+</footer>
+
+<script src="assets/js/widgets.js?v=202611082347"></script>
+</body>
+</html>

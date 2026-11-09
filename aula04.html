@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 4: Hidrostática e autogravidade | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611082338">
-<script src="assets/js/comum.js?v=202611082338"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611082347">
+<script src="assets/js/comum.js?v=202611082347"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -22,6 +22,7 @@
       <span class="grupo">Movimento</span>
       <a href="aula03.html" class="num" title="Módulo 3: Dinâmica do elemento de fluido">3</a>
       <a href="aula04.html" class="num ativo" title="Módulo 4: Hidrostática e autogravidade">4</a>
+      <a href="aula05.html" class="num" title="Módulo 5: Escoamento irrotacional e Bernoulli">5</a>
     </nav>
   </div>
 </header>
@@ -105,10 +106,37 @@
 
   <p>\[\der{p}{\Psi}=-\rho.\]</p>
 
-  <p>A consequência prática é forte. Num fluido em equilíbrio, a superfície livre é
-  necessariamente uma equipotencial, o que explica por que o nível do mar acompanha o geoide
-  e não a esfera, e por que a superfície de um balde girando é um paraboloide: naquele
-  referencial o potencial efetivo inclui a parte centrífuga.</p>
+  <p>Vale demorar nessa conclusão, porque ela é mais do que uma curiosidade geométrica. Se as
+  superfícies de pressão constante coincidem com as equipotenciais, então a superfície livre
+  de um fluido em equilíbrio, que é uma superfície de pressão constante por estar toda em
+  contato com a atmosfera, é <strong>necessariamente uma equipotencial</strong>. A forma que
+  um líquido parado assume não é escolhida pela forma do recipiente nem pela gravidade
+  isoladamente: ela é dada pelo potencial, qualquer que seja ele.</p>
+
+  <p>Disso vem o nível do mar acompanhar o geoide e não uma esfera, já que o potencial da
+  Terra tem as irregularidades da distribuição de massa. Disso vem também a superfície de um
+  balde girando ser um paraboloide, porque no referencial girante o potencial efetivo inclui
+  a parcela centrífuga \(-\Omega^2r^2/2\) e a equipotencial deixa de ser plana.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">A maré, outra vez</span>
+    <p>O mesmo argumento resolve a maré, e quem fez
+    <a href="https://apianomorais.github.io/mecanica-classica-ii/aula06.html">Mecânica
+    Clássica II</a> já o usou sem saber que era hidrostática. Lá, no módulo 6, o potencial de
+    maré foi obtido expandindo a atração da Lua em polinômios de Legendre e subtraindo a parte
+    que acelera a Terra inteira. O que sobrou foi uma parcela proporcional a
+    \(-\left(GM_L r^2/d^3\right)P_2(\cos\theta)\), somada ao potencial próprio da Terra.</p>
+    <p>A superfície do oceano, por ser livre, acomoda-se à equipotencial dessa soma, e a
+    equipotencial deixa de ser esférica: ela vira um elipsoide alongado na direção da Lua e,
+    pelo mesmo motivo, na direção oposta. São as duas marés altas por dia, e elas não exigem
+    nenhuma conta de forças, apenas a afirmação desta seção.</p>
+    <p>O argumento dos dois tubos daquele módulo, um radial e um tangencial, partindo do
+    centro e se encontrando na superfície, é exatamente a condição \(dp/d\Psi=-\rho\) aplicada
+    por dois caminhos diferentes. A pressão no ponto de encontro tem de ser a mesma pelos dois
+    percursos, e é dessa igualdade que sai a altura da maré. O que aqui aparece como um
+    teorema de uma linha, lá foi obtido com integrais ao longo de dois caminhos: é o mesmo
+    conteúdo, visto de duas alturas diferentes.</p>
+  </div>
 
   <!-- ================================================== -->
   <h2 id="s3">3. A lei de Stevin</h2>
@@ -293,6 +321,45 @@
   Esse valor é o <strong>limite de Chandrasekhar</strong>, cerca de 1,4 massas solares, e é o
   que separa uma anã branca estável de um colapso para estrela de nêutrons.</p>
 
+  <div class="bloco fisica">
+    <span class="rotulo">Por que o limite é superior, e não exato</span>
+    <p>A independência entre massa e densidade central merece ser lida com atenção, porque ela
+    não diz apenas que existe um valor máximo: ela diz que, nesse valor, o equilíbrio é
+    <strong>indiferente</strong>. Compare as duas parcelas da energia de uma esfera
+    politrópica de massa fixa e raio \(R\). A energia gravitacional vai como \(-B/R\), e a
+    energia interna de um gás com \(p\propto\rho^\gamma\) vai como
+    \(A/R^{3(\gamma-1)}\). Com \(\gamma=4/3\), que é o \(n=3\), o expoente dá exatamente 1, e
+    as duas parcelas escalam da mesma maneira:</p>
+    <p style="text-align:center">\(E=\dfrac{A-B}{R}\).</p>
+    <p>Se \(A>B\) a estrela se expande sem parar; se \(A&lt;B\) ela colapsa sem parar; e se
+    \(A=B\), que é a condição que fixa a massa, a energia não depende do raio. Não existe
+    força restauradora: comprimir a estrela não custa nada e não devolve nada.</p>
+    <p>É aí que as flutuações entram. Numa situação de equilíbrio indiferente, quem decide o
+    destino não é mais o termo dominante, que se cancelou, e sim as correções seguintes, que
+    em uma estrela real são pequenas e, sem exceção conhecida, atuam no sentido de favorecer a
+    compressão:</p>
+    <ul>
+      <li>A relatividade geral acrescenta à energia uma parcela que vai como \(-1/R^2\),
+      portanto mais negativa quanto menor o raio. Por si só ela já desfaz o empate em favor do
+      colapso.</li>
+      <li>A captura eletrônica pelos núcleos, a chamada neutronização, retira elétrons do gás
+      justamente onde a densidade é maior, e com eles some parte da pressão que sustentava a
+      estrela.</li>
+      <li>A interação coulombiana entre os elétrons e a rede de íons reduz um pouco a pressão
+      em relação à do gás degenerado ideal, e a correção cresce com a compressão.</li>
+      <li>Uma temperatura finita, a rotação e a composição não uniforme deslocam o valor da
+      massa para um lado ou para o outro, mas nenhuma delas restaura a estabilidade perdida no
+      termo principal.</li>
+    </ul>
+    <p>Por isso o número obtido do politropo \(n=3\) deve ser lido como um
+    <strong>limite superior</strong>, e não como a massa de nenhuma estrela em particular. Uma
+    anã branca que se aproxime dele por acreção colapsa <em>antes</em> de alcançá-lo, porque
+    basta uma flutuação de densidade para que as correções decidam a questão. O valor
+    idealizado fica perto de \(1{,}44\) massas solares para composição com dois núcleons por
+    elétron; os máximos realmente observados ficam um pouco abaixo disso, e são justamente
+    essas correções que explicam a diferença.</p>
+  </div>
+
   <!-- ================================================== -->
   <h2 id="s9">9. Exercícios resolvidos</h2>
 
@@ -393,7 +460,7 @@
 
   <nav class="nav-aulas">
     <a href="aula03.html"><small>Módulo anterior</small>← 3. Elemento de fluido</a>
-    <span class="em-breve"><small>Em preparação</small>5. Irrotacional e Bernoulli</span>
+    <a class="prox" href="aula05.html"><small>Próximo módulo</small>5. Irrotacional e Bernoulli →</a>
   </nav>
 
 </main>
@@ -405,6 +472,6 @@
   Laboratório de Física Computacional Aplicada (LFCA) · Universidade Regional do Cariri</p>
 </footer>
 
-<script src="assets/js/widgets.js?v=202611082338"></script>
+<script src="assets/js/widgets.js?v=202611082347"></script>
 </body>
 </html>

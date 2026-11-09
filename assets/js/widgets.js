@@ -1817,6 +1817,382 @@
     registrarRedesenho(desenhar);
   };
 
+  /* =================================================================
+     11. Linhas de corrente e equipotenciais
+     As duas famílias são desenhadas integrando o próprio campo: as de
+     corrente seguem u, as equipotenciais seguem u girado de noventa
+     graus. A ortogonalidade deixa de ser uma identidade algébrica e
+     passa a ser uma coisa que se vê.
+     ================================================================= */
+  REGISTRO.linhas = function (raiz) {
+    var est = { tipo: 'ralo', sw: 1.0 };
+
+    var corpo = moldura(raiz, 'As duas famílias de curvas');
+
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    opcoes(ctr, [{ rot: 'uniforme', v: 'uniforme' }, { rot: 'ralo', v: 'ralo' },
+                 { rot: 'vórtice', v: 'vortice' }, { rot: 'ralo com rotação', v: 'espiral' },
+                 { rot: 'cilindro', v: 'cilindro' }], 1,
+      function (v) { est.tipo = v; desenhar(); });
+    deslizante(ctr, 'intensidade da rotação', 0, 3, 0.1, 1.0,
+      function (v) { est.sw = v; desenhar(); },
+      function (v) { return F.fmt(v, 1); });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'u no ponto de prova', k: 'u' },
+      { rot: 'divergência medida', k: 'div' },
+      { rot: 'vorticidade medida', k: 'rot' },
+      { rot: 'ângulo entre as famílias', k: 'ang' },
+      { rot: 'pressão relativa ali', k: 'p' },
+      { rot: 'circulação em volta', k: 'circ' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    var A = 0.35;                       // raio do ralo ou do cilindro
+    var PX = 0.95, PY = 0.62;           // ponto de prova
+
+    /* Campos analíticos, todos irrotacionais fora da origem e todos de
+       divergência nula fora dela. */
+    function campo(x, y) {
+      var r2 = x * x + y * y, r = Math.sqrt(r2);
+      if (r < 1e-6) return [0, 0];
+      switch (est.tipo) {
+        case 'uniforme': return [1, 0];
+        case 'ralo': return [-A * x / r2, -A * y / r2];
+        case 'vortice': return [-est.sw * A * y / r2, est.sw * A * x / r2];
+        case 'espiral': return [(-A * x - est.sw * A * y) / r2,
+                                (-A * y + est.sw * A * x) / r2];
+        default: {
+          /* cilindro de raio A em escoamento uniforme */
+          var c = A * A / (r2 * r2);
+          return [1 - A * A / r2 + 2 * c * x * x, 2 * c * x * y];
+        }
+      }
+    }
+
+    function integra(x, y, s, n, passo) {
+      var pts = [[x, y]], i;
+      for (i = 0; i < n; i++) {
+        var k1 = s(x, y);
+        var m1 = Math.hypot(k1[0], k1[1]) || 1;
+        var k2 = s(x + passo * k1[0] / m1 / 2, y + passo * k1[1] / m1 / 2);
+        var m2 = Math.hypot(k2[0], k2[1]) || 1;
+        x += passo * k2[0] / m2; y += passo * k2[1] / m2;
+        if (Math.abs(x) > 4 || Math.abs(y) > 4) break;
+        if (est.tipo !== 'uniforme' && Math.hypot(x, y) < A * 0.55) break;
+        pts.push([x, y]);
+      }
+      return pts;
+    }
+
+    function desenhar() {
+      var p = G.preparar(cv, 420);
+      var ct = p.ct;
+      var esc = Math.min(p.L, p.A) / 3.2;
+      var cx = p.L / 2, cy = p.A / 2;
+      function PXp(x) { return cx + x * esc; }
+      function PYp(y) { return cy - y * esc; }
+
+      function traca(seeds, s, cor, esp) {
+        ct.strokeStyle = cor; ct.lineWidth = esp;
+        seeds.forEach(function (q) {
+          [1, -1].forEach(function (sinal) {
+            var pts = integra(q[0], q[1],
+              function (x, y) { var v = s(x, y); return [sinal * v[0], sinal * v[1]]; },
+              420, 0.012);
+            ct.beginPath();
+            pts.forEach(function (w, i) {
+              if (i === 0) ct.moveTo(PXp(w[0]), PYp(w[1]));
+              else ct.lineTo(PXp(w[0]), PYp(w[1]));
+            });
+            ct.stroke();
+          });
+        });
+      }
+
+      /* sementes numa circunferência, para cobrir o quadro nos dois casos */
+      var seeds = [], i;
+      for (i = 0; i < 16; i++) {
+        var a = 2 * Math.PI * i / 16;
+        seeds.push([1.45 * Math.cos(a), 1.45 * Math.sin(a)]);
+      }
+      /* as equipotenciais pedem sementes em raios diferentes, e não numa
+         circunferência só: no ralo todas as curvas desta família são
+         círculos concêntricos, de modo que sementes equidistantes do
+         centro desenhariam dezesseis vezes a mesma curva */
+      var seeds2 = [];
+      [0.50, 0.72, 0.95, 1.20, 1.50, 1.85, 2.25, 2.70].forEach(function (rr) {
+        seeds2.push([rr, 0.12]);
+        seeds2.push([-rr, -0.12]);
+        seeds2.push([0.12, rr]);
+        seeds2.push([-0.12, -rr]);
+      });
+
+      /* equipotenciais: o campo girado de noventa graus */
+      traca(seeds2, function (x, y) {
+        var v = campo(x, y); return [-v[1], v[0]];
+      }, 'rgba(168,96,31,.55)', 1.3);
+      traca(seeds, campo, G.COR.mestra, 1.8);
+
+      if (est.tipo === 'cilindro' || est.tipo === 'ralo' || est.tipo === 'espiral') {
+        ct.fillStyle = est.tipo === 'cilindro' ? 'rgba(27,31,36,.14)' : 'rgba(140,47,57,.16)';
+        ct.beginPath(); ct.arc(cx, cy, A * esc, 0, 2 * Math.PI); ct.fill();
+        ct.strokeStyle = est.tipo === 'cilindro' ? G.COR.tinta : G.COR.vinho;
+        ct.lineWidth = 2; ct.stroke();
+      }
+
+      /* ponto de prova e os dois vetores que ali se cruzam */
+      var v = campo(PX, PY), mv = Math.hypot(v[0], v[1]);
+      ct.fillStyle = G.COR.vinho;
+      ct.beginPath(); ct.arc(PXp(PX), PYp(PY), 4.5, 0, 2 * Math.PI); ct.fill();
+      seta(ct, PXp(PX), PYp(PY), PXp(PX) + v[0] / mv * 34, PYp(PY) - v[1] / mv * 34,
+        G.COR.mestra, 2.4);
+      seta(ct, PXp(PX), PYp(PY), PXp(PX) - v[1] / mv * 28, PYp(PY) - v[0] / mv * 28,
+        G.COR.bronze, 2.2);
+      rotulo(ct, 'ponto de prova', PXp(PX), PYp(PY) + 14, G.COR.vinho, 'center', 'top');
+
+      G.legenda({ ct: ct, x1: p.L - 6, y0: 8 }, [
+        { texto: 'linhas de corrente, ψ constante', cor: G.COR.mestra },
+        { texto: 'equipotenciais, φ constante', cor: G.COR.bronze }
+      ]);
+
+      /* medidas numéricas por diferenças centrais */
+      var h = 1e-4;
+      var dxp = campo(PX + h, PY), dxm = campo(PX - h, PY);
+      var dyp = campo(PX, PY + h), dym = campo(PX, PY - h);
+      var div = (dxp[0] - dxm[0]) / (2 * h) + (dyp[1] - dym[1]) / (2 * h);
+      var rot = (dxp[1] - dxm[1]) / (2 * h) - (dyp[0] - dym[0]) / (2 * h);
+      var perp = [-v[1], v[0]];
+      var cosang = (v[0] * perp[0] + v[1] * perp[1]) / (mv * mv);
+
+      /* circulação num circuito pequeno em volta do ponto de prova */
+      var rc = 0.12, circ = 0, n = 240;
+      for (i = 0; i < n; i++) {
+        var th = 2 * Math.PI * i / n, th2 = 2 * Math.PI * (i + 1) / n;
+        var xm = PX + rc * Math.cos((th + th2) / 2);
+        var ym = PY + rc * Math.sin((th + th2) / 2);
+        var w = campo(xm, ym);
+        circ += w[0] * (rc * Math.cos(th2) - rc * Math.cos(th))
+              + w[1] * (rc * Math.sin(th2) - rc * Math.sin(th));
+      }
+
+      mostrar({
+        u: F.fmt(mv, 3),
+        div: F.fmt(Math.abs(div) < 1e-9 ? 0 : div, 4),
+        rot: F.fmt(Math.abs(rot) < 1e-9 ? 0 : rot, 4),
+        ang: F.fmt(Math.acos(Math.max(-1, Math.min(1, cosang))) * 180 / Math.PI, 1) + '°',
+        p: F.fmt(-mv * mv / 2, 3) + ' (em ρ u²/2)',
+        circ: F.fmt(Math.abs(circ) < 1e-6 ? 0 : circ, 4)
+      });
+
+      nota.innerHTML =
+        '<p>Em duas dimensões a vorticidade tem uma componente só, e a continuidade '
+        + 'incompressível pode ser resolvida de uma vez definindo a <strong>função de '
+        + 'corrente</strong> \\(\\psi\\) por</p>'
+        + '\\[u_x=\\pder{\\psi}{y},\\qquad u_y=-\\pder{\\psi}{x}.\\]'
+        + '<p>Com essa definição \\(\\nabla\\cdot\\vet{u}\\) é identicamente nulo, porque as '
+        + 'derivadas cruzadas se cancelam. As curvas de \\(\\psi\\) constante são as '
+        + '<strong>linhas de corrente</strong>, tangentes ao campo em todo ponto, e a '
+        + 'diferença de \\(\\psi\\) entre duas delas é a vazão que passa no canal entre as '
+        + 'duas.</p>'
+        + '<p>Se além disso o escoamento for irrotacional, a velocidade também deriva de um '
+        + '<strong>potencial</strong>, \\(\\vet{u}=\\nabla\\phi\\), e aí valem duas equações '
+        + 'de Laplace ao mesmo tempo, \\(\\nabla^2\\phi=0\\) e \\(\\nabla^2\\psi=0\\). As '
+        + 'duas famílias de curvas se cruzam sempre em ângulo reto, porque</p>'
+        + '\\[\\left(\\der{y}{x}\\right)_\\phi\\left(\\der{y}{x}\\right)_\\psi'
+        + '=-\\frac{u_x}{u_y}\\cdot\\frac{u_y}{u_x}=-1,\\]'
+        + '<p>e o cartão do ângulo confirma os noventa graus em qualquer ponto e em qualquer '
+        + 'dos campos do menu.</p>'
+        + '<p>Os cinco exemplos são os tijolos com que se constrói quase tudo. O '
+        + '<strong>ralo</strong> tem \\(u_r=-U_ra/r\\) e vem do potencial '
+        + '\\(\\phi=-U_ra\\ln r\\). O <strong>vórtice</strong> tem \\(u_\\theta\\propto1/r\\) '
+        + 'e vem de \\(\\phi\\propto\\theta\\), que é multivalorado embora a velocidade não '
+        + 'seja. Somando os dois sai a <strong>espiral</strong> do ralo de pia. O '
+        + '<strong>cilindro</strong> é a soma de um escoamento uniforme com um dipolo, e nele '
+        + 'aparecem os dois pontos de estagnação.</p>'
+        + '<p>Os cartões medem a divergência e a vorticidade por diferenças centrais no ponto '
+        + 'de prova, e as duas dão zero em todos os casos: fora da origem esses campos são ao '
+        + 'mesmo tempo incompressíveis e irrotacionais. A circulação num circuito pequeno que '
+        + '<em>não</em> envolve a origem também dá zero, inclusive no vórtice, e é isso que '
+        + 'faz do vórtice livre um escoamento irrotacional apesar do nome.</p>';
+      tipografar(corpo);
+    }
+
+    registrarRedesenho(desenhar);
+  };
+
+  /* =================================================================
+     12. A lata furada
+     O exemplo do material, resolvido e animado. A hipótese de que a
+     superfície desce devagar não é feita: a continuidade entra inteira,
+     e o resultado exato se compara com Torricelli.
+     ================================================================= */
+  REGISTRO.lata = function (raiz) {
+    var est = { r2: 0.5, t: 0, rodando: true };
+    var R1 = 50, H0 = 0.10, G0 = 9.80665;      // milímetros e metros
+
+    function areas() {
+      var S1 = Math.PI * R1 * R1 * 1e-6;        // m²
+      var S2 = Math.PI * est.r2 * est.r2 * 1e-6;
+      return [S1, S2];
+    }
+
+    /* [(S1/S2)² − 1] u1² = 2gh, com u1 = −dh/dt, integra em forma fechada */
+    function coef() {
+      var a = areas(), S1 = a[0], S2 = a[1];
+      return S2 / Math.sqrt(S1 * S1 - S2 * S2);
+    }
+    function altura(t) {
+      var s = Math.sqrt(H0) - Math.sqrt(G0 / 2) * coef() * t;
+      return s > 0 ? s * s : 0;
+    }
+    function tvazio() { return Math.sqrt(2 * H0 / G0) / coef(); }
+
+    var corpo = moldura(raiz, 'A lata furada esvaziando');
+
+    var par = el('div', { class: 'paineis' });
+    var cv1 = el('canvas');
+    var cv2 = el('canvas');
+    par.appendChild(cv1);
+    par.appendChild(cv2);
+    corpo.appendChild(par);
+
+    var ctr = el('div', { class: 'controles' });
+    corpo.appendChild(ctr);
+    deslizante(ctr, 'raio do furo', 0.2, 45, 0.1, 0.5,
+      function (v) { est.r2 = v; est.t = 0; }, function (v) { return F.fmt(v, 1) + ' mm'; });
+    opcoes(ctr, [{ rot: 'pausar', v: 0 }, { rot: 'recomeçar', v: 1 }], -1,
+      function (v) {
+        if (v === 0) est.rodando = !est.rodando;
+        else { est.t = 0; est.rodando = true; }
+      });
+
+    var mostrar = cartoes(corpo, [
+      { rot: 'altura agora', k: 'h' },
+      { rot: 'velocidade no furo', k: 'u2' },
+      { rot: 'velocidade de Torricelli', k: 'tor' },
+      { rot: 'velocidade da superfície', k: 'u1' },
+      { rot: 'tempo até esvaziar', k: 'tv' },
+      { rot: 'vazão agora', k: 'q' }
+    ]);
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function desenhar() {
+      var a = areas(), S1 = a[0], S2 = a[1];
+      var h = altura(est.t), tf = tvazio();
+      var u1 = Math.sqrt(2 * G0 * h / ((S1 / S2) * (S1 / S2) - 1));
+      var u2 = u1 * S1 / S2;
+
+      /* ---- a lata ---- */
+      var p = G.preparar(cv1, 300);
+      var ct = p.ct;
+      var lx = p.L * 0.22, lw = p.L * 0.34;
+      var fundo = p.A - 48, topo = 24, alt = fundo - topo;
+      var hy = fundo - (h / H0) * alt;
+      ct.fillStyle = 'rgba(63,67,145,.16)';
+      ct.fillRect(lx, hy, lw, fundo - hy);
+      ct.strokeStyle = G.COR.tinta; ct.lineWidth = 2.4;
+      ct.beginPath();
+      ct.moveTo(lx, topo - 6); ct.lineTo(lx, fundo); ct.lineTo(lx + lw, fundo);
+      ct.lineTo(lx + lw, topo - 6);
+      ct.stroke();
+      ct.strokeStyle = G.COR.mestra; ct.lineWidth = 2;
+      ct.beginPath(); ct.moveTo(lx, hy); ct.lineTo(lx + lw, hy); ct.stroke();
+
+      /* o jato, com alcance de queda livre */
+      if (h > 1e-5) {
+        ct.strokeStyle = G.COR.vinho; ct.lineWidth = 2.2;
+        ct.beginPath();
+        var escx = alt / H0;
+        for (var s = 0; s <= 40; s++) {
+          var tt = s * 0.004;
+          var xx = lx + lw + u2 * tt * escx * 0.25;
+          var yy = fundo + 0.5 * G0 * tt * tt * escx;
+          if (yy > p.A - 4) break;
+          if (s === 0) ct.moveTo(xx, yy); else ct.lineTo(xx, yy);
+        }
+        ct.stroke();
+      }
+      rotulo(ct, 'h = ' + F.fmt(h * 100, 2) + ' cm', lx + lw / 2, hy - 8,
+        G.COR.mestra, 'center', 'bottom');
+      rotulo(ct, 'furo de ' + F.fmt(est.r2, 1) + ' mm', lx + lw + 6, fundo - 8,
+        G.COR.vinho, 'left', 'bottom');
+      rotulo(ct, 't = ' + F.fmt(est.t, 1) + ' s', 8, 12, G.COR.suave, 'left', 'top');
+
+      /* ---- a curva h(t) ---- */
+      var gr = G.eixos(cv2, {
+        altura: 300, xmin: 0, xmax: tf * 1.05, ymin: 0, ymax: H0 * 1.08,
+        margem: { e: 58, d: 14, c: 14, b: 44 },
+        rotX: 'tempo (s)', rotY: 'altura (m)',
+        marcasX: G.marcasLineares(0, tf * 1.05, 5, tf > 100 ? 0 : 1),
+        formataY: function (v) { return F.fmt(v, 2); }
+      });
+      G.curva(gr, function (t) { return altura(t); }, G.COR.mestra, 2.6);
+      G.vertical(gr, Math.min(est.t, tf * 1.05), G.COR.vinho, 'agora');
+
+      mostrar({
+        h: F.fmt(h * 100, 3) + ' cm',
+        u2: F.fmt(u2, 3) + ' m/s',
+        tor: F.fmt(Math.sqrt(2 * G0 * h), 3) + ' m/s',
+        u1: F.fmt(u1 * 1000, 4) + ' mm/s',
+        tv: F.fmt(tf, 1) + ' s',
+        q: F.fmt(u2 * S2 * 1e6, 2) + ' mL/s'
+      });
+    }
+
+    function escreverNota() {
+      nota.innerHTML =
+        '<p>Uma lata aberta em cima e furada embaixo, com fluido incompressível sujeito à '
+        + 'pressão ambiente e ao próprio peso. A continuidade dá \\(u_1S_1=u_2S_2\\), com '
+        + '\\(u_1=-\\dot h\\) a velocidade com que a superfície desce, e Bernoulli entre a '
+        + 'superfície e o furo dá</p>'
+        + '\\[p_0+\\tfrac12\\rho u_1^2+\\rho gh=p_0+\\tfrac12\\rho u_2^2.\\]'
+        + '<p>As duas pressões são a mesma, a atmosférica, e cancelam. Substituindo '
+        + '\\(u_2=u_1S_1/S_2\\) sobra</p>'
+        + '\\[\\left[\\left(\\frac{S_1}{S_2}\\right)^2-1\\right]u_1^2=2gh,\\]'
+        + '<p>que é uma equação separável para \\(h(t)\\). Integrando de \\(h_0\\) até '
+        + '\\(h\\),</p>'
+        + '\\[\\sqrt{h}=\\sqrt{h_0}-\\sqrt{\\frac{g}{2}}\\,'
+        + '\\frac{S_2}{\\sqrt{S_1^2-S_2^2}}\\;t,\\]'
+        + '<p>e a altura cai como o quadrado disso, de modo que a curva da direita é uma '
+        + 'parábola que toca o eixo no instante em que a lata esvazia. Com \\(R_1=50\\) mm, '
+        + '\\(R_2=0{,}5\\) mm e \\(h_0=10\\) cm, esse instante fica perto de vinte e quatro '
+        + 'minutos.</p>'
+        + '<p>Os dois cartões do meio comparam a velocidade de saída com '
+        + '\\(\\sqrt{2gh}\\), que é a <strong>fórmula de Torricelli</strong>. Elas são quase '
+        + 'iguais, e a razão está no fator \\(\\left(S_1/S_2\\right)^2\\) do denominador: com '
+        + 'o furo dez mil vezes menor que a seção da lata, o termo \\(u_1^2\\) de Bernoulli é '
+        + 'cem milhões de vezes menor que \\(u_2^2\\) e pode ser jogado fora. Torricelli é o '
+        + 'limite de furo pequeno, e o deslizante permite sair dele: com furo de quarenta '
+        + 'milímetros num recipiente de cinquenta, a velocidade real fica trinta por cento '
+        + 'acima da que Torricelli prevê, porque aí a superfície desce depressa e a sua '
+        + 'energia cinética deixa de ser desprezível.</p>'
+        + '<p>Vale notar o que foi deixado de fora. O fluido é ideal, de modo que não há '
+        + 'perda por viscosidade nem contração do jato na saída. Num furo real o jato se '
+        + 'estrangula a cerca de sessenta por cento da área do orifício, o chamado '
+        + '<em>vena contracta</em>, e a vazão medida fica abaixo da calculada aqui.</p>';
+      tipografar(corpo);
+    }
+
+    escreverNota();
+    registrarRedesenho(desenhar);
+
+    (function animar() {
+      if (est.rodando) {
+        est.t += tvazio() / 600;
+        if (est.t > tvazio() * 1.02) est.t = 0;
+        desenhar();
+      }
+      requestAnimationFrame(animar);
+    })();
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {
