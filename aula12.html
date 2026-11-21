@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 12: Convecção e semelhança | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611202251">
-<script src="assets/js/comum.js?v=202611202251"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611211758">
+<script src="assets/js/comum.js?v=202611211758"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -55,8 +55,9 @@
     <li><a href="#s7">7. Rayleigh-Bénard</a></li>
     <li><a href="#s8">8. A analogia de Reynolds</a></li>
     <li><a href="#s9">9. Convecção no computador</a></li>
-    <li><a href="#s10">10. Exercícios resolvidos</a></li>
-    <li><a href="#s11">11. Exercícios propostos</a></li>
+    <li><a href="#s10">10. No Spyder</a></li>
+    <li><a href="#s11">11. Exercícios resolvidos</a></li>
+    <li><a href="#s12">12. Exercícios propostos</a></li>
   </ol>
 </aside>
 
@@ -397,15 +398,104 @@
   com os esquemas do módulo 9, com a condição CFL e o cuidado com a difusão numérica. O termo
   de empuxo acopla as duas, e é só nele que a física nova entra.</p>
 
-  <p>Um aviso vale ouro aqui. Em convecção, a difusão numérica do esquema de advecção se soma à
-  difusividade física, de modo que a simulação se comporta como se tivesse
+  <p>Circula um aviso sobre isto, e ele merece ser examinado em vez de repetido. A versão
+  corrente diz que a difusão numérica do esquema de advecção se soma à difusividade física, de
+  modo que a simulação se comporta como se tivesse
   \(\alpha_{\text{efetivo}}=\alpha+D_{\text{num}}\) e, portanto, um Rayleigh
-  <strong>menor</strong> que o pretendido. É perfeitamente possível rodar um caso com
-  \(\mathrm{Ra}=5000\) e não ver convecção nenhuma, simplesmente porque a malha grossa levou o
-  Rayleigh efetivo para baixo de 1708. O exercício 12.7 pede para medir esse efeito.</p>
+  <strong>menor</strong> que o pretendido, a ponto de ser possível rodar um caso com
+  \(\mathrm{Ra}=5000\) e não ver convecção nenhuma. O programa da seção 10 mede isso, e o
+  aviso não sobrevive à medida.</p>
+
+  <div class="bloco alerta">
+    <span class="rotulo">O limiar não se move; a amplitude, sim</span>
+    <p>A difusão numérica do upwind vale \(D_{\text{num}}=u\,\Delta x/2\), e portanto é
+    <strong>proporcional à velocidade</strong>. No limiar a velocidade é infinitesimal, a
+    difusão numérica também, e por esse mecanismo o Rayleigh crítico não se move. Medido: com
+    \(\mathrm{Ra}=5000\), três vezes o limiar, o upwind numa malha de \(16\times8\) ainda
+    convecta, com \(\mathrm{Nu}=2{,}02\) contra 3,02 do esquema centrado na mesma malha e 2,12
+    convergido. Ele tira um terço do Nusselt, mas não mata a convecção nem na malha mais
+    grosseira que ainda roda.</p>
+    <p>O que a malha grossa de fato faz é duplo, e nos dois casos é na amplitude e não no
+    limiar. Com esquema centrado ela <em>superestima</em>: \(16\times8\) dá
+    \(\mathrm{Nu}=3{,}02\), mais de 40 % acima do valor convergido. Com upwind ela
+    subestima. A regra prática não muda, e só fica mais precisa: nenhum Nusselt vale sem ser
+    repetido em duas malhas.</p>
+    <p>O limiar também se desloca com a malha, mas por outro motivo e no outro sentido do que
+    o aviso supunha: não é a difusão numérica da advecção, é a diferença central subestimando
+    a segunda derivada, o que enfraquece justamente os termos que amortecem. O limiar medido
+    fica <em>abaixo</em> de 1707,76, e a seção 10 mostra os dois programas, o linear e o não
+    linear, concordando nisso.</p>
+  </div>
 
   <!-- ================================================== -->
-  <h2 id="s10">10. Exercícios resolvidos</h2>
+  <h2 id="s10">10. No Spyder</h2>
+
+  <p>Esta aula fez quatro afirmações numéricas que não vieram de ajuste a dado nenhum:
+  \(f''(0)=0{,}332\), o expoente \(1/3\) do Prandtl, \(\mathrm{Ra}_c=1707{,}76\) e o
+  comprimento de onda \(2{,}02\,d\) dos rolos. Todas se podem reproduzir, e a última seção do
+  programa submete à medida o aviso da seção 9.</p>
+
+  <div class="cartoes">
+    <a class="cartao" href="codigo/conveccao.py">
+      <span class="numero">Programa</span>
+      <h3>conveccao.py</h3>
+      <p>Resolve Blasius por tiro, mede o expoente do Prandtl em vez de assumi-lo, acha o
+      Rayleigh crítico por estabilidade linear, roda a simulação não linear completa em função
+      corrente e vorticidade, e mede o que a malha grossa faz de fato com a convecção.</p>
+    </a>
+  </div>
+
+  <p><strong>O que ele imprime, e o que conferir.</strong></p>
+
+  <ul>
+  <li>O tiro em Blasius dá \(f''(0)=0{,}332057337\) e \(u/U=0{,}99\) em \(\eta=4{,}910\), de
+  onde \(\delta=4{,}910\,x/\sqrt{\mathrm{Re}_x}\), que a definição usual arredonda para 5. O
+  atrito sai em \(C_f\sqrt{\mathrm{Re}_x}=0{,}664115\).</li>
+  <li>A lei \(0{,}332\,\mathrm{Pr}^{1/3}\) é excelente de \(\mathrm{Pr}=0{,}7\) a 100, com
+  razão entre 0,99 e 1,02, e <strong>falha nos metais líquidos</strong>: em
+  \(\mathrm{Pr}=0{,}01\) ela prevê 0,0715 contra 0,0516 de verdade, isto é,
+  <em>superestima</em> a troca de calor em 39 % do valor verdadeiro, que é o lado perigoso de
+  errar num trocador. É por isso que metais líquidos têm correlação própria. Em
+  \(\mathrm{Pr}=1\) o valor coincide com \(f''(0)\), como tem de coincidir, porque ali as duas
+  equações são a mesma.</li>
+  <li>O problema de autovalor converge para 1707,76 e \(k=3{,}116\), <strong>por
+  baixo</strong>: 1678,1 com 20 pontos, 1699,8 com 40, 1705,7 com 80, 1707,2 com 160. O sinal
+  importa e é o oposto do que se costuma supor. Do \(k\) sai o comprimento de onda,
+  \(2\pi/k=2{,}0163\) espessuras, e portanto rolos de 1,008 espessura cada, que é uma previsão
+  geométrica sem parâmetro nenhum e se confere com uma régua numa panela de óleo.</li>
+  <li>A simulação não linear fica em \(\mathrm{Nu}=1\) nas quatro casas abaixo do limiar e
+  convecta acima dele, sem que nada disso tenha sido posto no programa: o limiar emerge da
+  competição entre empuxo, viscosidade e difusão de calor. Acima dele o excesso de Nusselt
+  cresce linearmente com a distância ao limiar, e o programa verifica antes que não está
+  medindo transiente: em \(\mathrm{Ra}=1800\), \(t=20\) e \(t=40\) dão o mesmo número em
+  cinco casas, enquanto \(t=10\) ainda não tinha chegado lá.</li>
+  <li>O aviso da seção 9 não sobrevive: com \(\mathrm{Ra}=5000\) o upwind numa malha
+  \(16\times8\) ainda dá \(\mathrm{Nu}=2{,}02\), e a convecção não morre em nenhuma malha que
+  ainda rode. A razão é que \(D_{\text{num}}=u\,\Delta x/2\) é proporcional à velocidade, que
+  é infinitesimal no limiar.</li>
+  </ul>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Dois programas que erram juntos</span>
+    <p>A seção 4 do programa mede o limiar da própria malha extrapolando a reta
+    \(\mathrm{Nu}-1=A\left(\mathrm{Ra}-\mathrm{Ra}_c\right)\) até cruzar o eixo, o que custa
+    muito menos que procurá-lo por bissecção e, além disso, não depende de quão cedo o
+    programa <em>consegue detectar</em> convecção. A extrapolação tem um viés que precisa ser
+    controlado: as inclinações entre pontos consecutivos caem (7,38, 6,75 e 6,20 em
+    \(10^{-4}\)), porque a lei linear é só o primeiro termo de uma expansão, e uma reta puxada
+    por pontos longe do limiar cruza o eixo cedo demais. Encolhendo a janela de ajuste, as
+    duas quantidades andam juntas na direção certa: \(\mathrm{Ra}_c\) vai de 1664 para 1673 e
+    1679, e o coeficiente de 1,127 para 1,181 e 1,239, contra 1707,76 e 1,43.</p>
+    <p>Com a janela mais estreita o limiar da malha fica em 1679, e esse número conversa com a
+    seção 3: o problema de autovalor dá 1678 com 20 pontos e 1700 com 40, e esta simulação tem
+    24 na vertical. São dois programas independentes, um linear e um não linear, com
+    discretizações diferentes, errando o limiar para o mesmo lado e por quantidades
+    compatíveis. Nenhum dos dois sozinho provaria que o desvio é da malha e não de um defeito;
+    os dois juntos provam.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios resolvidos</h2>
 
   <div class="bloco ex">
     <span class="rotulo">12.1 Uma placa aquecida ao vento</span>
@@ -464,7 +554,7 @@
   </div>
 
   <!-- ================================================== -->
-  <h2 id="s11">11. Exercícios propostos</h2>
+  <h2 id="s12">12. Exercícios propostos</h2>
 
   <div class="bloco ex">
     <ol>
@@ -488,10 +578,14 @@
       \(\mathrm{Nu}=3{,}66\) na faixa laminar e Dittus-Boelter na turbulenta. Comente o salto
       na transição e por que ele não é físico.</li>
 
-      <li><b>12.7</b> Implemente a convecção de Rayleigh-Bénard em duas dimensões, na
-      formulação função corrente e vorticidade. Determine numericamente o Rayleigh crítico e
-      compare com \(1708\). Em seguida refine a malha e mostre que o valor medido se aproxima
-      do teórico por cima, explicando o papel da difusão numérica.</li>
+      <li><b>12.7</b> Resolva o problema de estabilidade linear de Rayleigh-Bénard como um
+      problema de autovalor discretizado, determine o Rayleigh crítico e compare com
+      \(1707{,}76\). Em seguida refine a malha e descubra <strong>de que lado</strong> o valor
+      medido se aproxima do teórico. Explique o sinal que encontrar partindo da diferença
+      central: aplicada a \(e^{ikz}\), ela dá \(-\left(4/h^2\right)\sen^2\left(kh/2\right)\) em
+      vez de \(-k^2\), e esse valor é sempre <em>menor</em> em módulo. Conclua o que isso faz
+      com os termos de amortecimento viscoso e térmico, que são os estabilizantes, e portanto
+      com o limiar.</li>
 
       <li><b>12.8</b> Com o programa do exercício anterior, meça o comprimento de onda dos
       rolos logo acima do limiar e compare com \(2{,}02\,d\). Suba então o Rayleigh por duas
@@ -523,6 +617,6 @@
   <!--PORTAL--><p><small><a href="https://apianomorais.github.io/">Todas as disciplinas e a pesquisa em apianomorais.github.io</a></small></p><!--/PORTAL-->
 </footer>
 
-<script src="assets/js/widgets.js?v=202611202251"></script>
+<script src="assets/js/widgets.js?v=202611211758"></script>
 </body>
 </html>

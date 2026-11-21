@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 6: Viscosidade e a equação de Navier-Stokes | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611202251">
-<script src="assets/js/comum.js?v=202611202251"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611211758">
+<script src="assets/js/comum.js?v=202611211758"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -55,7 +55,8 @@
     <li><a href="#s7">7. A equação de Navier-Stokes</a></li>
     <li><a href="#s8">8. Hagen-Poiseuille</a></li>
     <li><a href="#s9">9. Exercícios resolvidos</a></li>
-    <li><a href="#s10">10. Exercícios propostos</a></li>
+    <li><a href="#s10">10. No Spyder</a></li>
+    <li><a href="#s11">11. Exercícios propostos</a></li>
   </ol>
 </aside>
 
@@ -457,7 +458,65 @@
   </div>
 
   <!-- ================================================== -->
-  <h2 id="s10">10. Exercícios propostos</h2>
+  <h2 id="s10">10. No Spyder</h2>
+
+  <p>Três afirmações desta aula pedem medida. A primeira é que o perfil de tensão é geometria
+  pura, válida para qualquer fluido. A segunda é que a quarta potência de Poiseuille não é
+  universal, e que o expoente verdadeiro é \(\left(3n+1\right)/n\). A terceira é a mais
+  prática de todas, e a aula não chegou a enunciar: quem mede vazão num tubo e aplica
+  Poiseuille ao contrário obtém um número que só vale na vazão em que mediu.</p>
+
+  <div class="cartoes">
+    <a class="cartao" href="codigo/poiseuille.py">
+      <span class="numero">Programa</span>
+      <h3>poiseuille.py</h3>
+      <p>Resolve o escoamento no tubo por diferenças finitas sem usar a parábola, verifica o
+      perfil de tensão para cinco fluidos diferentes, mede o expoente da vazão com o raio por
+      ajuste em log-log, confere a razão entre velocidade de eixo e média, e mostra a
+      viscosidade aparente variando com a pressão num fluido de lei de potência.</p>
+    </a>
+  </div>
+
+  <p><strong>O que ele imprime, e o que conferir.</strong></p>
+
+  <ul>
+  <li>O teste de convergência do tubo cheio <em>não funciona</em>, e descobrir por quê vale
+  mais que o teste: a parábola é um polinômio de grau dois, a diferença central de segunda
+  derivada é exata sobre polinômios de grau dois, e o erro dá \(10^{-14}\) já com 20 pontos e
+  não melhora. O programa refaz a medida num tubo anular, onde a solução tem um logaritmo, e
+  aí a razão de erros dá 4,00 a cada refinamento, que é a segunda ordem esperada. A lição é
+  geral: um teste de convergência só vale contra uma solução que o esquema não represente
+  exatamente.</li>
+  <li>No tubo anular com \(a/R=0{,}3\), a velocidade máxima fica em \(r/R=0{,}6148\) e não no
+  meio geométrico, 0,65. As duas tensões de parede explicam: a interna vale 0,0240 Pa contra
+  0,0155 Pa na externa, porque o perímetro menor tem de segurar a sua parte da força de
+  pressão com tensão maior.</li>
+  <li>Reconstruindo \(\tau\) na parede a partir do perfil calculado para \(n=0{,}4\) até
+  \(n=1{,}8\), o resultado é sempre \(\Delta p\,R/2L=0{,}025\) Pa, em \(10^{-6}\). A reologia
+  não tem voto nenhum nessa conta.</li>
+  <li>O expoente da vazão com o raio, ajustado em log-log sobre uma década de raios, dá
+  5,500000 para \(n=0{,}4\) e 3,500000 para \(n=2\), contra \(\left(3n+1\right)/n\), com erro
+  em \(10^{-15}\). Dobrar o raio multiplica a vazão por 16 com água, por 45 com
+  \(n=0{,}4\) e por 11 com \(n=2\).</li>
+  <li>A razão \(u_{\max}/\bar u\) dá \(\left(3n+1\right)/\left(n+1\right)\) entre
+  \(10^{-11}\) e \(10^{-9}\), de 1,333 em \(n=0{,}2\) até 2,333 em \(n=2\).</li>
+  <li>A viscosidade aparente \(\mu_{\text{ap}}=\pi R^4\Delta p/8LQ\) varia com
+  \(\Delta p^{1-1/n}\), e o expoente medido bate em seis casas. Num fluido com \(n=0{,}5\),
+  cem vezes mais pressão dá cem vezes <em>menos</em> viscosidade aparente.</li>
+  </ul>
+
+  <div class="bloco fisica">
+    <span class="rotulo">O expoente 3 do limite dilatante</span>
+    <p>Quando \(n\) cresce sem limite, \(\left(3n+1\right)/n\) tende a 3, e o programa mostra
+    por quê. Com \(n\) muito grande, \(\left|du/dr\right|=\left(\tau/K\right)^{1/n}\) deixa de
+    depender da tensão: a taxa de deformação satura. O perfil vira um cone de inclinação fixa,
+    a velocidade do eixo passa a crescer apenas com \(R\), e a vazão, que é velocidade vezes
+    área, cresce com \(R\cdot R^2\). O expoente 4 do newtoniano e o expoente 3 deste limite
+    marcam os dois extremos do que a geometria permite.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios propostos</h2>
 
   <div class="bloco ex">
     <ol>
@@ -495,6 +554,22 @@
       mostrou que num fluido ideal a vorticidade não pode nascer. Explique como o termo
       \(\mu\nabla^2\vet{u}\) desfaz esse teorema, e por que a vorticidade de um escoamento
       real é sempre gerada nas paredes.</li>
+
+      <li><b>6.12</b> O tubo anular, de raio interno \(a\) e externo \(R\), tem solução com
+      um logaritmo. Obtenha-a e mostre que a velocidade máxima fica em
+      \(r_m=\sqrt{\left(R^2-a^2\right)/2\ln\left(R/a\right)}\), que não é nem a média
+      aritmética nem a geométrica dos dois raios. Verifique os dois limites: com
+      \(a\to0\) deve voltar a parábola, e com \(a\to R\) a parábola entre placas do exercício
+      6.6. Por fim, use o equilíbrio global de forças para explicar por que a parede interna
+      carrega mais tensão que a externa.</li>
+
+      <li><b>6.13</b> Um laboratório mede a vazão de um fluido num tubo capilar para cinco
+      quedas de pressão e, em cada medida, calcula a viscosidade pela fórmula de Poiseuille.
+      Os cinco valores saem diferentes, caindo quando a pressão sobe. Mostre que, se o fluido
+      obedecer à lei de potência, essa <em>viscosidade aparente</em> vai com
+      \(\Delta p^{1-1/n}\), e explique como extrair \(n\) e \(K\) dos mesmos dados. Em
+      seguida, diga que medida adicional distinguiria um fluido de lei de potência de um
+      fluido de Bingham, que também daria viscosidade aparente decrescente.</li>
     </ol>
   </div>
 
@@ -513,6 +588,6 @@
   <!--PORTAL--><p><small><a href="https://apianomorais.github.io/">Todas as disciplinas e a pesquisa em apianomorais.github.io</a></small></p><!--/PORTAL-->
 </footer>
 
-<script src="assets/js/widgets.js?v=202611202251"></script>
+<script src="assets/js/widgets.js?v=202611211758"></script>
 </body>
 </html>
