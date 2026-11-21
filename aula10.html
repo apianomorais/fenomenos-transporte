@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 10: Condução de calor | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611202137">
-<script src="assets/js/comum.js?v=202611202137"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611202149">
+<script src="assets/js/comum.js?v=202611202149"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -53,8 +53,9 @@
     <li><a href="#s7">7. A onda térmica</a></li>
     <li><a href="#s8">8. Biot e o modelo concentrado</a></li>
     <li><a href="#s9">9. Condução no computador</a></li>
-    <li><a href="#s10">10. Exercícios resolvidos</a></li>
-    <li><a href="#s11">11. Exercícios propostos</a></li>
+    <li><a href="#s10">10. No Spyder</a></li>
+    <li><a href="#s11">11. Exercícios resolvidos</a></li>
+    <li><a href="#s12">12. Exercícios propostos</a></li>
   </ol>
 </aside>
 
@@ -352,11 +353,22 @@
   <p>\[\mathrm{Bi}=\frac{L_c/k}{1/h}=\frac{hL_c}{k},\qquad
   L_c=\frac{V}{A}.\]</p>
 
-  <p>O critério usual é \(\mathrm{Bi}&lt;0{,}1\), que garante erro abaixo de uns cinco por
-  cento. Uma panela de cobre fina em água fervente tem Biot minúsculo e é isotérmica; uma
-  batata de \(4\) cm de raio num forno, com \(k\approx0{,}5\) W/mK e \(h\approx20\) W/m²K, tem
-  \(\mathrm{Bi}=1{,}6\), de modo que o centro dela fica muito atrás da casca, que é por que
-  assar leva tempo e queimar por fora é fácil.</p>
+  <p>O critério usual é \(\mathrm{Bi}&lt;0{,}1\), e ele garante erro abaixo de cinco por cento
+  com folga larga: a seção 10 mede o erro de verdade e encontra 1,2 % em \(\mathrm{Bi}=0{,}1\),
+  com os cinco por cento só chegando em \(\mathrm{Bi}\approx0{,}44\). Uma panela de cobre fina
+  em água fervente tem Biot minúsculo e é isotérmica; uma batata de \(4\) cm de raio num forno,
+  com \(k\approx0{,}5\) W/mK e \(h\approx20\) W/m²K, tem \(\mathrm{Bi}=0{,}53\), de modo que o
+  centro dela fica muito atrás da casca, que é por que assar leva tempo e queimar por fora é
+  fácil.</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Qual comprimento característico</span>
+    <p>O \(\mathrm{Bi}=0{,}53\) acima usa \(L_c=V/A\), que para uma esfera dá \(R/3\) e não
+    \(R\). Vários textos usam o próprio raio quando passam às soluções em série, e aí a mesma
+    batata aparece com \(\mathrm{Bi}=1{,}6\). Os dois números estão certos dentro da sua
+    convenção e diferem por um fator 3, de modo que convém dizer qual se está usando antes de
+    comparar com o critério de 0,1, que é formulado para \(L_c=V/A\).</p>
+  </div>
 
   <p>Convém não confundir Biot com Nusselt, que será definido no módulo 11 e tem a mesma cara,
   \(hL/k\). A diferença está em qual \(k\): no Biot é a condutividade <strong>do
@@ -399,11 +411,88 @@
     <b>return</b> novo</pre>
 
   <p>Repare que a condição de estabilidade ficou mais apertada nas células da superfície, onde
-  o limite passa a ser \(s(1+\mathrm{Bi}_\Delta)\le1/2\). Esquecer isso é um erro comum, e o
-  sintoma é uma simulação que fica estável no miolo e oscila só nas duas pontas.</p>
+  o critério usual passa a ser \(s(1+\mathrm{Bi}_\Delta)\le1/2\). Esquecer isso é um erro
+  comum, e o sintoma é uma simulação que fica estável no miolo e oscila só nas duas pontas.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Esse critério é suficiente, e não é o limite</span>
+    <p>A desigualdade acima sai de exigir que o coeficiente do próprio nó, \(1-2s(1+
+    \mathrm{Bi}_\Delta)\), não fique negativo. Isso garante mais que estabilidade: garante que
+    a temperatura do nó nunca ande na direção errada de um passo para o outro, e é por isso
+    que vale a pena usá-la. Mas ela é mais apertada que o necessário.</p>
+    <p>O limite verdadeiro sai procurando um modo que decai para dentro, \(T_j=z^j\). A
+    equação do nó da superfície exige \(z^2-2\mathrm{Bi}_\Delta z-1=0\), cuja raiz de módulo
+    menor que 1 é \(z=\mathrm{Bi}_\Delta-\sqrt{1+\mathrm{Bi}_\Delta^2}\), e o autovalor
+    correspondente vale \(\lambda=1-2s\left(1+\sqrt{1+\mathrm{Bi}_\Delta^2}\right)\). Pedindo
+    \(\lambda\ge-1\),</p>
+    <p>\[s\le\frac{1}{1+\sqrt{1+\mathrm{Bi}_\Delta^2}},\]</p>
+    <p>que a seção 10 confere contra o espectro da matriz em oito casas decimais. Para
+    \(\mathrm{Bi}_\Delta\) grande o critério da positividade fica quase duas vezes mais
+    apertado que esse. Vale usar o conservador, e vale saber quanto ele custa.</p>
+  </div>
 
   <!-- ================================================== -->
-  <h2 id="s10">10. Exercícios resolvidos</h2>
+  <h2 id="s10">10. No Spyder</h2>
+
+  <p>Este módulo tem mais soluções fechadas que qualquer outro do curso, e isso é uma sorte
+  para quem programa: cada uma delas é um teste pronto. O programa resolve numericamente os
+  mesmos problemas e compara com as fórmulas, inclusive nos dois pontos em que a aula foi
+  conservadora de propósito.</p>
+
+  <div class="cartoes">
+    <a class="cartao" href="codigo/conducao.py">
+      <span class="numero">Programa</span>
+      <h3>conducao.py</h3>
+      <p>Confere o sólido semi-infinito contra a função erro e o fluxo contra a efusividade,
+      mede a temperatura de contato entre dois sólidos, extrai a profundidade da onda térmica
+      de dois jeitos independentes, localiza o limite exato de estabilidade do contorno de
+      Robin e mede o erro do modelo concentrado em função do Biot.</p>
+    </a>
+  </div>
+
+  <p><strong>O que ele imprime, e o que conferir.</strong></p>
+
+  <ul>
+  <li>O perfil numérico bate com \(\operatorname{erf}\left(x/2\sqrt{\alpha t}\right)\) em
+  \(5\times10^{-6}\) do degrau, e o fluxo na superfície bate com
+  \(k(T_s-T_i)/\sqrt{\pi\alpha t}\) em quinze partes por milhão.</li>
+  <li>A profundidade em que a temperatura subiu 1 % dividida por \(\sqrt t\) dá o mesmo
+  número em quatro instantes diferentes, que é a lei da raiz do tempo medida.</li>
+  <li>A temperatura de contato dá 21,024 °C para o aço e 29,325 °C para a madeira, iguais à
+  média ponderada pelas efusividades em todas as casas.</li>
+  <li>A profundidade da onda térmica medida pela queda da amplitude e a medida pelo atraso de
+  fase coincidem em 0,01 %, e as duas dão o \(\delta=\sqrt{2\alpha/\omega}\) previsto.</li>
+  <li>O limite de estabilidade do contorno de Robin, extraído do espectro da matriz, bate com
+  \(1/(1+\sqrt{1+\mathrm{Bi}_\Delta^2})\) em oito casas.</li>
+  <li>O erro do modelo concentrado vale 1,2 % em \(\mathrm{Bi}=0{,}1\) e chega aos cinco por
+  cento só em \(\mathrm{Bi}=0{,}44\).</li>
+  </ul>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Ler a malha também é física</span>
+    <p>A segunda seção do programa faz a mesma simulação de contato e lê a interface de dois
+    jeitos. Tomando a média dos dois nós vizinhos, o resultado converge para a fórmula em
+    primeira ordem, e com 500 células erra mais de 3 °C. Tomando o valor que a continuidade do
+    fluxo exige, \(\left(k_1T_1+k_2T_2\right)/\left(k_1+k_2\right)\), o mesmo cálculo acerta
+    todas as casas com mil células. O que muda não é a simulação, é a pergunta feita a ela: a
+    temperatura tem um bico na interface, e a média simples ignora que de um lado o calor anda
+    com muito mais facilidade que do outro.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">Para mexer</span>
+    <p>Troque o degrau de temperatura por um degrau de fluxo imposto e deduza a solução
+    correspondente, \(T(0,t)-T_i=2q_s\sqrt{\alpha t/\pi}/k\), conferindo-a como o programa faz
+    com a erf. Depois rode a onda térmica com dois períodos somados, o diário e o anual, e
+    verifique que cada um chega com a sua própria profundidade: é o que faz a temperatura a
+    três metros seguir as estações com meses de atraso e ignorar completamente o dia e a
+    noite. Por fim, meça o erro do modelo concentrado para a esfera e para o cilindro, e
+    descubra se o critério \(\mathrm{Bi}&lt;0{,}1\) é igualmente conservador nas três
+    geometrias.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios resolvidos</h2>
 
   <div class="bloco ex">
     <span class="rotulo">10.1 A parede de uma casa no Cariri</span>
@@ -461,7 +550,7 @@
   </div>
 
   <!-- ================================================== -->
-  <h2 id="s11">11. Exercícios propostos</h2>
+  <h2 id="s12">12. Exercícios propostos</h2>
 
   <div class="bloco ex">
     <ol>
@@ -527,6 +616,6 @@
   <!--PORTAL--><p><small><a href="https://apianomorais.github.io/">Todas as disciplinas e a pesquisa em apianomorais.github.io</a></small></p><!--/PORTAL-->
 </footer>
 
-<script src="assets/js/widgets.js?v=202611202137"></script>
+<script src="assets/js/widgets.js?v=202611202149"></script>
 </body>
 </html>
