@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 9: Advecção e difusão no computador | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611201318">
-<script src="assets/js/comum.js?v=202611201318"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611202137">
+<script src="assets/js/comum.js?v=202611202137"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -53,8 +53,9 @@
     <li><a href="#s7">7. Lax-Wendroff e a dispersão numérica</a></li>
     <li><a href="#s8">8. Juntando os dois: o Péclet de malha</a></li>
     <li><a href="#s9">9. Duas dimensões e a divisão de operadores</a></li>
-    <li><a href="#s10">10. Exercícios resolvidos</a></li>
-    <li><a href="#s11">11. Exercícios propostos</a></li>
+    <li><a href="#s10">10. No Spyder</a></li>
+    <li><a href="#s11">11. Exercícios resolvidos</a></li>
+    <li><a href="#s12">12. Exercícios propostos</a></li>
   </ol>
 </aside>
 
@@ -293,8 +294,19 @@
   <p>O módulo é maior que 1 para todo \(C\) diferente de zero e para quase todo \(k\). O
   esquema é <strong>incondicionalmente instável</strong>, e não existe passo de tempo que o
   salve. Rodando com \(C=0{,}5\) numa malha de 200 pontos, o máximo da solução vale \(1{,}15\)
-  depois de 100 passos, \(1{,}1\times10^{3}\) depois de 400 e \(2\times10^{22}\) depois de 800.
-  O widget da seção seguinte permite assistir a isso.</p>
+  depois de 100 passos, algumas centenas depois de 400 e da ordem de \(10^{22}\) depois de
+  800. O widget da seção seguinte permite assistir a isso.</p>
+
+  <div class="bloco fisica">
+    <span class="rotulo">Por que os dois últimos números não têm casas decimais</span>
+    <p>O valor em 100 passos é uma propriedade do esquema e sai igual em qualquer máquina. Os
+    de 400 e 800 não são, e seria desonesto escrevê-los com algarismos. O esquema amplifica
+    por vinte ordens de grandeza aquilo que havia no último bit do dado inicial, e o último
+    bit de \(\exp\) não é o mesmo em duas bibliotecas diferentes. A seção 10 traz a medida:
+    mudando a condição inicial em um <em>ulp</em>, o resultado em 100 e 200 passos não muda em
+    nenhum dígito, e o de 800 muda em 81 %. De um esquema instável anota-se a ordem de
+    grandeza e a taxa de crescimento, nunca um número com casas.</p>
+  </div>
 
   <p>A razão física é instrutiva. A diferença centrada pergunta aos dois vizinhos o que
   acontece, e numa equação de advecção a informação só vem de um lado, o de onde o fluido vem.
@@ -479,7 +491,68 @@
   Strang. É assim que estão escritos praticamente todos os códigos de transporte em uso.</p>
 
   <!-- ================================================== -->
-  <h2 id="s10">10. Exercícios resolvidos</h2>
+  <h2 id="s10">10. No Spyder</h2>
+
+  <p>Este módulo fez afirmações de dois tipos. Umas são sobre estabilidade, e se verificam
+  rodando o esquema dos dois lados do limite. Outras são sobre o erro que cada esquema comete,
+  e essas são mais interessantes, porque a equação modificada prevê o erro com uma fórmula e
+  a fórmula pode ser conferida contra a medida. O programa faz as duas coisas.</p>
+
+  <div class="cartoes">
+    <a class="cartao" href="codigo/adveccao.py">
+      <span class="numero">Programa</span>
+      <h3>adveccao.py</h3>
+      <p>Mede o limite \(s\le1/2\) dos dois lados, confere o caso \(s=1/2\) contra uma fórmula
+      fechada, mede a ordem no tempo do implícito e do Crank-Nicolson pelo algoritmo de Thomas,
+      compara a difusão numérica do upwind com a previsão da equação modificada, mostra a
+      dispersão do Lax-Wendroff num degrau e localiza o limiar do Péclet de malha.</p>
+    </a>
+  </div>
+
+  <p><strong>O que ele imprime, e o que conferir.</strong></p>
+
+  <ul>
+  <li>Com \(s=1/2\) o esquema explícito vira a média dos dois vizinhos, e o máximo de um pulso
+  de um ponto só depois de 200 passos tem de valer \(\binom{200}{100}/4^{100}\). O programa
+  acha 0,0563484790 contra 0,0563484790, com desvio de \(7\times10^{-18}\). Em \(s=0{,}51\) o
+  mesmo pulso chega a 73, e em \(s=0{,}60\) a \(5\times10^{27}\).</li>
+  <li>O implícito aguenta \(s=50\), cem vezes acima do limite do explícito, sem sinal de
+  problema; o explícito com o mesmo \(s\) estoura em dois passos.</li>
+  <li>O erro do implícito cai por 2 e o do Crank-Nicolson por 4 quando o passo de tempo cai
+  pela metade, medidos contra a solução exata do esquema semidiscreto, para que o erro de
+  malha não entre na conta.</li>
+  <li>A largura final do pulso no upwind bate com \(\sqrt{\sigma_0^2+2D_{\text{num}}t}\) nas
+  cinco casas, nos quatro valores de \(C\), e em \(C=1\) o esquema fica exato.</li>
+  <li>No degrau com \(C=0{,}8\), o Lax-Wendroff vai de \(-0{,}186\) a 1,186 enquanto o upwind
+  fica entre 0 e 0,996. Na gaussiana suave é o contrário: o Lax-Wendroff guarda a largura em
+  0,05000 e o upwind a alarga para 0,05745.</li>
+  <li>O limiar do Péclet de malha cai exatamente em 2: em 1,99 a solução estacionária não
+  oscila, em 2,01 oscila.</li>
+  </ul>
+
+  <div class="bloco fisica">
+    <span class="rotulo">A terceira seção é a que ensina mais</span>
+    <p>Ela roda o FTCS instável duas vezes, partindo de condições iniciais que diferem em um
+    <em>ulp</em>, o último bit de cada valor. Até 200 passos os dois resultados coincidem em
+    todos os dígitos impressos. Em 400 passos diferem em 41 %, e em 800 em 81 %. Não é erro de
+    programa nem ruído de arredondamento acumulado: é o esquema fazendo exatamente o que a
+    análise de von Neumann disse que faria, amplificando tudo, inclusive o que estava no
+    último bit. Daí a regra de nunca anotar, de um cálculo instável, um número com casas
+    decimais.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">Para mexer</span>
+    <p>Implemente um limitador de fluxo, o minmod é o mais curto de escrever, e rode o mesmo
+    degrau com \(C=0{,}8\): a solução deve ficar entre 0 e 1 sem o achatamento do upwind, o que
+    é a saída do teorema de Godunov pela porta da não linearidade. Depois junte advecção e
+    difusão num caso só e verifique a condição \(C+2s\le1\) dos dois lados. Por fim, monte o
+    caso bidimensional com divisão de operadores e meça a ordem do erro da divisão simples
+    contra a de Strang, que deve subir de \(\Delta t\) para \(\Delta t^2\).</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios resolvidos</h2>
 
   <div class="bloco ex">
     <span class="rotulo">9.1 Por que o esquema centrado oscila acima de \(\mathrm{Pe}_\Delta=2\)</span>
@@ -539,7 +612,7 @@
   </div>
 
   <!-- ================================================== -->
-  <h2 id="s11">11. Exercícios propostos</h2>
+  <h2 id="s12">12. Exercícios propostos</h2>
 
   <div class="bloco ex">
     <p>Os exercícios de 9.3 a 9.9 são para programar e rodar. Entregue, em cada um, o programa
@@ -608,6 +681,6 @@
   <!--PORTAL--><p><small><a href="https://apianomorais.github.io/">Todas as disciplinas e a pesquisa em apianomorais.github.io</a></small></p><!--/PORTAL-->
 </footer>
 
-<script src="assets/js/widgets.js?v=202611201318"></script>
+<script src="assets/js/widgets.js?v=202611202137"></script>
 </body>
 </html>

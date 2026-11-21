@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 8: Campos no computador: relaxação e convergência | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611201318">
-<script src="assets/js/comum.js?v=202611201318"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611202137">
+<script src="assets/js/comum.js?v=202611202137"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -53,8 +53,9 @@
     <li><a href="#s7">7. Jacobi, Gauss-Seidel e sobre-relaxação</a></li>
     <li><a href="#s8">8. Do campo às grandezas físicas</a></li>
     <li><a href="#s9">9. Ordem de convergência e verificação</a></li>
-    <li><a href="#s10">10. Exercícios resolvidos</a></li>
-    <li><a href="#s11">11. Exercícios propostos</a></li>
+    <li><a href="#s10">10. No Spyder</a></li>
+    <li><a href="#s11">11. Exercícios resolvidos</a></li>
+    <li><a href="#s12">12. Exercícios propostos</a></li>
   </ol>
 </aside>
 
@@ -461,7 +462,65 @@
   </div>
 
   <!-- ================================================== -->
-  <h2 id="s10">10. Exercícios resolvidos</h2>
+  <h2 id="s10">10. No Spyder</h2>
+
+  <p>As oito seções anteriores fizeram afirmações que se podem medir: que o erro cai com o
+  quadrado do passo, que o SOR custa vinte vezes menos que Jacobi, que o \(\omega\) ótimo da
+  caixa vazia é o da fórmula. O programa abaixo mede cada uma delas, e inclui a verificação
+  que a seção 9 pede: a inclinação do erro contra o passo da malha.</p>
+
+  <div class="cartoes">
+    <a class="cartao" href="codigo/relaxacao.py">
+      <span class="numero">Programa</span>
+      <h3>relaxacao.py</h3>
+      <p>Mede a ordem de convergência do laplaciano de cinco pontos, mostra um contorno de
+      Neumann derrubando essa ordem pela metade, reproduz o capacitor do widget com os três
+      métodos, procura o \(\omega\) ótimo por medida e mede como o custo de cada método
+      cresce com o tamanho da malha.</p>
+    </a>
+  </div>
+
+  <p><strong>O que ele imprime, e o que conferir.</strong></p>
+
+  <ul>
+  <li>No caso de resposta conhecida, o erro cai por 3,99 quando o número de pontos dobra e a
+  inclinação de \(\log E\) contra \(\log h\) dá 1,998. É a segunda ordem prevista na
+  seção 2, medida de ponta a ponta.</li>
+  <li>Trocando a parede de Neumann pela diferença de um lado só, a mesma medida dá inclinação
+  1,044 e o erro passa a cair por 2. O ponto fantasma devolve os 1,998. O interior é idêntico
+  nos dois casos: o erro mora só no contorno e contamina o domínio inteiro.</li>
+  <li>No capacitor \(61\times61\), com resíduo de corte em \(10^{-11}\): Jacobi 3822
+  varreduras, Gauss-Seidel 1969, SOR com \(\omega=1{,}82\) 163. Os três chegam ao mesmo campo,
+  com diferença máxima de \(6\times10^{-11}\), e o potencial no centro dá zero.</li>
+  <li>Na caixa vazia o mínimo medido cai em \(\omega=1{,}90\), que é o \(1{,}9005\) da
+  fórmula. No capacitor ele anda para \(\omega=1{,}82\), confirmando por medida o
+  deslocamento que a seção 7 atribui às duas placas.</li>
+  <li>O expoente do custo contra \(N\) dá 1,995 para Jacobi e 1,021 para o SOR com
+  \(\omega\) ótimo, contra os 2 e 1 previstos.</li>
+  </ul>
+
+  <div class="bloco fisica">
+    <span class="rotulo">A medida que vale mais que a figura</span>
+    <p>A segunda seção do programa é a mais útil das cinco, e vale rodá-la antes das outras. O
+    campo calculado com o contorno de Neumann errado tem aparência impecável: é suave, respeita
+    as simetrias, e nada nele denuncia o problema. Só a taxa de queda do erro o faz, e ela cai
+    por 2 em vez de 4. Nenhuma quantidade de inspeção visual substitui essa medida, e é por isso
+    que ela vem antes de qualquer resultado de produção.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">Para mexer</span>
+    <p>Acrescente um termo de fonte e resolva a equação de Poisson, \(\nabla^2u=-\rho\), com
+    uma carga pontual no centro da caixa, e verifique a ordem contra a solução exata da carga
+    numa caixa aterrada. Depois substitua a busca manual pelo \(\omega\) ótimo por uma busca
+    automática em seção áurea, e compare o ótimo encontrado com a fórmula para malhas de 21 a
+    121 pontos. Por fim, troque o critério de parada: em vez do deslocamento entre varreduras,
+    use o resíduo verdadeiro \(\|\nabla^2u\|\), e descubra por que os dois param em iterações
+    diferentes e qual dos dois é o honesto.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios resolvidos</h2>
 
   <div class="bloco ex">
     <span class="rotulo">8.1 O limite de estabilidade, passo a passo</span>
@@ -505,7 +564,7 @@
   </div>
 
   <!-- ================================================== -->
-  <h2 id="s11">11. Exercícios propostos</h2>
+  <h2 id="s12">12. Exercícios propostos</h2>
 
   <div class="bloco ex">
     <ol>
@@ -568,6 +627,6 @@
   <!--PORTAL--><p><small><a href="https://apianomorais.github.io/">Todas as disciplinas e a pesquisa em apianomorais.github.io</a></small></p><!--/PORTAL-->
 </footer>
 
-<script src="assets/js/widgets.js?v=202611201318"></script>
+<script src="assets/js/widgets.js?v=202611202137"></script>
 </body>
 </html>
