@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 13: Radiação térmica | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611202206">
-<script src="assets/js/comum.js?v=202611202206"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611202251">
+<script src="assets/js/comum.js?v=202611202251"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -227,7 +227,7 @@
 
   <p><strong>Com um escudo no meio</strong>, de emissividade \(\epsilon_3\) nas duas faces, as
   resistências radiativas se somam em série, exatamente como no circuito térmico do módulo
-  10, e o fluxo cai drasticamente. O exercício 12.2 faz as contas: um escudo de alumínio
+  10, e o fluxo cai drasticamente. O exercício 13.2 faz as contas: um escudo de alumínio
   polido entre duas placas de \(\epsilon=0{,}9\) reduz a troca por um fator de 33.</p>
 
   <!-- ================================================== -->
@@ -289,7 +289,7 @@
 
   <p>São \(-18\) °C, e a temperatura média observada na superfície é \(288\) K, ou \(15\) °C. A
   diferença de \(33\) K é o efeito estufa natural, sem o qual o planeta seria congelado. O
-  mesmo cálculo com os dados de Marte e de Vênus, no exercício 12.5, dá a Vênus um efeito
+  mesmo cálculo com os dados de Marte e de Vênus, no exercício 13.5, dá a Vênus um efeito
   estufa de mais de \(500\) K.</p>
 
   <p>O modelo seguinte, que já captura o mecanismo, trata a atmosfera como uma única camada
@@ -360,7 +360,7 @@ SIGMA = 5.670374419e-8
   <h2 id="s10">10. Exercícios resolvidos</h2>
 
   <div class="bloco ex">
-    <span class="rotulo">12.1 O telhado de zinco e a sala embaixo</span>
+    <span class="rotulo">13.1 O telhado de zinco e a sala embaixo</span>
     <p>Um telhado de zinco sem forro atinge \(45\) °C numa tarde do Cariri. A sala embaixo tem
     ar a \(26\) °C e paredes a \(28\) °C. Estime o fluxo radiativo que o telhado manda para
     baixo e compare com o convectivo, tomando \(\epsilon=0{,}25\) para o zinco galvanizado já
@@ -382,7 +382,7 @@ SIGMA = 5.670374419e-8
   </div>
 
   <div class="bloco ex">
-    <span class="rotulo">12.2 Um escudo entre duas placas</span>
+    <span class="rotulo">13.2 Um escudo entre duas placas</span>
     <p>Duas placas paralelas grandes, a \(50\) °C e \(20\) °C, ambas com
     \(\epsilon=0{,}9\). Calcule o fluxo e repita com um escudo de alumínio polido
     (\(\epsilon=0{,}05\)) no meio.</p>
@@ -409,41 +409,41 @@ SIGMA = 5.670374419e-8
 
   <div class="bloco ex">
     <ol>
-      <li><b>12.3</b> Obtenha a lei de Wien derivando a função de Planck, mostrando que a
+      <li><b>13.3</b> Obtenha a lei de Wien derivando a função de Planck, mostrando que a
       equação transcendente é \(x=5\left(1-e^{-x}\right)\) e resolvendo-a numericamente.
       Verifique que a mesma dedução feita em frequência dá uma constante diferente e explique
       por que não há contradição.</li>
 
-      <li><b>12.4</b> Integre numericamente a função de Planck em Python e reproduza
+      <li><b>13.4</b> Integre numericamente a função de Planck em Python e reproduza
       \(\sigma=5{,}67\times10^{-8}\) com quatro algarismos. Em seguida calcule a fração emitida
       no visível para \(2800\) K e para \(5772\) K e comente o rendimento de uma lâmpada
       incandescente.</li>
 
-      <li><b>12.5</b> Repita o balanço radiativo da seção 8 para Marte (\(S=586\) W/m²,
+      <li><b>13.5</b> Repita o balanço radiativo da seção 8 para Marte (\(S=586\) W/m²,
       \(a=0{,}25\)) e para Vênus (\(S=2601\) W/m², \(a=0{,}77\)). Compare com as temperaturas
       de superfície observadas, \(210\) K e \(737\) K, e discuta o que o resultado de Vênus diz
       sobre o efeito estufa.</li>
 
-      <li><b>12.6</b> Mostre que o modelo de uma camada dá \(T_s=2^{1/4}T_e\) e generalize para
+      <li><b>13.6</b> Mostre que o modelo de uma camada dá \(T_s=2^{1/4}T_e\) e generalize para
       \(N\) camadas, obtendo \(T_s=(N+1)^{1/4}T_e\). Determine quantas camadas seriam
       necessárias para reproduzir os \(288\) K da Terra e discuta o significado físico desse
       número.</li>
 
-      <li><b>12.7</b> Um coletor solar plano recebe \(800\) W/m². Compare a temperatura de
+      <li><b>13.7</b> Um coletor solar plano recebe \(800\) W/m². Compare a temperatura de
       equilíbrio da placa com tinta preta comum (\(\alpha=0{,}95\), \(\epsilon=0{,}95\)) e com
       superfície seletiva (\(\alpha=0{,}95\), \(\epsilon=0{,}10\)), incluindo perda convectiva
       com \(h_c=5\) W/m²K. Use o programa de Newton da seção 9.</li>
 
-      <li><b>12.8</b> Deduza a fórmula das duas placas paralelas somando a série geométrica das
+      <li><b>13.8</b> Deduza a fórmula das duas placas paralelas somando a série geométrica das
       reflexões múltiplas, e verifique que ela se reduz ao caso do corpo pequeno numa cavidade
       quando \(\epsilon_2\to1\).</li>
 
-      <li><b>12.9</b> Implemente o resfriamento noturno de uma superfície horizontal exposta ao
+      <li><b>13.9</b> Implemente o resfriamento noturno de uma superfície horizontal exposta ao
       céu, com temperatura radiativa do céu \(20\) K abaixo da do ar, convecção com
       \(h_c=4\) W/m²K e capacidade térmica dada. Determine se a superfície chega abaixo de
       \(0\) °C com o ar a \(4\) °C, que é a condição de geada de radiação.</li>
 
-      <li><b>12.10</b> Em meia página: a seção 4 afirma que \(\epsilon=\alpha\) vale por
+      <li><b>13.10</b> Em meia página: a seção 4 afirma que \(\epsilon=\alpha\) vale por
       comprimento de onda mas não necessariamente no total. Explique por que isso não viola a
       segunda lei, e descreva um experimento conceitual que pareceria produzir trabalho a
       partir de uma única fonte de calor se a igualdade total valesse sempre.</li>
@@ -465,6 +465,6 @@ SIGMA = 5.670374419e-8
   <!--PORTAL--><p><small><a href="https://apianomorais.github.io/">Todas as disciplinas e a pesquisa em apianomorais.github.io</a></small></p><!--/PORTAL-->
 </footer>
 
-<script src="assets/js/widgets.js?v=202611202206"></script>
+<script src="assets/js/widgets.js?v=202611202251"></script>
 </body>
 </html>

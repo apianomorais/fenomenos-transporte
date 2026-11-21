@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 12: Convecção e semelhança | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611202206">
-<script src="assets/js/comum.js?v=202611202206"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611202251">
+<script src="assets/js/comum.js?v=202611202251"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -402,13 +402,13 @@
   \(\alpha_{\text{efetivo}}=\alpha+D_{\text{num}}\) e, portanto, um Rayleigh
   <strong>menor</strong> que o pretendido. É perfeitamente possível rodar um caso com
   \(\mathrm{Ra}=5000\) e não ver convecção nenhuma, simplesmente porque a malha grossa levou o
-  Rayleigh efetivo para baixo de 1708. O exercício 11.7 pede para medir esse efeito.</p>
+  Rayleigh efetivo para baixo de 1708. O exercício 12.7 pede para medir esse efeito.</p>
 
   <!-- ================================================== -->
   <h2 id="s10">10. Exercícios resolvidos</h2>
 
   <div class="bloco ex">
-    <span class="rotulo">11.1 Uma placa aquecida ao vento</span>
+    <span class="rotulo">12.1 Uma placa aquecida ao vento</span>
     <p>Ar a \(20\) °C escoa a \(3\) m/s sobre uma placa plana de \(1\) m de comprimento mantida
     a \(60\) °C. Determine o regime, a espessura das duas camadas no fim da placa, o
     coeficiente médio e a potência trocada por metro de largura.</p>
@@ -440,7 +440,7 @@
   </div>
 
   <div class="bloco ex">
-    <span class="rotulo">11.2 Por que a câmara de um vidro duplo tem 12 mm</span>
+    <span class="rotulo">12.2 Por que a câmara de um vidro duplo tem 12 mm</span>
     <p>Uma janela de vidro duplo tem uma câmara de ar entre as duas lâminas, com \(15\) K de
     diferença entre elas. Determine a espessura a partir da qual o ar da câmara começa a
     convectar, e discuta o efeito disso no isolamento.</p>
@@ -468,40 +468,40 @@
 
   <div class="bloco ex">
     <ol>
-      <li><b>11.3</b> Resolva a equação de Blasius por tiro, em Python, e reproduza
+      <li><b>12.3</b> Resolva a equação de Blasius por tiro, em Python, e reproduza
       \(f''(0)=0{,}332057\) e \(\eta_{99}=4{,}91\). Em seguida integre a equação da energia
       para \(\mathrm{Pr}=0{,}7\), \(7\) e \(100\), obtenha \(-\theta'(0)\) em cada caso e
       compare com \(0{,}332\,\mathrm{Pr}^{1/3}\). Explique o que acontece com a aproximação
       para \(\mathrm{Pr}=0{,}025\), que é o do mercúrio.</li>
 
-      <li><b>11.4</b> Mostre, pela integral do coeficiente local, que
+      <li><b>12.4</b> Mostre, pela integral do coeficiente local, que
       \(\overline{h}=2h_L\) para a placa laminar, e determine qual seria a razão se o
       coeficiente local fosse proporcional a \(x^{-1/5}\), como no caso turbulento.</li>
 
-      <li><b>11.5</b> Uma xícara de café a \(80\) °C numa sala a \(25\) °C perde calor pela
+      <li><b>12.5</b> Uma xícara de café a \(80\) °C numa sala a \(25\) °C perde calor pela
       superfície livre e pelas paredes. Estime o coeficiente de convecção natural de cada uma,
       calcule a potência total e determine a constante de tempo do resfriamento. Compare com o
       que você mede com um termômetro de cozinha e discuta as diferenças.</li>
 
-      <li><b>11.6</b> Para o escoamento de água num tubo de \(2\) cm de diâmetro, faça o
+      <li><b>12.6</b> Para o escoamento de água num tubo de \(2\) cm de diâmetro, faça o
       gráfico de \(h\) contra a velocidade, de \(0{,}01\) a \(5\) m/s, usando
       \(\mathrm{Nu}=3{,}66\) na faixa laminar e Dittus-Boelter na turbulenta. Comente o salto
       na transição e por que ele não é físico.</li>
 
-      <li><b>11.7</b> Implemente a convecção de Rayleigh-Bénard em duas dimensões, na
+      <li><b>12.7</b> Implemente a convecção de Rayleigh-Bénard em duas dimensões, na
       formulação função corrente e vorticidade. Determine numericamente o Rayleigh crítico e
       compare com \(1708\). Em seguida refine a malha e mostre que o valor medido se aproxima
       do teórico por cima, explicando o papel da difusão numérica.</li>
 
-      <li><b>11.8</b> Com o programa do exercício anterior, meça o comprimento de onda dos
+      <li><b>12.8</b> Com o programa do exercício anterior, meça o comprimento de onda dos
       rolos logo acima do limiar e compare com \(2{,}02\,d\). Suba então o Rayleigh por duas
       ordens de grandeza e descreva o que acontece com o padrão.</li>
 
-      <li><b>11.9</b> Verifique a analogia de Colburn com dados de um tubo turbulento: tome
+      <li><b>12.9</b> Verifique a analogia de Colburn com dados de um tubo turbulento: tome
       \(C_f=0{,}079\,\mathrm{Re}^{-1/4}\) de Blasius e mostre que ela reproduz a correlação de
       Dittus-Boelter a menos de uns 15%. Discuta a origem da diferença.</li>
 
-      <li><b>11.10</b> Em meia página: a seção 5 afirma que o Nusselt de um tubo laminar
+      <li><b>12.10</b> Em meia página: a seção 5 afirma que o Nusselt de um tubo laminar
       desenvolvido não depende do Reynolds. Explique por que isso não contradiz o fato de que
       soprar mais forte esfria mais rápido, deixando claro qual grandeza aumenta e qual
       não.</li>
@@ -523,6 +523,6 @@
   <!--PORTAL--><p><small><a href="https://apianomorais.github.io/">Todas as disciplinas e a pesquisa em apianomorais.github.io</a></small></p><!--/PORTAL-->
 </footer>
 
-<script src="assets/js/widgets.js?v=202611202206"></script>
+<script src="assets/js/widgets.js?v=202611202251"></script>
 </body>
 </html>

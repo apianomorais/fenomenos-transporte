@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Módulo 14: Difusão de massa e a lei de Fick | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611202206">
-<script src="assets/js/comum.js?v=202611202206"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611202251">
+<script src="assets/js/comum.js?v=202611202251"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -124,7 +124,7 @@
   \(\vet{j}_A\), o movimento da espécie <strong>em relação à mistura</strong>, e não o fluxo
   total. Quando a mistura está parada como um todo, \(\vet{v}=0\) e os dois coincidem, que é o
   caso de quase todo problema de livro. Quando não está, confundir os dois produz erro, e a
-  seção 7 mostra um caso em que o erro é de 1,6% e outro, no exercício 13.3, em que chega a
+  seção 7 mostra um caso em que o erro é de 1,6% e outro, no exercício 14.3, em que chega a
   20%.</p>
 
   <!-- ================================================== -->
@@ -378,7 +378,7 @@
   <h2 id="s10">10. Exercícios resolvidos</h2>
 
   <div class="bloco ex">
-    <span class="rotulo">13.1 Evaporação num tubo de Stefan</span>
+    <span class="rotulo">14.1 Evaporação num tubo de Stefan</span>
     <p>Um tubo vertical de \(2\) cm de diâmetro tem água no fundo, a \(25\) °C, e o nível está
     \(10\) cm abaixo da boca, onde sopra ar seco. Com
     \(D=2{,}6\times10^{-5}\) m²/s, calcule a taxa de evaporação e compare com o resultado sem o
@@ -401,12 +401,12 @@
     <p>Sem o termo de arraste, isto é, usando \(N_A=cD\,x_{A1}/L\), viria
     \(3{,}32\times10^{-4}\) mol/m²s, apenas \(1{,}6\%\) abaixo. A razão é que a água a
     \(25\) °C é uma espécie diluída no ar, com \(x_A=3\%\), e o logaritmo quase coincide com o
-    seu argumento. O exercício 13.3 refaz a conta com acetona, cuja pressão de vapor é dez
+    seu argumento. O exercício 14.3 refaz a conta com acetona, cuja pressão de vapor é dez
     vezes maior, e lá a correção sobe para cerca de 20%.</p>
   </div>
 
   <div class="bloco ex">
-    <span class="rotulo">13.2 Por que o pulmão tem a forma que tem</span>
+    <span class="rotulo">14.2 Por que o pulmão tem a forma que tem</span>
     <p>Estime o tempo de difusão do oxigênio através da membrana alvéolo-capilar, de
     \(0{,}6\) μm, e compare com o tempo que uma hemácia passa no capilar, \(0{,}75\) s. Em
     seguida estime o tamanho máximo de um organismo que vivesse só de difusão.</p>
@@ -436,42 +436,42 @@
 
   <div class="bloco ex">
     <ol>
-      <li><b>13.3</b> Refaça o exercício 13.1 com acetona a \(25\) °C, cuja pressão de vapor é
+      <li><b>14.3</b> Refaça o exercício 14.1 com acetona a \(25\) °C, cuja pressão de vapor é
       \(30{,}8\) kPa, usando \(D=1{,}1\times10^{-5}\) m²/s. Compare o resultado com e sem o
       termo de arraste e explique por que agora a diferença chega a 20%. Em seguida
       determine a fração molar na superfície a partir da qual o arraste responde por metade do
       fluxo, resolvendo \(\ln[1/(1-x_A)]=1{,}5\,x_A\).</li>
 
-      <li><b>13.4</b> Implemente o passeio aleatório em Python, com \(10^4\) caminhantes, e
+      <li><b>14.4</b> Implemente o passeio aleatório em Python, com \(10^4\) caminhantes, e
       verifique que \(\med{x^2}=n a^2\) e que o histograma converge para a gaussiana. Em
       seguida torne o passo enviesado, com probabilidade \(0{,}55\) para a direita, e mostre
       que aparece um termo de advecção, identificando a velocidade resultante.</li>
 
-      <li><b>13.5</b> Resolva numericamente a segunda lei de Fick em uma dimensão, com o
+      <li><b>14.5</b> Resolva numericamente a segunda lei de Fick em uma dimensão, com o
       esquema do módulo 9, para um pulso inicial, e verifique contra a solução gaussiana
       analítica. Meça a ordem de convergência.</li>
 
-      <li><b>13.6</b> Use a relação de Stokes-Einstein para estimar \(D\) da hemoglobina na
+      <li><b>14.6</b> Use a relação de Stokes-Einstein para estimar \(D\) da hemoglobina na
       água, tomando a massa molar de \(64\) kDa e densidade de \(1{,}35\) g/cm³ para obter o
       raio. Compare com o valor medido, \(6{,}9\times10^{-11}\) m²/s, e discuta por que a
       concordância é melhor para proteínas globulares que para moléculas pequenas.</li>
 
-      <li><b>13.7</b> Uma peça de aço com \(0{,}2\%\) de carbono é cementada a \(950\) °C numa
+      <li><b>14.7</b> Uma peça de aço com \(0{,}2\%\) de carbono é cementada a \(950\) °C numa
       atmosfera que mantém \(1{,}0\%\) na superfície, com
       \(D=1{,}3\times10^{-11}\) m²/s. Determine o tempo necessário para que a concentração a
       \(0{,}5\) mm de profundidade atinja \(0{,}6\%\), e faça o gráfico do perfil em 1, 4 e
       16 horas.</li>
 
-      <li><b>13.8</b> Deduza a fórmula da coluna de Stefan a partir de \(N_B=0\), mostrando
+      <li><b>14.8</b> Deduza a fórmula da coluna de Stefan a partir de \(N_B=0\), mostrando
       onde entra o arraste, e verifique que ela se reduz ao resultado sem arraste quando
       \(x_A\to0\).</li>
 
-      <li><b>13.9</b> Obtenha \(\eta=\tgh\phi/\phi\) a partir do perfil de concentração da
+      <li><b>14.9</b> Obtenha \(\eta=\tgh\phi/\phi\) a partir do perfil de concentração da
       seção 9, e faça o gráfico de \(\eta\) contra \(\phi\) em escala logarítmica. Determine a
       partir de que valor de \(\phi\) a eficácia cai abaixo de \(0{,}5\), e o que isso
       significa para o tamanho de partícula de um catalisador.</li>
 
-      <li><b>13.10</b> Em meia página: a caixa da seção 7 afirma que a concentração salta numa
+      <li><b>14.10</b> Em meia página: a caixa da seção 7 afirma que a concentração salta numa
       interface enquanto a temperatura não. Explique a diferença em termos de qual grandeza se
       iguala no equilíbrio em cada caso, e descreva o que aconteceria se alguém montasse um
       circuito de resistências de massa ignorando o coeficiente de partição.</li>
@@ -493,6 +493,6 @@
   <!--PORTAL--><p><small><a href="https://apianomorais.github.io/">Todas as disciplinas e a pesquisa em apianomorais.github.io</a></small></p><!--/PORTAL-->
 </footer>
 
-<script src="assets/js/widgets.js?v=202611202206"></script>
+<script src="assets/js/widgets.js?v=202611202251"></script>
 </body>
 </html>
