@@ -22,19 +22,21 @@ TITULOS = {
     7: ("Tensão superficial e capilaridade", "Tensão superficial"),
     8: ("Campos no computador: relaxação e convergência", "Relaxação"),
     9: ("Advecção e difusão no computador", "Advecção e difusão"),
-    10: ("Condução de calor", "Condução"),
-    11: ("Convecção e semelhança", "Convecção"),
-    12: ("Radiação térmica", "Radiação"),
-    13: ("Difusão de massa e a lei de Fick", "Lei de Fick"),
-    14: ("Convecção mássica e as analogias", "Convecção mássica"),
+    10: ("Escoamento em meios porosos", "Meios porosos"),
+    11: ("Condução de calor", "Condução"),
+    12: ("Convecção e semelhança", "Convecção"),
+    13: ("Radiação térmica", "Radiação"),
+    14: ("Difusão de massa e a lei de Fick", "Lei de Fick"),
+    15: ("Convecção mássica e as analogias", "Convecção mássica"),
 }
 
 UNIDADES = [
     ("O meio contínuo", "Contínuo", [1, 2]),
     ("Transporte de quantidade de movimento", "Movimento", [3, 4, 5, 6, 7]),
     ("Métodos numéricos para transporte", "Numérico", [8, 9]),
-    ("Transporte de energia", "Energia", [10, 11, 12]),
-    ("Transporte de massa", "Massa", [13, 14]),
+    ("Escoamento em meios porosos", "Meios porosos", [10]),
+    ("Transporte de energia", "Energia", [11, 12, 13]),
+    ("Transporte de massa", "Massa", [14, 15]),
 ]
 
 # o que vai no chapéu de cada página, logo acima do título

@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Módulo 14: Convecção mássica e as analogias | Fenômenos de Transporte</title>
+<title>Módulo 14: Difusão de massa e a lei de Fick | Fenômenos de Transporte</title>
 <link rel="icon" type="image/png" href="assets/img/favicon.png">
-<link rel="stylesheet" href="assets/css/estilo.css?v=202611202149">
-<script src="assets/js/comum.js?v=202611202149"></script>
+<link rel="stylesheet" href="assets/css/estilo.css?v=202611202206">
+<script src="assets/js/comum.js?v=202611202206"></script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -28,13 +28,15 @@
       <span class="grupo">Numérico</span>
       <a href="aula08.html" class="num" title="Módulo 8: Campos no computador: relaxação e convergência">8</a>
       <a href="aula09.html" class="num" title="Módulo 9: Advecção e difusão no computador">9</a>
+      <span class="grupo">Meios porosos</span>
+      <a href="aula10.html" class="num" title="Módulo 10: Escoamento em meios porosos">10</a>
       <span class="grupo">Energia</span>
-      <a href="aula10.html" class="num" title="Módulo 10: Condução de calor">10</a>
-      <a href="aula11.html" class="num" title="Módulo 11: Convecção e semelhança">11</a>
-      <a href="aula12.html" class="num" title="Módulo 12: Radiação térmica">12</a>
+      <a href="aula11.html" class="num" title="Módulo 11: Condução de calor">11</a>
+      <a href="aula12.html" class="num" title="Módulo 12: Convecção e semelhança">12</a>
+      <a href="aula13.html" class="num" title="Módulo 13: Radiação térmica">13</a>
       <span class="grupo">Massa</span>
-      <a href="aula13.html" class="num" title="Módulo 13: Difusão de massa e a lei de Fick">13</a>
-      <a href="aula14.html" class="num ativo" title="Módulo 14: Convecção mássica e as analogias">14</a>
+      <a href="aula14.html" class="num ativo" title="Módulo 14: Difusão de massa e a lei de Fick">14</a>
+      <a href="aula15.html" class="num" title="Módulo 15: Convecção mássica e as analogias">15</a>
     </nav>
   </div>
 </header>
@@ -44,365 +46,441 @@
 <aside class="lateral">
   <h4>Neste módulo</h4>
   <ol>
-    <li><a href="#s1">1. O coeficiente de transferência de massa</a></li>
-    <li><a href="#s2">2. A camada-limite de concentração</a></li>
-    <li><a href="#s3">3. Correlações por tradução</a></li>
-    <li><a href="#s4">4. A analogia de Chilton-Colburn</a></li>
-    <li><a href="#s5">5. Calor e massa ao mesmo tempo</a></li>
-    <li><a href="#s6">6. Evaporação e resfriamento evaporativo</a></li>
-    <li><a href="#s7">7. Onde as analogias falham</a></li>
-    <li><a href="#s8">8. O curso inteiro numa página</a></li>
-    <li><a href="#s9">9. Exercícios resolvidos</a></li>
-    <li><a href="#s10">10. Exercícios propostos</a></li>
+    <li><a href="#s1">1. Concentrações e velocidades numa mistura</a></li>
+    <li><a href="#s2">2. A primeira lei de Fick</a></li>
+    <li><a href="#s3">3. A segunda lei e a equação da difusão</a></li>
+    <li><a href="#s4">4. O passeio aleatório</a></li>
+    <li><a href="#s5">5. Quanto vale D</a></li>
+    <li><a href="#s6">6. Quanto tempo a difusão leva</a></li>
+    <li><a href="#s7">7. Difusão estacionária e a coluna de Stefan</a></li>
+    <li><a href="#s8">8. Difusão transiente</a></li>
+    <li><a href="#s9">9. Difusão com reação e o módulo de Thiele</a></li>
+    <li><a href="#s10">10. Exercícios resolvidos</a></li>
+    <li><a href="#s11">11. Exercícios propostos</a></li>
   </ol>
 </aside>
 
 <main class="conteudo">
 
   <p class="chapeu">Módulo 14 · Transporte de massa</p>
-  <h1>Convecção mássica e as analogias</h1>
-  <p class="subtitulo">Este é o último módulo, e ele não introduz fenômeno novo. O que faz é
-  colher o que as três unidades anteriores construíram e mostrar que são a mesma construção:
-  uma correlação medida com um termômetro, numa geometria qualquer, pode ser usada para prever
-  quanta água evapora dela, sem que ninguém tenha medido evaporação.</p>
+  <h1>Difusão de massa e a lei de Fick</h1>
+  <p class="subtitulo">Esta é a terceira e última das três leis constitutivas prometidas no
+  módulo 11, e a mais nova das três: Adolf Fick a escreveu em 1855, copiando deliberadamente a
+  forma da lei de Fourier. O que o módulo acrescenta ao paralelo é a origem microscópica, que
+  aqui pode ser vista acontecer, e a complicação que o transporte de massa tem e os outros dois
+  não.</p>
 
   <div class="bloco def">
     <span class="rotulo">Objetivos</span>
     <ul>
-      <li>Definir \(k_c\) e o número de Sherwood, e reconhecer a correspondência com \(h\) e
-      Nusselt.</li>
-      <li>Traduzir uma correlação de transferência de calor em uma de massa trocando
-      \(\mathrm{Pr}\) por \(\mathrm{Sc}\).</li>
-      <li>Usar a analogia de Chilton-Colburn para relacionar atrito, calor e massa.</li>
-      <li>Resolver problemas de calor e massa simultâneos, com a temperatura de bulbo úmido
-      como caso central.</li>
-      <li>Estimar evaporação e resfriamento evaporativo em situações reais.</li>
-      <li>Saber em que condições as analogias deixam de valer.</li>
+      <li>Distinguir as medidas de concentração e as velocidades médias de uma mistura, e saber
+      em relação a que o fluxo difusivo é definido.</li>
+      <li>Enunciar a primeira lei de Fick e obter dela a equação da difusão pelo balanço de
+      espécie.</li>
+      <li>Relacionar \(D\) ao passeio aleatório pela relação de Einstein.</li>
+      <li>Estimar \(D\) em gases, líquidos e sólidos, e usar \(t=L^2/2D\) para decidir quando a
+      difusão é suficiente.</li>
+      <li>Resolver difusão estacionária com e sem arraste, e transiente no semi-espaço.</li>
+      <li>Combinar difusão com reação e interpretar o módulo de Thiele.</li>
     </ul>
   </div>
 
   <!-- ================================================== -->
-  <h2 id="s1">1. O coeficiente de transferência de massa</h2>
+  <h2 id="s1">1. Concentrações e velocidades numa mistura</h2>
 
-  <p>O módulo 13 tratou de difusão em meios parados. Assim que há escoamento, repete-se a
-  história do módulo 11: a espécie atravessa uma camada fina junto da superfície, onde o fluido
-  está praticamente parado, e dali em diante é levada pelo escoamento. Como lá, define-se um
-  coeficiente que esconde toda a complicação:</p>
+  <p>O transporte de massa começa com uma dificuldade que os outros dois não têm. Energia não
+  se move sozinha em relação à matéria: quando um elemento de fluido escoa, ele leva a sua
+  energia junto. Uma espécie química, não. Numa mistura, o açúcar pode estar indo para um lado
+  enquanto a água vai para o outro, de modo que a pergunta "qual é a velocidade do fluido" deixa
+  de ter uma resposta só.</p>
 
-  <p>\[N_A=k_c\left(c_{A,s}-c_{A,\infty}\right),\]</p>
+  <p>Por isso convém fixar a notação antes de qualquer fórmula. Para uma espécie \(A\) numa
+  mistura:</p>
 
-  <p>com \(k_c\) em m/s, que é a velocidade que o fluxo teria se a diferença de concentração
-  fosse consumida de uma vez. Como \(h\), ele não é propriedade de nada: depende da geometria,
-  do escoamento e do par de substâncias.</p>
+  <p>\[\rho_A\ \text{(kg/m³)},\qquad
+  c_A=\frac{\rho_A}{M_A}\ \text{(mol/m³)},\qquad
+  \omega_A=\frac{\rho_A}{\rho},\qquad
+  x_A=\frac{c_A}{c},\]</p>
 
-  <p>E, como lá, a adimensionalização dá a forma correta de apresentá-lo. O número de
-  <strong>Sherwood</strong> é o Nusselt da transferência de massa:</p>
+  <p>que são a concentração mássica, a molar, a fração mássica e a fração molar. Cada espécie
+  tem a sua velocidade média \(\vet{v}_A\), e a mistura tem duas velocidades médias, conforme o
+  peso usado:</p>
 
-  <p>\[\mathrm{Sh}=\frac{k_cL}{D_{AB}}
-  \qquad\longleftrightarrow\qquad
-  \mathrm{Nu}=\frac{hL}{k_f},\]</p>
-
-  <p>e mede quanto o transporte total excede o que haveria por difusão pura na mesma espessura.
-  Um Sherwood de 245, que é o que uma placa de um metro com vento de \(3\) m/s produz, significa
-  que a evaporação é 245 vezes maior do que seria se o ar estivesse parado sobre essa mesma
-  espessura.</p>
-
-  <!-- ================================================== -->
-  <h2 id="s2">2. A camada-limite de concentração</h2>
-
-  <p>Junto de uma superfície que evapora ou dissolve, forma-se uma camada-limite de
-  concentração, de espessura \(\delta_c\), exatamente como a térmica do módulo 11. A razão
-  entre ela e a de velocidade é governada por um número que já foi definido:</p>
-
-  <p>\[\mathrm{Sc}=\frac{\nu}{D_{AB}},
+  <p>\[\vet{v}=\sum_A\omega_A\vet{v}_A\ \text{(mássica)},
   \qquad
-  \frac{\delta}{\delta_c}\approx\mathrm{Sc}^{1/3}.\]</p>
+  \vet{v}^*=\sum_Ax_A\vet{v}_A\ \text{(molar)}.\]</p>
 
-  <p>O <strong>Schmidt</strong> é o Prandtl da transferência de massa, e compara a difusão de
-  quantidade de movimento com a de espécie. Os valores são instrutivos. Em gases, \(\nu\) e
-  \(D\) são ambos da ordem de \(10^{-5}\) m²/s, e \(\mathrm{Sc}\) fica perto de 1: para vapor
-  d'água no ar, \(0{,}60\). Em líquidos, \(\nu\approx10^{-6}\) e
-  \(D\approx10^{-9}\), de modo que \(\mathrm{Sc}\) chega a mil: para sal na água, cerca de 600,
-  e para uma proteína, dezenas de milhares.</p>
+  <p>A primeira é a que aparece em Navier-Stokes, porque é ela que carrega a quantidade de
+  movimento. Com isso, o fluxo total de \(A\) através de uma superfície fixa se separa em duas
+  parcelas:</p>
 
-  <p>Um Schmidt de mil significa que a camada de concentração é dez vezes mais fina que a de
-  velocidade, com o gradiente dez vezes mais íngreme. É por isso que dissolver açúcar em água
-  parada é desesperador e mexer resolve: o que a colher faz é afinar essa camada.</p>
+  <p>\[\underbrace{\rho_A\vet{v}_A}_{\text{fluxo total}}
+  =\underbrace{\rho_A\vet{v}}_{\text{arraste pela mistura}}
+  +\underbrace{\vet{j}_A}_{\text{difusão}},
+  \qquad
+  \vet{j}_A=\rho_A\left(\vet{v}_A-\vet{v}\right).\]</p>
 
-  <p>A demonstração formal é a mesma do módulo 11. Adimensionalizando a equação da espécie,</p>
-
-  <p>\[\vet{u}^*\cdot\nabla^*c_A^*
-  =\frac{1}{\mathrm{Re}\,\mathrm{Sc}}\nabla^{*2}c_A^*,\]</p>
-
-  <p>que é <strong>idêntica</strong> à equação da energia do módulo 11 com \(\mathrm{Sc}\) no
-  lugar de \(\mathrm{Pr}\). Equações idênticas, com condições de contorno de mesma forma, têm
-  soluções idênticas.</p>
+  <p>Essa separação é a chave do módulo. O que a lei de Fick descreve é apenas
+  \(\vet{j}_A\), o movimento da espécie <strong>em relação à mistura</strong>, e não o fluxo
+  total. Quando a mistura está parada como um todo, \(\vet{v}=0\) e os dois coincidem, que é o
+  caso de quase todo problema de livro. Quando não está, confundir os dois produz erro, e a
+  seção 7 mostra um caso em que o erro é de 1,6% e outro, no exercício 13.3, em que chega a
+  20%.</p>
 
   <!-- ================================================== -->
-  <h2 id="s3">3. Correlações por tradução</h2>
+  <h2 id="s2">2. A primeira lei de Fick</h2>
 
-  <p>A consequência prática é imediata e vale todo o módulo. Qualquer correlação
-  \(\mathrm{Nu}=f(\mathrm{Re},\mathrm{Pr})\) vira, sem nova medida,</p>
+  <p>Com o fluxo difusivo bem definido, a lei é a esperada:</p>
 
-  <p>\[\mathrm{Sh}=f\left(\mathrm{Re},\mathrm{Sc}\right).\]</p>
+  <p>\[\vet{j}_A=-\rho\,D_{AB}\,\nabla\omega_A,
+  \qquad\text{ou, em base molar,}\qquad
+  \vet{J}^*_A=-c\,D_{AB}\,\nabla x_A.\]</p>
 
-  <p>Aplicando às correlações do módulo 11:</p>
+  <p>Para uma mistura diluída de densidade praticamente uniforme, as duas formas se reduzem à
+  que aparece em quase todo texto,</p>
+
+  <p>\[\vet{j}_A=-D_{AB}\,\nabla c_A,\]</p>
+
+  <p>que é a forma que o nosso livro-texto usa, escrita com a densidade de partículas
+  \(\rho_N\). Convém saber que ela é a versão diluída e com a mistura em repouso, e não a lei
+  geral, porque a seção 7 precisará da forma completa.</p>
+
+  <p>O coeficiente \(D_{AB}\) é a <strong>difusividade</strong>, em m²/s, as mesmas unidades de
+  \(\nu\) e de \(\alpha\). O índice duplo não é decoração: a difusividade é uma propriedade do
+  par de substâncias, e não de uma delas, e numa mistura de três ou mais espécies nem sequer
+  basta uma matriz de pares, assunto que leva às equações de Maxwell-Stefan.</p>
 
   <div class="bloco def">
-    <span class="rotulo">O dicionário em uso</span>
-    <p>Placa plana laminar:
-    \(\overline{\mathrm{Nu}}_L=0{,}664\,\mathrm{Re}_L^{1/2}\mathrm{Pr}^{1/3}\)
-    passa a
-    \(\overline{\mathrm{Sh}}_L=0{,}664\,\mathrm{Re}_L^{1/2}\mathrm{Sc}^{1/3}\).</p>
-    <p>Tubo turbulento:
-    \(\mathrm{Nu}_D=0{,}023\,\mathrm{Re}_D^{4/5}\mathrm{Pr}^{0{,}4}\)
-    passa a
-    \(\mathrm{Sh}_D=0{,}023\,\mathrm{Re}_D^{4/5}\mathrm{Sc}^{1/3}\).</p>
-    <p>Tubo laminar desenvolvido: \(\mathrm{Nu}_D=3{,}66\) passa a
-    \(\mathrm{Sh}_D=3{,}66\).</p>
-    <p>Convecção natural: \(\mathrm{Ra}=\mathrm{Gr}\,\mathrm{Pr}\) passa a
-    \(\mathrm{Ra}_m=\mathrm{Gr}_m\mathrm{Sc}\), com o Grashof mássico construído com a
-    diferença de densidade devida à concentração em vez da temperatura.</p>
+    <span class="rotulo">As três leis, completas</span>
+    <p>\[\tau_{yx}=-\mu\der{u_x}{y},\qquad
+    q_y=-k\der{T}{y},\qquad
+    j_{A,y}=-D_{AB}\der{c_A}{y}\]</p>
+    <p>\[\nu=\frac{\mu}{\rho},\qquad
+    \alpha=\frac{k}{\rho c_p},\qquad D_{AB},\]</p>
+    <p>\[\mathrm{Pr}=\frac{\nu}{\alpha},\qquad
+    \mathrm{Sc}=\frac{\nu}{D_{AB}},\qquad
+    \mathrm{Le}=\frac{\alpha}{D_{AB}}.\]</p>
+    <p>A promessa feita na caixa do módulo 6 está cumprida: as três leis têm a mesma forma, as
+    três difusividades têm as mesmas unidades, e as razões entre elas são os três números que o
+    módulo 15 usará para transferir uma correlação medida para calor diretamente para
+    massa.</p>
   </div>
 
-  <p>Essa tradução é uma das economias mais produtivas da engenharia. Medir transferência de
-  calor é fácil: basta um termômetro e um aquecedor. Medir transferência de massa exige
-  cromatografia, pesagem contínua ou análise química, e cada medida leva muito mais tempo. A
-  analogia permite que a literatura inteira de trocadores de calor, acumulada por um século,
-  seja usada em projeto de secadores, umidificadores, colunas de absorção e reatores
-  catalíticos.</p>
+  <!-- ================================================== -->
+  <h2 id="s3">3. A segunda lei e a equação da difusão</h2>
+
+  <p>O balanço de espécie num volume de controle fixo é o mesmo do módulo 2, com um termo a
+  mais para reação química:</p>
+
+  <p>\[\pder{c_A}{t}+\nabla\cdot\left(c_A\vet{v}^*+\vet{J}^*_A\right)=\dot{r}_A.\]</p>
+
+  <p>Com a mistura em repouso, sem reação, e substituindo a lei de Fick,</p>
+
+  <p>\[\pder{c_A}{t}=\nabla\cdot\left(D_{AB}\nabla c_A\right)
+  =\left(\nabla D_{AB}\right)\cdot\nabla c_A+D_{AB}\nabla^2c_A,\]</p>
+
+  <p>e, se a difusividade for uniforme, resta a <strong>segunda lei de Fick</strong>:</p>
+
+  <p>\[\pder{c_A}{t}=D_{AB}\nabla^2c_A.\]</p>
+
+  <p>É a equação do calor do módulo 11 com outro nome, e tudo o que foi resolvido lá vale aqui
+  trocando \(T\) por \(c_A\) e \(\alpha\) por \(D_{AB}\). O termo \((\nabla D)\cdot\nabla c\)
+  importa quando a difusividade varia com a concentração, o que é comum em polímeros e em
+  sólidos.</p>
+
+  <p>Resolvendo por separação de variáveis, com \(c_A=f(t)g(\vet{r})\),</p>
+
+  <p>\[\frac{1}{Df}\der{f}{t}=\frac{1}{g}\nabla^2g=-k^2,\]</p>
+
+  <p>e as duas equações que sobram são conhecidas:</p>
+
+  <p>\[f(t)=Ae^{-k^2Dt},\qquad \nabla^2g=-k^2g.\]</p>
+
+  <p>A segunda é a equação de Helmholtz, cujas soluções em coordenadas cartesianas são senos e
+  cossenos, como no oscilador harmônico. A primeira diz o essencial sobre a física: cada modo
+  espacial de número de onda \(k\) decai com constante de tempo \(1/k^2D\), de modo que os
+  detalhes finos, de \(k\) grande, somem primeiro, e o perfil vai ficando cada vez mais suave.
+  Difusão apaga estrutura, e apaga a estrutura pequena muito mais depressa que a grande.</p>
+
+  <p>Com a mistura em movimento, o termo de arraste permanece e a equação vira exatamente a de
+  advecção-difusão do módulo 9:</p>
+
+  <p>\[\pder{c_A}{t}+\vet{v}\cdot\nabla c_A=D_{AB}\nabla^2c_A+\dot{r}_A.\]</p>
 
   <!-- ================================================== -->
-  <h2 id="s4">4. A analogia de Chilton-Colburn</h2>
+  <h2 id="s4">4. O passeio aleatório</h2>
 
-  <p>A seção 8 do módulo 11 mostrou que, para \(\mathrm{Pr}=1\), o transporte de calor e o de
-  quantidade de movimento são o mesmo transporte, e que a correção de Colburn estende o
-  resultado para outros Prandtl. Com a terceira equação agora disponível, o enunciado completo
-  é o de Chilton e Colburn, de 1934:</p>
+  <p>A lei de Fick, como Fourier e Newton, é empírica na origem: Fick a propôs por analogia,
+  sem derivá-la. A derivação microscópica veio cinquenta anos depois, com Einstein em 1905, no
+  mesmo ano dos outros três artigos famosos, e é notavelmente simples.</p>
 
-  <p>\[j_H=\mathrm{St}\,\mathrm{Pr}^{2/3}
-  =j_D=\mathrm{St}_m\,\mathrm{Sc}^{2/3}
-  =\frac{C_f}{2},\]</p>
-
-  <p>com \(\mathrm{St}=\mathrm{Nu}/\mathrm{Re}\,\mathrm{Pr}\) e
-  \(\mathrm{St}_m=\mathrm{Sh}/\mathrm{Re}\,\mathrm{Sc}=k_c/U\). Três fenômenos diferentes,
-  medidos por três instrumentos diferentes, colapsam num único número.</p>
-
-  <p>A forma mais útil dessa igualdade se obtém dividindo \(j_H\) por \(j_D\), o que elimina a
-  geometria e o escoamento:</p>
-
-  <p>\[\frac{h}{k_c}=\rho\,c_p\left(\frac{\mathrm{Sc}}{\mathrm{Pr}}\right)^{2/3}
-  =\rho\,c_p\,\mathrm{Le}^{2/3},
-  \qquad
-  \mathrm{Le}=\frac{\alpha}{D_{AB}}.\]</p>
-
-  <p>Conhecido \(h\), obtém-se \(k_c\) sem resolver nada. E, para o par ar e vapor d'água,
-  \(\mathrm{Le}=0{,}85\), de modo que \(\mathrm{Le}^{2/3}=0{,}90\), perto de 1: essa
-  proximidade é o acidente feliz de que a seção seguinte vive.</p>
+  <div data-widget="caminhante"></div>
 
   <!-- ================================================== -->
-  <h2 id="s5">5. Calor e massa ao mesmo tempo</h2>
+  <h2 id="s5">5. Quanto vale D</h2>
 
-  <p>Quando uma superfície evapora, os dois transportes ocorrem juntos e se acoplam, porque a
-  evaporação consome calor latente e esfria a superfície, o que por sua vez muda a concentração
-  de saturação e portanto a evaporação. O caso de referência é o termômetro de bulbo úmido, em
-  que o estado estacionário é dado por</p>
+  <p>A relação \(D=a^2/2\Delta t\) do widget transforma a pergunta sobre a difusividade numa
+  pergunta sobre o passo e a frequência dos passos, e a resposta é diferente em cada estado da
+  matéria.</p>
 
-  <p>\[h\left(T_\infty-T_u\right)
-  =k_c\,M_A\,\lambda\left(c_{\text{sat}}(T_u)-c_{A,\infty}\right).\]</p>
+  <p>Nos <strong>gases</strong>, o passo é o livre caminho médio \(\lambda\) e a frequência é
+  \(\bar{c}/\lambda\), de modo que a teoria cinética dá</p>
 
-  <p>Usando \(h/k_c=\rho c_p\mathrm{Le}^{2/3}\), a geometria desaparece e sobra uma relação
-  entre temperaturas e umidades apenas, que é o que faz do psicrômetro um instrumento
-  confiável.</p>
+  <p>\[D\approx\frac13\bar{c}\lambda.\]</p>
 
-  <div data-widget="bulboumido"></div>
+  <p>Com \(\bar{c}=460\) m/s e \(\lambda=68\) nm para o ar em condições normais, isso dá
+  \(1{,}0\times10^{-5}\) m²/s, contra \(2{,}0\times10^{-5}\) medido para o oxigênio no ar: a
+  estimativa acerta a ordem de grandeza com uma linha de conta. Como \(\lambda\propto1/p\) e
+  \(\bar{c}\propto\sqrt{T}\), segue \(D\propto T^{3/2}/p\), o que é confirmado
+  experimentalmente.</p>
 
-  <!-- ================================================== -->
-  <h2 id="s6">6. Evaporação e resfriamento evaporativo</h2>
+  <p>Nos <strong>líquidos</strong>, a molécula não voa livre, e sim é empurrada pelas vizinhas
+  enquanto sofre arraste viscoso. Einstein combinou a agitação térmica com a lei de Stokes do
+  módulo 6 e obteve</p>
 
-  <p>A temperatura de bulbo úmido é o <strong>limite</strong> de todo resfriamento
-  evaporativo. Nenhum processo que funcione apenas evaporando água num ar dado consegue baixar
-  da temperatura de bulbo úmido desse ar, porque ali a evaporação para de ser favorecida pelo
-  balanço.</p>
+  <p>\[D=\frac{k_BT}{6\pi\mu a},\]</p>
 
-  <p>Esse limite explica uma geografia de tecnologias. No Cariri em setembro, com \(34\) °C e
-  35% de umidade, o bulbo úmido fica perto de \(21\) °C, de modo que uma moringa de barro, um
-  climatizador evaporativo ou um telhado molhado podem entregar algo próximo disso, que é
-  conforto. Em março, com \(28\) °C e 80%, o bulbo úmido sobe para \(25\) °C e o mesmo
-  aparelho praticamente não faz nada. É também por isso que o resfriamento evaporativo domina
-  no sertão e no interior do nordeste e é inútil no litoral úmido.</p>
+  <p>a relação de <strong>Stokes-Einstein</strong>, com \(a\) o raio da molécula. Para o
+  oxigênio na água, com \(a\approx0{,}15\) nm e \(\mu=0{,}89\) mPa·s, ela dá
+  \(1{,}6\times10^{-9}\) m²/s contra \(2{,}1\times10^{-9}\) medido, o que é um acerto notável
+  para uma fórmula que trata uma molécula como uma esfera macroscópica. O resultado é o elo
+  entre esta unidade e a de quantidade de movimento: a mesma viscosidade que freia uma esfera
+  no módulo 6 fixa a difusividade aqui.</p>
 
-  <p>O mesmo limite governa a fisiologia. O suor resfria enquanto evapora, e em ar saturado ele
-  escorre sem evaporar e não resfria nada. O índice de bulbo úmido é por isso o critério usado
-  em normas de trabalho sob calor, e valores acima de \(35\) °C de bulbo úmido são
-  incompatíveis com a sobrevivência humana prolongada, por mais sombra e água que haja, porque
-  nessa condição o corpo não tem para onde mandar o calor que produz.</p>
+  <p>Nos <strong>sólidos</strong>, o átomo precisa de energia para pular de um sítio da rede
+  para outro, de modo que a frequência dos pulos tem fator de Boltzmann e</p>
 
-  <div data-widget="evaporacao"></div>
+  <p>\[D=D_0\,e^{-E_a/RT}.\]</p>
 
-  <!-- ================================================== -->
-  <h2 id="s7">7. Onde as analogias falham</h2>
+  <p>A dependência exponencial com a temperatura é brutal: no ferro, a difusividade do carbono
+  cresce por um fator da ordem de mil entre \(500\) e \(1000\) °C, e é por isso que o
+  tratamento térmico de aços é feito em faixas estreitas e bem controladas de
+  temperatura.</p>
 
-  <p>Toda a força deste módulo vem de uma hipótese que convém enunciar para saber quando ela se
-  rompe. A analogia exige que as equações adimensionais sejam as mesmas, e isso falha em quatro
-  situações.</p>
-
-  <p>A primeira é a <strong>alta taxa de transferência</strong>. Se a evaporação é intensa, o
-  fluxo de massa saindo da superfície empurra a camada-limite para longe, engrossando-a e
-  reduzindo tanto \(h\) quanto \(k_c\). É o mesmo arraste da coluna de Stefan, agora em regime
-  convectivo, e trata-se dele por um fator de correção chamado fator de sopro. A analogia
-  simples vale enquanto a fração molar na superfície for pequena.</p>
-
-  <p>A segunda é a <strong>reação química</strong>. Calor não reage; espécies sim. Se a espécie
-  é consumida dentro da camada-limite, o perfil deixa de ser o da equação análoga, e o problema
-  passa a ser o da seção 9 do módulo 13, com o módulo de Thiele.</p>
-
-  <p>A terceira é a <strong>radiação</strong>. Ela entrega calor a uma superfície sem passar
-  pela camada-limite, de modo que o balanço térmico ganha um termo que não tem correspondente
-  mássico. Um bulbo úmido exposto ao sol lê alto, e por isso o psicrômetro é sempre sombreado e
-  ventilado.</p>
-
-  <p>A quarta é a existência de <strong>mais de duas espécies</strong>. Com três ou mais
-  componentes, a difusão de cada uma depende dos gradientes de todas, e aparecem fenômenos sem
-  análogo térmico, como difusão contra o próprio gradiente. O tratamento correto é o das
-  equações de Maxwell-Stefan.</p>
+  <p>Em ordens de grandeza, para guardar: \(10^{-5}\) m²/s em gases, \(10^{-9}\) em líquidos,
+  \(10^{-11}\) para macromoléculas em água e de \(10^{-12}\) a \(10^{-30}\) em sólidos. São
+  vinte e cinco ordens de grandeza, a maior variação de qualquer propriedade de transporte
+  desta disciplina.</p>
 
   <!-- ================================================== -->
-  <h2 id="s8">8. O curso inteiro numa página</h2>
+  <h2 id="s6">6. Quanto tempo a difusão leva</h2>
 
-  <p>Vale terminar olhando para trás. Os catorze módulos trataram de três grandezas
-  transportadas, e foi sempre o mesmo programa.</p>
+  <div data-widget="penetracao"></div>
+
+  <!-- ================================================== -->
+  <h2 id="s7">7. Difusão estacionária e a coluna de Stefan</h2>
+
+  <p>Em regime permanente, sem reação e com \(D\) uniforme, a equação se reduz a
+  \(\nabla^2c_A=0\), e tudo o que o módulo 11 fez para a condução vale aqui. Numa membrana
+  plana de espessura \(L\),</p>
+
+  <p>\[N_A=\frac{D_{AB}}{L}\left(c_{A1}-c_{A2}\right)
+  =\frac{c_{A1}-c_{A2}}{L/D_{AB}},\]</p>
+
+  <p>com \(L/D\) no papel de resistência à transferência de massa, e as resistências de camadas
+  sucessivas somando-se em série como no circuito térmico.</p>
 
   <div class="bloco fisica">
-    <span class="rotulo">A estrutura que se repetiu quatro vezes</span>
-    <p><strong>Conservação.</strong> Um balanço num volume de controle, que deu a continuidade
-    no módulo 2, a equação de Cauchy no 3, a equação do calor no 10 e a segunda lei de Fick no
-    13. Sempre a mesma forma: acúmulo mais divergência do fluxo igual à geração.</p>
-    <p><strong>Lei constitutiva.</strong> Um fluxo proporcional ao gradiente, com sinal
-    negativo: Newton no módulo 6, Fourier no 10, Fick no 13. As três difusividades, \(\nu\),
-    \(\alpha\) e \(D\), nas mesmas unidades.</p>
-    <p><strong>Adimensionalização.</strong> As equações escritas em variáveis próprias revelam
-    que só uns poucos números importam: Reynolds, Prandtl, Schmidt, Nusselt, Sherwood,
-    Rayleigh, Péclet. Semelhança é o que permite medir pequeno e aplicar grande.</p>
-    <p><strong>Solução.</strong> Analítica onde a geometria coopera, numérica onde não coopera,
-    que é quase sempre. Os módulos 8 e 9 construíram as ferramentas, e os módulos 10 a 14 as
-    usaram.</p>
-    <p>A única grandeza que escapou do programa foi a radiação do módulo 12, que não precisa de
-    meio, não tem gradiente e não tem análogo mássico. Ela é a exceção que mostra que a
-    estrutura dos outros três não era inevitável.</p>
+    <span class="rotulo">Uma armadilha que a condução não tem</span>
+    <p>Na condução, a temperatura é contínua através de uma interface entre dois materiais. Na
+    difusão, a concentração <strong>não</strong> é: ela salta, porque o que se iguala no
+    equilíbrio é o potencial químico, e não a concentração. A razão entre os dois valores é o
+    coeficiente de partição ou, para um gás sobre um líquido, a constante da lei de Henry.</p>
+    <p>É por isso que o oxigênio dissolvido na água a \(25\) °C fica em \(8\) mg/L enquanto no
+    ar logo acima há \(280\) mg/L: não há gradiente nenhum empurrando oxigênio, os dois estão
+    em equilíbrio. Montar um circuito de resistências em série sem converter as concentrações
+    pelo coeficiente de partição em cada interface é o erro mais comum do assunto.</p>
   </div>
 
-  <p>Três perguntas deste curso continuam valendo para qualquer problema novo. Qual é a
-  grandeza conservada? Qual é a lei que dá o fluxo dela? E quais números adimensionais dizem
-  qual termo domina? Com as três respondidas, o resto é cálculo, e boa parte dele é código.</p>
+  <p>O caso em que o arraste da seção 1 deixa de ser ignorável é o da <strong>coluna de
+  Stefan</strong>: um tubo com líquido no fundo, ar parado acima e a boca aberta, que é o
+  experimento clássico para medir \(D\). A espécie \(A\) evapora e sobe; o ar \(B\) não é
+  absorvido pelo líquido, de modo que \(N_B=0\) em regime permanente. Mas se \(A\) sobe e
+  \(B\) não desce, a mistura como um todo tem velocidade para cima, e esse movimento arrasta
+  \(A\) adicionalmente.</p>
+
+  <p>Impondo \(N_B=0\) na definição de fluxo total e resolvendo, encontra-se</p>
+
+  <p>\[N_A=\frac{c\,D_{AB}}{L}\,\ln\!\left(\frac{1-x_{A2}}{1-x_{A1}}\right),\]</p>
+
+  <p>em vez do resultado ingênuo \(N_A=cD(x_{A1}-x_{A2})/L\). O logaritmo é a assinatura do
+  arraste, e o fator \(1/(1-x_A)\) que dele resulta mostra quando a correção importa: para
+  espécies diluídas, \(x_A\ll1\) e o logaritmo se reduz à diferença, mas para
+  \(x_A\) próximo de 1 a correção é enorme. O exercício resolvido 13.1 faz as duas contas para
+  a evaporação de água a \(25\) °C e encontra apenas \(1{,}6\%\) de diferença; o exercício
+  13.3 refaz tudo com acetona, onde ela chega a 20%.</p>
 
   <!-- ================================================== -->
-  <h2 id="s9">9. Exercícios resolvidos</h2>
+  <h2 id="s8">8. Difusão transiente</h2>
 
-  <div class="bloco ex">
-    <span class="rotulo">14.1 Da placa aquecida à placa molhada</span>
-    <p>No exercício 11.1, ar a \(20\) °C e \(3\) m/s sobre uma placa de \(1\) m dava
-    \(\overline{h}=6{,}7\) W/m²K. Use a analogia para obter \(k_c\) e a taxa de evaporação se a
-    placa estiver molhada, com ar a 50% de umidade a \(25\) °C.</p>
-    <p>O caminho curto usa a razão de Chilton-Colburn. Com
-    \(\alpha=2{,}22\times10^{-5}\) e \(D=2{,}6\times10^{-5}\) m²/s,
-    \(\mathrm{Le}=0{,}854\) e \(\mathrm{Le}^{2/3}=0{,}900\), de modo que</p>
-    <p>\[k_c=\frac{h}{\rho c_p\mathrm{Le}^{2/3}}
-    =\frac{6{,}7}{1{,}17\times1006\times0{,}900}
-    =6{,}3\times10^{-3}\ \text{m/s}.\]</p>
-    <p>O caminho longo usa a correlação traduzida: \(\mathrm{Re}_L=1{,}91\times10^5\),
-    \(\mathrm{Sc}=0{,}604\), de onde
-    \(\overline{\mathrm{Sh}}=0{,}664\sqrt{1{,}91\times10^5}\times0{,}604^{1/3}=245\) e
-    \(k_c=245\times2{,}6\times10^{-5}/1=6{,}4\times10^{-3}\) m/s. Os dois caminhos concordam
-    dentro de 2%, e a diferença vem das propriedades terem sido avaliadas em temperaturas
-    ligeiramente diferentes.</p>
-    <p>A taxa de evaporação, com \(c_{\text{sat}}(25\,^\circ\text{C})=1{,}28\) mol/m³ e o ar a
-    50%,</p>
-    <p>\[N_A=k_c\left(c_s-c_\infty\right)
-    =6{,}4\times10^{-3}\times1{,}28\times0{,}5
-    =4{,}1\times10^{-3}\ \text{mol/m²s},\]</p>
-    <p>ou \(7{,}4\times10^{-5}\) kg/m²s, isto é, \(6{,}4\) mm por dia. O calor latente
-    correspondente é</p>
-    <p>\[q=N_AM_A\lambda=7{,}4\times10^{-5}\times2{,}44\times10^{6}=180\ \text{W/m²},\]</p>
-    <p>Para pôr esse número em perspectiva: a mesma placa seca, com o mesmo coeficiente,
-    precisaria de \(179/6{,}7=27\) K de diferença de temperatura para trocar isso por
-    convecção sensível. Molhar uma superfície muda a categoria do problema térmico, e é por
-    isso que um telhado molhado esfria o que nenhuma pintura branca esfriaria.</p>
-  </div>
+  <p>Todos os resultados do módulo 11 se traduzem diretamente. Para um meio semi-infinito,
+  inicialmente com concentração \(c_0\), cuja superfície é posta em \(c_s\) em \(t=0\),</p>
 
-  <div class="bloco ex">
-    <span class="rotulo">14.2 Até onde resfria uma moringa</span>
-    <p>Um pote de barro poroso é posto à sombra, com ar a \(34\) °C e 35% de umidade relativa.
-    Estime a temperatura da água dentro e a potência retirada, com \(h=10\) W/m²K e área de
-    \(0{,}15\) m².</p>
-    <p>A água do pote atravessa o barro por capilaridade, molha a superfície externa e evapora,
-    de modo que a situação é exatamente a do bulbo úmido. O widget da seção 5, com
-    \(34\) °C e 35%, dá \(T_u=21{,}4\) °C, confirmado pela temperatura de saturação adiabática,
-    \(21{,}9\) °C.</p>
-    <p>A potência retirada é a convectiva que chega do ar quente, já que no equilíbrio ela
-    iguala a latente:</p>
-    <p>\[\dot{Q}=hA\left(T_\infty-T_u\right)
-    =10\times0{,}15\times12{,}6=19\ \text{W},\]</p>
-    <p>e a água evaporada para sustentar isso é
-    \(\dot{m}=\dot{Q}/\lambda=19/2{,}45\times10^{6}=7{,}7\times10^{-6}\) kg/s, cerca de
-    \(0{,}67\) litro por dia. É um preço alto em água, o que casa com a experiência de que a
-    moringa precisa ser reabastecida.</p>
-    <p>Dois comentários importam. O primeiro é que o resultado não depende do material do pote
-    nem do seu tamanho na temperatura, só na potência: qualquer superfície molhada e ventilada
-    chega ao mesmo \(T_u\). O segundo é o limite prático: em março, com \(28\) °C e 80%, a
-    mesma conta dá \(T_u=25\) °C, três graus abaixo do ar, e nenhuma engenhoca evaporativa
-    fará melhor que isso naquele ar.</p>
+  <p>\[\frac{c_A(x,t)-c_s}{c_0-c_s}
+  =\operatorname{erf}\left(\frac{x}{2\sqrt{D_{AB}t}}\right),\]</p>
+
+  <p>e o fluxo na superfície é \(N_A=\left(c_s-c_0\right)\sqrt{D_{AB}/\pi t}\).</p>
+
+  <p>Esse é o problema da <strong>cementação</strong> de um aço, em que uma peça é posta numa
+  atmosfera rica em carbono e se quer uma camada superficial endurecida de profundidade
+  controlada; é também o da dopagem de semicondutores, o da salga de um queijo e o da
+  absorção de \(\text{CO}_2\) num filme de líquido. Em todos, a profundidade afetada é da
+  ordem de \(4\sqrt{Dt}\) e cresce com a raiz do tempo.</p>
+
+  <p>A analogia com o módulo 11 é completa e vale a pena ter em tabela:</p>
+
+  <div class="bloco def">
+    <span class="rotulo">Dicionário entre os módulos 10 e 13</span>
+    <p>\(T\leftrightarrow c_A\); \(\alpha\leftrightarrow D_{AB}\);
+    \(k\leftrightarrow D_{AB}\) (ou \(\rho D\), conforme a base);
+    \(q=-k\nabla T\leftrightarrow N_A=-D\nabla c_A\);
+    \(h\leftrightarrow k_c\), o coeficiente de transferência de massa;
+    \(\mathrm{Nu}=hL/k\leftrightarrow\mathrm{Sh}=k_cL/D\), o número de Sherwood;
+    \(\mathrm{Bi}=hL/k_s\leftrightarrow\mathrm{Bi}_m=k_cL/D_s\);
+    \(\mathrm{Pr}\leftrightarrow\mathrm{Sc}\).</p>
+    <p>A única grandeza sem correspondente é a radiação: não existe transferência de massa
+    entre corpos que não se tocam. Em compensação, a massa tem a reação química, que o calor
+    só tem como geração interna.</p>
   </div>
 
   <!-- ================================================== -->
-  <h2 id="s10">10. Exercícios propostos</h2>
+  <h2 id="s9">9. Difusão com reação e o módulo de Thiele</h2>
+
+  <p>Quando a espécie é consumida enquanto difunde, os dois processos competem, e qual deles
+  limita a taxa é a pergunta central da catálise, da respiração de um tecido e da corrosão.
+  Para uma reação de primeira ordem, \(\dot{r}_A=-k_1c_A\), em regime permanente numa placa de
+  espessura \(L\) com a superfície em \(c_s\) e o fundo impermeável,</p>
+
+  <p>\[D\dder{c_A}{x}=k_1c_A
+  \quad\Longrightarrow\quad
+  c_A(x)=c_s\frac{\cosh\left(\phi\,x/L\right)}{\cosh\phi},
+  \qquad
+  \phi=L\sqrt{\frac{k_1}{D}},\]</p>
+
+  <p>com \(\phi\) o <strong>módulo de Thiele</strong>, que é a razão entre o tempo de difusão
+  \(L^2/D\) e o de reação \(1/k_1\). Definindo a eficácia \(\eta\) como a razão entre o que de
+  fato reage e o que reagiria se toda a placa estivesse em \(c_s\),</p>
+
+  <p>\[\eta=\frac{\tgh\phi}{\phi}.\]</p>
+
+  <p>Os dois limites valem mais que a fórmula. Com \(\phi\ll1\), a difusão é rápida, a
+  concentração é praticamente uniforme e \(\eta\to1\): o processo é <strong>limitado pela
+  reação</strong>, e melhorar o catalisador aumenta a produção. Com \(\phi\gg1\),
+  \(\eta\approx1/\phi\): a espécie reage antes de penetrar, só uma casca fina trabalha, e o
+  processo é <strong>limitado pela difusão</strong>. Nesse regime, melhorar o catalisador não
+  adianta nada, e o que adianta é moer as partículas, porque \(\eta\propto1/L\).</p>
+
+  <p>O mesmo raciocínio explica por que um tumor sólido desenvolve necrose no centro a partir
+  de poucos milímetros, e por que os eletrodos de uma bateria são feitos de pó e não de
+  blocos.</p>
+
+  <!-- ================================================== -->
+  <h2 id="s10">10. Exercícios resolvidos</h2>
+
+  <div class="bloco ex">
+    <span class="rotulo">13.1 Evaporação num tubo de Stefan</span>
+    <p>Um tubo vertical de \(2\) cm de diâmetro tem água no fundo, a \(25\) °C, e o nível está
+    \(10\) cm abaixo da boca, onde sopra ar seco. Com
+    \(D=2{,}6\times10^{-5}\) m²/s, calcule a taxa de evaporação e compare com o resultado sem o
+    termo de arraste.</p>
+    <p>A pressão de vapor da água a \(25\) °C é \(3169\) Pa, de modo que na superfície do
+    líquido</p>
+    <p>\[x_{A1}=\frac{3169}{101\,325}=0{,}0313,\qquad x_{A2}=0,\]</p>
+    <p>e a concentração molar total do gás é</p>
+    <p>\[c=\frac{P}{RT}=\frac{101\,325}{8{,}314\times298}=40{,}9\ \text{mol/m³}.\]</p>
+    <p>Pela fórmula com arraste,</p>
+    <p>\[N_A=\frac{40{,}9\times2{,}6\times10^{-5}}{0{,}10}
+    \ln\!\left(\frac{1-0}{1-0{,}0313}\right)
+    =1{,}063\times10^{-2}\times0{,}03180
+    =3{,}38\times10^{-4}\ \text{mol/m²s}.\]</p>
+    <p>Em massa, multiplicando por \(18\) g/mol e pela área de \(3{,}14\) cm², dá
+    \(1{,}9\times10^{-9}\) kg/s, ou \(165\) mg por dia. Em nível de líquido isso é meio
+    milímetro por dia, o que mostra de passagem como a difusão pura é lenta: a mesma água, num
+    prato ao vento, evapora umas vinte vezes mais depressa, porque ali o transporte deixa de
+    ser difusivo e passa a ser convectivo, que é o assunto do módulo 15.</p>
+    <p>Sem o termo de arraste, isto é, usando \(N_A=cD\,x_{A1}/L\), viria
+    \(3{,}32\times10^{-4}\) mol/m²s, apenas \(1{,}6\%\) abaixo. A razão é que a água a
+    \(25\) °C é uma espécie diluída no ar, com \(x_A=3\%\), e o logaritmo quase coincide com o
+    seu argumento. O exercício 13.3 refaz a conta com acetona, cuja pressão de vapor é dez
+    vezes maior, e lá a correção sobe para cerca de 20%.</p>
+  </div>
+
+  <div class="bloco ex">
+    <span class="rotulo">13.2 Por que o pulmão tem a forma que tem</span>
+    <p>Estime o tempo de difusão do oxigênio através da membrana alvéolo-capilar, de
+    \(0{,}6\) μm, e compare com o tempo que uma hemácia passa no capilar, \(0{,}75\) s. Em
+    seguida estime o tamanho máximo de um organismo que vivesse só de difusão.</p>
+    <p>Com \(D=2{,}1\times10^{-9}\) m²/s na água,</p>
+    <p>\[t=\frac{L^2}{2D}=\frac{\left(0{,}6\times10^{-6}\right)^2}
+    {2\times2{,}1\times10^{-9}}=8{,}6\times10^{-5}\ \text{s},\]</p>
+    <p>isto é, \(86\) μs contra \(0{,}75\) s disponíveis: sobra um fator de quase dez mil. A
+    troca gasosa é tão folgada que continua completa mesmo em exercício intenso, quando o
+    tempo de trânsito cai para um terço.</p>
+    <p>Para o organismo, a conta é outra. Tomando como critério que o oxigênio precise chegar
+    ao centro em um tempo da ordem do consumo, com algo como \(100\) s de folga,</p>
+    <p>\[L=\sqrt{2Dt}=\sqrt{2\times2{,}1\times10^{-9}\times100}
+    \approx6{,}5\times10^{-4}\ \text{m},\]</p>
+    <p>menos de um milímetro. Esse número é notavelmente respeitado pela biologia: animais sem
+    sistema circulatório, como platelmintos e cnidários, são finos ou achatados justamente
+    para manter toda célula a menos de um milímetro da água. Tudo o que é maior que isso
+    precisou inventar bombeamento, isto é, trocar difusão por advecção, que é o tema do módulo
+    14.</p>
+    <p>O pulmão humano resolve o mesmo problema pelo outro lado: em vez de encurtar a
+    distância ao mundo, ele traz o mundo para dentro, com trezentos milhões de alvéolos, uma
+    área de troca de cerca de \(100\) m² e uma barreira de \(0{,}6\) μm. É a mesma estratégia
+    das aletas do módulo 11, com área grande e espessura pequena, e pela mesma razão.</p>
+  </div>
+
+  <!-- ================================================== -->
+  <h2 id="s11">11. Exercícios propostos</h2>
 
   <div class="bloco ex">
     <ol>
-      <li><b>14.3</b> Deduza \(h/k_c=\rho c_p\mathrm{Le}^{2/3}\) a partir das definições de
-      \(j_H\) e \(j_D\), deixando claro em que ponto a geometria se cancela. Determine o valor
-      dessa razão para o par ar e etanol, com \(D=1{,}2\times10^{-5}\) m²/s, e compare com o do
-      ar e água.</li>
+      <li><b>13.3</b> Refaça o exercício 13.1 com acetona a \(25\) °C, cuja pressão de vapor é
+      \(30{,}8\) kPa, usando \(D=1{,}1\times10^{-5}\) m²/s. Compare o resultado com e sem o
+      termo de arraste e explique por que agora a diferença chega a 20%. Em seguida
+      determine a fração molar na superfície a partir da qual o arraste responde por metade do
+      fluxo, resolvendo \(\ln[1/(1-x_A)]=1{,}5\,x_A\).</li>
 
-      <li><b>14.4</b> Escreva um programa que receba temperatura e umidade relativa e devolva a
-      temperatura de bulbo úmido pelos dois caminhos, o de transporte e o de saturação
-      adiabática. Faça o gráfico da diferença entre eles em função da umidade, de 10% a 100%, e
-      explique por que ela cresce com o ar seco.</li>
+      <li><b>13.4</b> Implemente o passeio aleatório em Python, com \(10^4\) caminhantes, e
+      verifique que \(\med{x^2}=n a^2\) e que o histograma converge para a gaussiana. Em
+      seguida torne o passo enviesado, com probabilidade \(0{,}55\) para a direita, e mostre
+      que aparece um termo de advecção, identificando a velocidade resultante.</li>
 
-      <li><b>14.5</b> Um açude de \(5\) hectares no Cariri perde água por evaporação. Usando o
-      widget da seção 6 com dados de setembro, estime a perda diária em metros cúbicos e
-      compare com o consumo de uma cidade de dez mil habitantes, a \(120\) litros por pessoa
-      por dia. Discuta o efeito de reduzir a área exposta pela metade mantendo o volume.</li>
+      <li><b>13.5</b> Resolva numericamente a segunda lei de Fick em uma dimensão, com o
+      esquema do módulo 9, para um pulso inicial, e verifique contra a solução gaussiana
+      analítica. Meça a ordem de convergência.</li>
 
-      <li><b>14.6</b> Uma gota de água de \(1\) mm de diâmetro cai em ar seco a \(30\) °C.
-      Use a correlação de Ranz-Marshall,
-      \(\mathrm{Sh}=2+0{,}6\,\mathrm{Re}^{1/2}\mathrm{Sc}^{1/3}\), para calcular o tempo de
-      vida dela, incluindo a queda do diâmetro. Explique a origem física do termo 2.</li>
+      <li><b>13.6</b> Use a relação de Stokes-Einstein para estimar \(D\) da hemoglobina na
+      água, tomando a massa molar de \(64\) kDa e densidade de \(1{,}35\) g/cm³ para obter o
+      raio. Compare com o valor medido, \(6{,}9\times10^{-11}\) m²/s, e discuta por que a
+      concordância é melhor para proteínas globulares que para moléculas pequenas.</li>
 
-      <li><b>14.7</b> Para uma torre de resfriamento, mostre que a água pode sair mais fria que
-      a temperatura do ar que entra, mas nunca mais fria que a de bulbo úmido desse ar.
-      Determine a aproximação típica, isto é, a diferença entre a água de saída e o bulbo
-      úmido, consultando catálogos de fabricantes.</li>
+      <li><b>13.7</b> Uma peça de aço com \(0{,}2\%\) de carbono é cementada a \(950\) °C numa
+      atmosfera que mantém \(1{,}0\%\) na superfície, com
+      \(D=1{,}3\times10^{-11}\) m²/s. Determine o tempo necessário para que a concentração a
+      \(0{,}5\) mm de profundidade atinja \(0{,}6\%\), e faça o gráfico do perfil em 1, 4 e
+      16 horas.</li>
 
-      <li><b>14.8</b> Verifique a analogia de Chilton-Colburn com dados reais: tome uma
-      correlação de \(\mathrm{Nu}\) e uma de \(\mathrm{Sh}\) medidas independentemente para
-      esferas, calcule \(j_H\) e \(j_D\) para a mesma faixa de Reynolds e faça o gráfico dos
-      dois. Comente o desvio.</li>
+      <li><b>13.8</b> Deduza a fórmula da coluna de Stefan a partir de \(N_B=0\), mostrando
+      onde entra o arraste, e verifique que ela se reduz ao resultado sem arraste quando
+      \(x_A\to0\).</li>
 
-      <li><b>14.9</b> Simule, com os esquemas do módulo 9, a evaporação de um filme fino de
-      água sobre uma placa com vento, resolvendo as equações de energia e de espécie acopladas.
-      Verifique que a temperatura da superfície converge para o bulbo úmido.</li>
+      <li><b>13.9</b> Obtenha \(\eta=\tgh\phi/\phi\) a partir do perfil de concentração da
+      seção 9, e faça o gráfico de \(\eta\) contra \(\phi\) em escala logarítmica. Determine a
+      partir de que valor de \(\phi\) a eficácia cai abaixo de \(0{,}5\), e o que isso
+      significa para o tamanho de partícula de um catalisador.</li>
 
-      <li><b>14.10</b> Em meia página, fechando o curso: escolha um fenômeno de transporte que
-      não tenha aparecido nestes catorze módulos e analise-o com o programa da seção 8,
-      identificando a grandeza conservada, a lei constitutiva e os números adimensionais
-      relevantes. Diga também o que, no seu fenômeno, escaparia dessa estrutura.</li>
+      <li><b>13.10</b> Em meia página: a caixa da seção 7 afirma que a concentração salta numa
+      interface enquanto a temperatura não. Explique a diferença em termos de qual grandeza se
+      iguala no equilíbrio em cada caso, e descreva o que aconteceria se alguém montasse um
+      circuito de resistências de massa ignorando o coeficiente de partição.</li>
     </ol>
   </div>
 
   <nav class="nav-aulas">
-    <a href="aula13.html"><small>Módulo anterior</small>← 13. Lei de Fick</a>
-    <a class="prox" href="index.html"><small>Voltar</small>Página inicial →</a>
+    <a href="aula13.html"><small>Módulo anterior</small>← 13. Radiação</a>
+    <a class="prox" href="aula15.html"><small>Próximo módulo</small>15. Convecção mássica →</a>
   </nav>
 
 </main>
@@ -415,6 +493,6 @@
   <!--PORTAL--><p><small><a href="https://apianomorais.github.io/">Todas as disciplinas e a pesquisa em apianomorais.github.io</a></small></p><!--/PORTAL-->
 </footer>
 
-<script src="assets/js/widgets.js?v=202611202149"></script>
+<script src="assets/js/widgets.js?v=202611202206"></script>
 </body>
 </html>

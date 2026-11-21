@@ -5621,6 +5621,253 @@
     registrarRedesenho(desenhar);
   };
 
+
+  /* ============================================================
+     Módulo 10 — escoamento em meios porosos
+     ============================================================ */
+  REGISTRO.poroso = function (raiz) {
+    var est = { vista: 'darcy', eps: 0.40, d: 1.0, n: 0.6, R: 0.10 };
+
+    var corpo = moldura(raiz, 'Darcy, Forchheimer e a embebição');
+    var topo = el('div', { class: 'controles' });
+    corpo.appendChild(topo);
+
+    opcoes(topo, [
+      { rot: 'Darcy e Forchheimer', v: 'darcy' },
+      { rot: 'Lei de potência', v: 'potencia' },
+      { rot: 'Embebição de Washburn', v: 'washburn' }
+    ], 0, function (v) { est.vista = v; montar(); desenhar(); });
+
+    var ctrl = el('div', { class: 'controles' });
+    corpo.appendChild(ctrl);
+    var cv = el('canvas');
+    corpo.appendChild(cv);
+    /* Os cartoes sao refeitos a cada vista: o atualizador de `cartoes` so
+       troca os VALORES, e aqui os rotulos tambem mudam de uma vista para a
+       outra. */
+    var caixa = el('div');
+    corpo.appendChild(caixa);
+    var mostrar = null;
+    var nota = el('div', { class: 'saida' });
+    corpo.appendChild(nota);
+
+    function rotular(lista) {
+      caixa.innerHTML = '';
+      mostrar = cartoes(caixa, lista);
+    }
+
+    /* marcas do eixo x em milhares de Pa/m, para o ultimo rotulo caber */
+    function marcasKilo(gmax) {
+      var m = [], i;
+      for (i = 0; i <= 4; i++) {
+        var v = gmax * i / 4;
+        m.push({ v: v, r: F.fmt(v / 1e3, 0) + 'k' });
+      }
+      return m;
+    }
+
+    var MU = 1e-3, RHO = 1000, GAMA = 0.0728, GRAV = 9.80665;
+
+    /* k e beta pela equação de Ergun; d entra em milímetros */
+    function ergun() {
+      var d = est.d * 1e-3, e = est.eps;
+      return { k: Math.pow(e, 3) * d * d / (150 * Math.pow(1 - e, 2)),
+               beta: 1.75 * (1 - e) / (Math.pow(e, 3) * d), d: d };
+    }
+
+    function qForch(grad) {
+      var p = ergun(), a = p.beta * RHO, b = MU / p.k;
+      return (-b + Math.sqrt(b * b + 4 * a * grad)) / (2 * a);
+    }
+
+    function montar() {
+      ctrl.innerHTML = '';
+      if (est.vista === 'washburn') {
+        deslizante(ctrl, 'Raio do poro R:', 0.01, 1.0, 0.01, est.R,
+          function (v) { est.R = v; desenhar(); },
+          function (v) { return F.fmt(v, 2) + ' mm'; });
+        return;
+      }
+      deslizante(ctrl, 'Porosidade ε:', 0.25, 0.55, 0.01, est.eps,
+        function (v) { est.eps = v; desenhar(); },
+        function (v) { return F.fmt(v, 2); });
+      deslizante(ctrl, 'Diâmetro do grão d:', 0.1, 3.0, 0.1, est.d,
+        function (v) { est.d = v; desenhar(); },
+        function (v) { return F.fmt(v, 1) + ' mm'; });
+      if (est.vista === 'potencia') {
+        deslizante(ctrl, 'Índice de potência n:', 0.3, 1.6, 0.05, est.n,
+          function (v) { est.n = v; desenhar(); },
+          function (v) { return F.fmt(v, 2); });
+      }
+    }
+
+    /* G.curva prende a curva na moldura; aqui ela precisa SAIR dela, e por
+       isso o traçado é feito à mão, interrompendo fora dos limites. */
+    function tracar(gr, f, cor, esp, tracejado) {
+      var ct = gr.ct, i, dentro = false;
+      ct.save();
+      ct.strokeStyle = cor; ct.lineWidth = esp || 2.2;
+      if (tracejado) ct.setLineDash(tracejado);
+      ct.beginPath();
+      for (i = 0; i <= 400; i++) {
+        var x = gr.xmin + (gr.xmax - gr.xmin) * i / 400, y = f(x);
+        if (!isFinite(y) || y < gr.ymin || y > gr.ymax) { dentro = false; continue; }
+        if (dentro) ct.lineTo(gr.X(x), gr.Y(y)); else ct.moveTo(gr.X(x), gr.Y(y));
+        dentro = true;
+      }
+      ct.stroke();
+      ct.restore();
+    }
+
+    function desenhar() {
+      if (est.vista === 'darcy') return vistaDarcy();
+      if (est.vista === 'potencia') return vistaPotencia();
+      return vistaWashburn();
+    }
+
+    function vistaDarcy() {
+      var p = ergun();
+      var gmax = 2e5;
+      var qmax = qForch(gmax) * 1.35;
+      var gr = G.eixos(cv, {
+        altura: 300, xmin: 0, xmax: gmax, ymin: 0, ymax: qmax,
+        rotX: 'gradiente de pressão (Pa/m)', rotY: 'q (m/s)',
+        marcasX: marcasKilo(gmax),
+        formataY: function (v) { return F.fmt(v, 3); }
+      });
+      tracar(gr, function (g) { return p.k * g / MU; }, G.COR.vinho, 2.2, [6, 4]);
+      tracar(gr, qForch, G.COR.mestra, 2.6);
+      G.legenda(gr, [
+        { texto: 'Darcy', cor: G.COR.vinho },
+        { texto: 'Forchheimer', cor: G.COR.mestra }
+      ]);
+      var g10 = gmax / 2, qd = p.k * g10 / MU, qf = qForch(g10);
+      var rep = RHO * qf * p.d / (MU * (1 - est.eps));
+      rotular([{ rot: 'permeabilidade k', k: 'k' },
+               { rot: 'em darcy', k: 'kd' },
+               { rot: 'Re de poro a 100 kPa/m', k: 're' },
+               { rot: 'quanto Darcy erra ali', k: 'err' }]);
+      mostrar({ k: F.fmt(p.k * 1e9, 2) + '\u00a0&times;\u00a010<sup>-9</sup> m²',
+                kd: F.fmt(p.k / 9.869e-13, 0),
+                re: F.fmt(rep, 1),
+                err: F.fmt(100 * (qd / qf - 1), 0) + ' %' });
+      nota.innerHTML = '<p>A reta tracejada é Darcy e a curva cheia é '
+        + 'Forchheimer. As duas se separam quando o Reynolds de poro passa '
+        + 'de um, e a separação não é uma transição para turbulência: é a '
+        + 'inércia do fluido ao contornar os grãos. Repare como a '
+        + 'permeabilidade responde à porosidade: ela vai com '
+        + '\\(\\varepsilon^3/(1-\\varepsilon)^2\\), de modo que dez pontos '
+        + 'de porosidade a mais quase triplicam \\(k\\).</p>';
+      tipografar(nota);
+    }
+
+    function vistaPotencia() {
+      var p = ergun(), n = est.n;
+      /* q = (k dp/(L H))^(1/n), com H de Christopher e Middleman, que vale
+         exatamente a viscosidade quando n = 1 */
+      var K = MU;
+      function H() {
+        return (K / 12) * Math.pow(9 + 3 / n, n)
+             * Math.pow(150 * p.k * est.eps, (1 - n) / 2);
+      }
+      function q(g) { return Math.pow(p.k * g / H(), 1 / n); }
+      var gmax = 1e5, qmax = Math.max(q(gmax), p.k * gmax / MU) * 1.25;
+      var gr = G.eixos(cv, {
+        altura: 300, xmin: 0, xmax: gmax, ymin: 0, ymax: qmax,
+        rotX: 'gradiente de pressão (Pa/m)', rotY: 'q (m/s)',
+        marcasX: marcasKilo(gmax),
+        formataY: function (v) { return F.fmt(v, 3); }
+      });
+      tracar(gr, function (g) { return p.k * g / MU; }, G.COR.vinho, 2.2, [6, 4]);
+      tracar(gr, q, G.COR.mestra, 2.6);
+      G.legenda(gr, [
+        { texto: 'newtoniano (n = 1)', cor: G.COR.vinho },
+        { texto: 'n = ' + F.fmt(n, 2), cor: G.COR.mestra }
+      ]);
+      var g1 = gmax / 2;
+      rotular([{ rot: 'expoente de q com ∇p', k: 'ex' },
+               { rot: 'dobrando ∇p, q cresce', k: 'db' },
+               { rot: 'comportamento', k: 'co' }]);
+      mostrar({ ex: F.fmt(1 / n, 3),
+                db: F.fmt(Math.pow(2, 1 / n), 2) + '×',
+                co: n < 1 ? 'pseudoplástico'
+                          : (n > 1 ? 'dilatante' : 'newtoniano') });
+      nota.innerHTML = '<p>Com \\(n<1\\) a curva sobe mais depressa que a '
+        + 'reta: o fluido afina sob cisalhamento, e cisalhar mais forte o '
+        + 'torna mais fino ainda. O expoente \\(1/n\\) não é um ajuste '
+        + 'empírico à escala do meio: ele vem da lei de potência dentro de '
+        + 'cada poro e atravessa intacto a média sobre a rede, o que a '
+        + 'seção 7 verifica resolvendo a rede poro a poro.</p>';
+      tipografar(nota);
+    }
+
+    function vistaWashburn() {
+      var R = est.R * 1e-3;
+      var hJ = 2 * GAMA / (RHO * GRAV * R);
+      var tmax = 8 * MU * hJ / (R * R * RHO * GRAV) * 3;
+      var gr = G.eixos(cv, {
+        altura: 300, xmin: 0, xmax: tmax, ymin: 0, ymax: hJ * 1.25,
+        rotX: 'tempo (s)', rotY: 'altura (m)',
+        marcasX: G.marcasLineares(0, tmax, 4, tmax < 1 ? 2 : 0),
+        formataY: function (v) { return F.fmt(v, 3); }
+      });
+      /* sem gravidade: a lei pura, l = sqrt(R gama t/(2 mu)) */
+      tracar(gr, function (t) {
+        return Math.sqrt(R * GAMA * t / (2 * MU));
+      }, G.COR.vinho, 2.2, [6, 4]);
+      /* com gravidade: integra u = l^2, que não tem a divergência em l = 0 */
+      var passos = 400, dt = tmax / passos, u = 0, pts = [[0, 0]];
+      for (var i = 0; i < passos; i++) {
+        var f = function (uu) {
+          return R * R * (2 * GAMA / R - RHO * GRAV * Math.sqrt(Math.max(uu, 0)))
+               / (4 * MU);
+        };
+        var k1 = f(u), k2 = f(u + dt * k1 / 2), k3 = f(u + dt * k2 / 2),
+            k4 = f(u + dt * k3);
+        u = u + dt / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
+        pts.push([(i + 1) * dt, Math.sqrt(Math.max(u, 0))]);
+      }
+      var ct = gr.ct;
+      ct.save();
+      ct.strokeStyle = G.COR.mestra; ct.lineWidth = 2.6;
+      ct.beginPath();
+      pts.forEach(function (q, j) {
+        if (j) ct.lineTo(gr.X(q[0]), gr.Y(q[1])); else ct.moveTo(gr.X(q[0]), gr.Y(q[1]));
+      });
+      ct.stroke();
+      ct.setLineDash([4, 4]); ct.strokeStyle = G.COR.suave; ct.lineWidth = 1.4;
+      ct.beginPath(); ct.moveTo(gr.x0, gr.Y(hJ)); ct.lineTo(gr.x1, gr.Y(hJ));
+      ct.stroke();
+      ct.restore();
+      rotulo(ct, 'altura de Jurin', gr.x1 - 6, gr.Y(hJ) - 8, G.COR.suave, 'right');
+      G.legenda(gr, [
+        { texto: 'sem gravidade (√t)', cor: G.COR.vinho },
+        { texto: 'com gravidade', cor: G.COR.mestra }
+      ]);
+      var imeia = 0;
+      while (imeia < pts.length - 1 && pts[imeia][1] < hJ / 2) imeia++;
+      rotular([{ rot: 'altura de Jurin', k: 'hj' },
+               { rot: 'tempo para metade dela', k: 'tm' },
+               { rot: 'altura no fim do gráfico', k: 'hf' },
+               { rot: 'isso é, de Jurin', k: 'pc' }]);
+      mostrar({ hj: F.fmt(hJ * 1e3, 1) + ' mm',
+                tm: F.fmt(pts[imeia][0], 2) + ' s',
+                hf: F.fmt(pts[pts.length - 1][1] * 1e3, 1) + ' mm',
+                pc: F.fmt(100 * pts[pts.length - 1][1] / hJ, 0) + ' %' });
+      nota.innerHTML = '<p>A curva tracejada é a lei de Washburn pura, que '
+        + 'cresce com \\(\\sqrt t\\) e não para nunca. A curva cheia inclui '
+        + 'o peso da coluna já levantada, e satura na altura de Jurin. As '
+        + 'duas coincidem enquanto a coluna for curta perto dessa altura, e '
+        + 'é por isso que a lei de Washburn descreve bem um guardanapo, '
+        + 'onde os poros são de micrometros e a altura de Jurin é de '
+        + 'metros, e falha num tubo largo.</p>';
+      tipografar(nota);
+    }
+
+    montar();
+    registrarRedesenho(desenhar);
+  };
+
   /* ---------- inicialização ---------- */
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('[data-widget]'), function (n) {
